@@ -1,108 +1,1021 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Feeling Good - App Hub</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      color: #fff;
-      min-height: 100vh;
-    }
-    .hub {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 3rem 1rem;
-      text-align: center;
-    }
-    .hub h1 {
-      font-size: 3rem;
-      background: linear-gradient(90deg, #f7971e, #ffd200);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-    .hub .subtitle {
-      color: #aaa;
-      font-size: 1.2rem;
-      margin-bottom: 3rem;
-    }
-    .apps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 2rem;
-      margin-bottom: 3rem;
-    }
-    .app-card {
-      background: rgba(255,255,255,0.05);
-      border-radius: 20px;
-      padding: 2rem;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: transform 0.3s ease, border-color 0.3s ease;
-      text-decoration: none;
-      color: #fff;
-      display: block;
-    }
-    .app-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(255,255,255,0.3);
-    }
-    .app-card .icon { font-size: 3rem; margin-bottom: 1rem; }
-    .app-card h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-    .app-card p { color: #aaa; line-height: 1.6; font-size: 0.95rem; }
-    .app-card .badge {
-      display: inline-block;
-      padding: 0.3rem 1rem;
-      border-radius: 50px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-top: 1rem;
-    }
-    .badge-gold { background: linear-gradient(90deg, #f7971e, #ffd200); color: #000; }
-    .badge-blue { background: #4fc3f7; color: #000; }
-    .badge-green { background: #81c784; color: #000; }
-    .footer {
-      color: #555;
-      font-size: 0.85rem;
-      padding-top: 2rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pioneer Spiritual Growth Tracker</title>
+    <style>
+        :root {
+            --color-primary: #2C5F8D;
+            --color-secondary: #5B9BD5;
+            --color-accent: #70AD47;
+            --color-light: #F2F2F2;
+            --color-dark: #333333;
+            --color-border: #D4D4D4;
+            --color-bg-card: #FFFFFF;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #E8F0F7 0%, #F5F9FC 100%);
+            color: var(--color-dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: var(--color-bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            color: var(--color-primary);
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .week-info {
+            color: var(--color-secondary);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .scripture-verse {
+            font-style: italic;
+            color: #666;
+            margin-top: 12px;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--color-bg-card);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--color-dark);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: var(--color-light);
+            border-color: var(--color-secondary);
+        }
+
+        .tab-btn.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--color-bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h3 {
+            color: var(--color-secondary);
+            font-size: 1.1rem;
+            margin: 16px 0 12px;
+        }
+
+        .time-badge {
+            display: inline-block;
+            background: var(--color-accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--color-light);
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .checklist-item:hover {
+            background: #E8EEF5;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 4px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--color-primary);
+        }
+
+        .checklist-item label {
+            flex: 1;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-secondary);
+        }
+
+        .scripture-box {
+            background: linear-gradient(135deg, #2C5F8D 0%, #5B9BD5 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 16px 0;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .scripture-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+
+        .prayer-template {
+            background: #FFF9E6;
+            border-left: 4px solid #FFB84D;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .trait-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .trait-card {
+            background: var(--color-light);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .trait-card h4 {
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .trait-card input[type="range"] {
+            width: 100%;
+            margin: 8px 0;
+            accent-color: var(--color-primary);
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+
+        .btn:hover {
+            background: var(--color-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            background: var(--color-accent);
+        }
+
+        .btn-secondary:hover {
+            background: #5E9A3A;
+        }
+
+        .highlight {
+            background: #FFF3CD;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .meeting-content {
+            background: #F0F7FF;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .day-selector {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .day-btn {
+            padding: 8px 16px;
+            background: var(--color-bg-card);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .day-btn:hover {
+            border-color: var(--color-secondary);
+        }
+
+        .day-btn.active {
+            background: var(--color-secondary);
+            color: white;
+            border-color: var(--color-secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-box .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                width: 100%;
+            }
+            
+            .trait-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .reference-link {
+            color: var(--color-secondary);
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--color-border), transparent);
+            margin: 24px 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="hub">
-    <h1>Feeling Good</h1>
-    <p class="subtitle">Your wellness app hub - all tools in one place</p>
+    <div class="container">
+        <header>
+            <h1>🌟 Pioneer Spiritual Growth Tracker</h1>
+            <div class="week-info">Week of February 2-8, 2026</div>
+            <div class="week-info">Midweek Meeting Theme: <strong>"The Result of True Righteousness Will Be Peace"</strong></div>
+            <div class="scripture-verse">"The result of true righteousness will be peace, and the fruitage of true righteousness will be lasting tranquility and security."—Isaiah 32:17</div>
+        </header>
 
-    <div class="apps">
-      <a href="/pioneer/" class="app-card">
-        <div class="icon">&#127775;</div>
-        <h2>Pioneer Tracker</h2>
-        <p>Spiritual growth tracking, meeting prep, daily routines and weekly study tools.</p>
-        <span class="badge badge-blue">Open App</span>
-      </a>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('morning')">Morning Routine</button>
+            <button class="tab-btn" onclick="showTab('daily')">Daily Progress</button>
+            <button class="tab-btn" onclick="showTab('evening')">Evening Review</button>
+            <button class="tab-btn" onclick="showTab('weekly')">Weekly Study</button>
+            <button class="tab-btn" onclick="showTab('traits')">Trait Tracker</button>
+            <button class="tab-btn" onclick="showTab('meeting')">Meeting Prep</button>
+        </div>
 
-      <a href="/wellness/" class="app-card">
-        <div class="icon">&#128154;</div>
-        <h2>Wellness App</h2>
-        <p>Your third app goes here. Track wellness goals and daily habits.</p>
-        <span class="badge badge-green">Open App</span>
-      </a>
+        <!-- Morning Routine -->
+        <div id="morning" class="tab-content active">
+            <div class="card">
+                <h2>☀️ Morning Spiritual Routine <span class="time-badge">45-60 min</span></h2>
+                
+                <h3>1. Opening Prayer (5 min)</h3>
+                <div class="prayer-template">
+                    <strong>Prayer Template:</strong>
+                    <ul style="margin-left: 20px; margin-top: 8px;">
+                        <li>Sanctify Jehovah's name and acknowledge His sovereignty</li>
+                        <li>Thank Him for the new day and the privilege of service</li>
+                        <li>Request holy spirit to cultivate the new personality (Col. 3:10)</li>
+                        <li>Ask for wisdom to apply Matthew 5-7 principles today</li>
+                        <li>Pray for strength to show compassion, humility, and peace</li>
+                        <li>Ask for guidance in ministry encounters</li>
+                    </ul>
+                </div>
 
-      <a href="#" class="app-card">
-        <div class="icon">&#128640;</div>
-        <h2>More Coming Soon</h2>
-        <p>Additional tools and features are on the way. Stay tuned!</p>
-        <span class="badge badge-gold">Coming Soon</span>
-      </a>
+                <h3>2. Daily Text &amp; Bible Reading (15-20 min)</h3>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-1">
+                        <label for="morning-1">Read today's daily text from jw.org</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-2">
+                        <label for="morning-2">Meditate on application: How does this relate to righteousness?</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-3">
+                        <label for="morning-3">Read this week's Bible chapters (Isaiah 30-35 for Feb 2-15)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-4">
+                        <label for="morning-4">Note one spiritual gem to share at meeting</label>
+                    </li>
+                </ul>
+
+                <div class="scripture-box">
+                    <strong>This Week's Focus Scripture:</strong>
+                    "Happy are those hungering and thirsting for righteousness, since they will be filled."—Matthew 5:6
+                </div>
+
+                <h3>3. Trait Meditation (10-15 min)</h3>
+                <p style="margin-bottom: 12px;">Focus on one quality from Colossians 3:12-14:</p>
+                
+                <div class="day-selector">
+                    <button class="day-btn" onclick="selectDay('Monday')">Mon: Compassion</button>
+                    <button class="day-btn" onclick="selectDay('Tuesday')">Tue: Kindness</button>
+                    <button class="day-btn" onclick="selectDay('Wednesday')">Wed: Humility</button>
+                    <button class="day-btn" onclick="selectDay('Thursday')">Thu: Mildness</button>
+                    <button class="day-btn" onclick="selectDay('Friday')">Fri: Patience</button>
+                </div>
+
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-5">
+                        <label for="morning-5">Read scriptures related to today's trait</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-6">
+                        <label for="morning-6">Identify one situation today where I can demonstrate this quality</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-7">
+                        <label for="morning-7">Pray specifically for help to show this trait</label>
+                    </li>
+                </ul>
+
+                <h3>4. Ministry Preparation (10-15 min)</h3>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-8">
+                        <label for="morning-8">Review territory assignments or return visits</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-9">
+                        <label for="morning-9">Prepare 2-3 conversation starters based on current events</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-10">
+                        <label for="morning-10">Review Teaching Toolbox video or publication to feature</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="morning-11">
+                        <label for="morning-11">Commit ministry to Jehovah in prayer</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Daily Progress -->
+        <div id="daily" class="tab-content">
+            <div class="card">
+                <h2>📊 Daily Service Progress</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="number" id="hours-today">0</div>
+                        <div class="label">Hours Today</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="hours-week">0</div>
+                        <div class="label">Weekly Total</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="rvs-count">0</div>
+                        <div class="label">Return Visits</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="studies-count">0</div>
+                        <div class="label">Bible Studies</div>
+                    </div>
+                </div>
+
+                <h3>Ministry Log</h3>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="daily-1">
+                        <label for="daily-1">Morning ministry session completed</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="daily-2">
+                        <label for="daily-2">Afternoon/evening ministry or informal witnessing</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="daily-3">
+                        <label for="daily-3">Made notes on interested persons</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="daily-4">
+                        <label for="daily-4">Followed up on return visit or Bible study</label>
+                    </li>
+                </ul>
+
+                <h3>Workplace/Daily Integration</h3>
+                <div class="meeting-content">
+                    <p><strong>Question for Reflection:</strong> How did I demonstrate the new personality today?</p>
+                    <ul style="margin-left: 20px; margin-top: 8px;">
+                        <li>Did I show compassion to someone in distress? (Col. 3:12)</li>
+                        <li>Was I kind even when others were difficult? (Eph. 4:32)</li>
+                        <li>Did I clothe myself with humility in interactions? (Col. 3:12)</li>
+                        <li>Was I mild and patient under pressure? (Gal. 5:22-23)</li>
+                    </ul>
+                </div>
+
+                <h3>Notes on Today's Experiences</h3>
+                <textarea placeholder="Record interesting ministry experiences, conversations, or spiritual observations from today..."></textarea>
+            </div>
+        </div>
+
+        <!-- Evening Review -->
+        <div id="evening" class="tab-content">
+            <div class="card">
+                <h2>🌙 Evening Spiritual Review <span class="time-badge">60-90 min</span></h2>
+                
+                <h3>1. Self-Examination (20-30 min)</h3>
+                <div class="scripture-box">
+                    <strong>Examination Foundation:</strong>
+                    "Keep testing whether you are in the faith; keep proving what you yourselves are."—2 Corinthians 13:5
+                </div>
+
+                <p style="margin: 16px 0;"><strong>Guided Questions Based on Matthew 5-7:</strong></p>
+                <textarea placeholder="• Was I conscious of my spiritual need today? (Matt. 5:3)
+• Did I hunger and thirst for righteousness in my decisions? (Matt. 5:6)
+• Was I merciful and willing to forgive? (Matt. 5:7)
+• Did I seek to be a peacemaker? (Matt. 5:9)
+• Was I persecuted or reproached for righteousness? (Matt. 5:10-12)
+• Did I let my light shine through good works? (Matt. 5:16)
+• Did I go beyond what was expected, giving the 'extra mile'? (Matt. 5:41)
+• Did I practice righteousness to be seen by God, not men? (Matt. 6:1)
+• What did I store up as treasure in heaven today? (Matt. 6:19-21)"></textarea>
+
+                <h3>2. Trait Self-Assessment</h3>
+                <p style="margin: 12px 0;">Rate your demonstration of the new personality today (Colossians 3:10-14):</p>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="evening-1">
+                        <label for="evening-1">Tender compassion: Did I feel and show empathy?</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="evening-2">
+                        <label for="evening-2">Kindness: Was I actively helpful and considerate?</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="evening-3">
+                        <label for="evening-3">Humility: Did I avoid pride and self-promotion?</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="evening-4">
+                        <label for="evening-4">Mildness: Was I gentle in speech and manner?</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="evening-5">
+                        <label for="evening-5">Patience: Did I endure difficulties without complaint?</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="evening-6">
+                        <label for="evening-6">Love: Did I put others' interests ahead of my own?</label>
+                    </li>
+                </ul>
+
+                <h3>3. Areas Needing Refinement</h3>
+                <textarea placeholder="Identify specific thoughts or actions today that did not align with the new personality. Be honest and specific:
+
+Example: 'I felt impatient when brother/sister spoke at length. I need to cultivate deeper patience and genuine interest in others (Philippians 2:3-4).'
+
+What will I do differently tomorrow?"></textarea>
+
+                <h3>4. Heart Transformation Journal (20-30 min)</h3>
+                <div class="meeting-content">
+                    <p><strong>Deep Reflection Questions:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 8px;">
+                        <li>What wrong desire did I struggle with today? (Col. 3:5)</li>
+                        <li>How am I being "made new in the dominant mental attitude"? (Eph. 4:23)</li>
+                        <li>What aspect of the old personality do I still need to strip off? (Col. 3:8-9)</li>
+                        <li>How is Jehovah's spirit helping me transform my thinking? (Rom. 12:2)</li>
+                    </ul>
+                </div>
+                <textarea placeholder="Write your honest thoughts about your spiritual progress, struggles, and insights gained today..."></textarea>
+
+                <h3>5. Closing Prayer (10-15 min)</h3>
+                <div class="prayer-template">
+                    <strong>Evening Prayer Focus:</strong>
+                    <ul style="margin-left: 20px; margin-top: 8px;">
+                        <li>Thank Jehovah for specific blessings and protections today</li>
+                        <li>Confess specific shortcomings and ask for forgiveness</li>
+                        <li>Request continued help to strip off old personality</li>
+                        <li>Ask for wisdom to apply insights from today's examination</li>
+                        <li>Pray for those you encountered in ministry</li>
+                        <li>Commit tomorrow to Jehovah's service</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Study -->
+        <div id="weekly" class="tab-content">
+            <div class="card">
+                <h2>📖 Weekly Deep Study <span class="time-badge">1-2 hours</span></h2>
+                
+                <h3>Current Week Focus: Isaiah 30-35 (Feb 2-15, 2026)</h3>
+                <div class="scripture-box">
+                    <strong>Key Theme:</strong>
+                    "The result of true righteousness will be peace, and the fruitage of true righteousness will be lasting tranquility and security."—Isaiah 32:17
+                </div>
+
+                <h3>Study Questions for Isaiah 30-35:</h3>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-1">
+                        <label for="weekly-1"><strong>Isa 30:20—</strong> What does "bread in the form of distress" mean? Research w01 11/15 p.16</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-2">
+                        <label for="weekly-2"><strong>Isa 31:1-9—</strong> How does Jehovah defend His people like a bird defends its young? (Isa 31:5)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-3">
+                        <label for="weekly-3"><strong>Isa 32:1-2—</strong> Who provides spiritual support in our day? (w24.01 p.24 ¶13)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-4">
+                        <label for="weekly-4"><strong>Isa 32:16-18—</strong> How does righteousness lead to peace? Apply to personal life</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-5">
+                        <label for="weekly-5"><strong>Isa 33:6—</strong> How does wisdom from Jehovah bring stability? (w24.01 p.22 ¶7-8)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-6">
+                        <label for="weekly-6"><strong>Isa 35:8—</strong> What is "the Way of Holiness" today? (w23.05 p.15 ¶8)</label>
+                    </li>
+                </ul>
+
+                <h3>Righteousness Deep Dive: Matthew 5-7</h3>
+                <div class="meeting-content">
+                    <p><strong>Study Matthew 5-7 systematically this week:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 8px;">
+                        <li><strong>Monday:</strong> Matt. 5:1-16 — The Beatitudes and being light</li>
+                        <li><strong>Tuesday:</strong> Matt. 5:17-48 — Surpassing righteousness of scribes</li>
+                        <li><strong>Wednesday:</strong> Matt. 6:1-18 — Practicing righteousness in secret</li>
+                        <li><strong>Thursday:</strong> Matt. 6:19-34 — Kingdom priorities and trust</li>
+                        <li><strong>Friday:</strong> Matt. 7:1-29 — Judging, prayer, doing God's will</li>
+                    </ul>
+                </div>
+
+                <h3>Research Notes:</h3>
+                <textarea placeholder="Record insights from Watchtower Online Library, research tools, and cross-references:
+
+• What did I learn about true righteousness?
+• How does this apply to my pioneer service?
+• What scriptures particularly moved me?
+• How can I use this information in ministry?"></textarea>
+
+                <h3>Colossians 3:10-14 - New Personality Study</h3>
+                <div class="scripture-box">
+                    <strong>Read Colossians 3:10-14:</strong> "Clothe yourselves with the new personality, which through accurate knowledge is being made new according to the image of the One who created it... clothe yourselves with the tender affections of compassion, kindness, humility, mildness, and patience... But besides all these things, clothe yourselves with love, for it is a perfect bond of union."
+                </div>
+                
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-7">
+                        <label for="weekly-7">Read w17 8/15 study article "How We Put On and Keep On the New Personality"</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-8">
+                        <label for="weekly-8">Study examples of Jesus demonstrating each quality</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="weekly-9">
+                        <label for="weekly-9">Identify personal areas where old personality still shows</label>
+                    </li>
+                </ul>
+
+                <h3>Weekly Goals Setting</h3>
+                <textarea placeholder="Based on this week's study, set 2-3 specific spiritual goals:
+
+Example goals:
+• Demonstrate humility by asking for help from experienced publishers
+• Show compassion by visiting sick/elderly publisher this week
+• Practice patience by spending extra time with someone in ministry who talks excessively
+• Cultivate peace by resolving conflict with a brother/sister"></textarea>
+            </div>
+        </div>
+
+        <!-- Trait Tracker -->
+        <div id="traits" class="tab-content">
+            <div class="card">
+                <h2>✨ New Personality Trait Tracker</h2>
+                <p style="margin-bottom: 20px;">Based on Colossians 3:12-14. Rate your growth weekly and track progress over time.</p>
+
+                <div class="trait-grid">
+                    <div class="trait-card">
+                        <h4>Tender Compassion</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Feeling and showing empathy for others' suffering</p>
+                        <input type="range" min="1" max="10" value="5" id="compassion">
+                        <div class="range-labels">
+                            <span>Needs Growth</span>
+                            <span>Strong</span>
+                        </div>
+                        <textarea style="min-height: 60px; margin-top: 8px; font-size: 0.85rem;" placeholder="Example: Called sister who lost loved one..."></textarea>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Kindness</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Acting with generosity and consideration</p>
+                        <input type="range" min="1" max="10" value="5" id="kindness">
+                        <div class="range-labels">
+                            <span>Needs Growth</span>
+                            <span>Strong</span>
+                        </div>
+                        <textarea style="min-height: 60px; margin-top: 8px; font-size: 0.85rem;" placeholder="Example: Helped publisher with transportation..."></textarea>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Humility</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Modest view of self; avoiding pride</p>
+                        <input type="range" min="1" max="10" value="5" id="humility">
+                        <div class="range-labels">
+                            <span>Needs Growth</span>
+                            <span>Strong</span>
+                        </div>
+                        <textarea style="min-height: 60px; margin-top: 8px; font-size: 0.85rem;" placeholder="Example: Accepted counsel graciously..."></textarea>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Mildness</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Gentle in manner and speech</p>
+                        <input type="range" min="1" max="10" value="5" id="mildness">
+                        <div class="range-labels">
+                            <span>Needs Growth</span>
+                            <span>Strong</span>
+                        </div>
+                        <textarea style="min-height: 60px; margin-top: 8px; font-size: 0.85rem;" placeholder="Example: Responded calmly to opposition..."></textarea>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Patience</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Enduring difficulties without complaint</p>
+                        <input type="range" min="1" max="10" value="5" id="patience">
+                        <div class="range-labels">
+                            <span>Needs Growth</span>
+                            <span>Strong</span>
+                        </div>
+                        <textarea style="min-height: 60px; margin-top: 8px; font-size: 0.85rem;" placeholder="Example: Waited calmly during delayed meeting start..."></textarea>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Love</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">The perfect bond; selfless concern for others</p>
+                        <input type="range" min="1" max="10" value="5" id="love">
+                        <div class="range-labels">
+                            <span>Needs Growth</span>
+                            <span>Strong</span>
+                        </div>
+                        <textarea style="min-height: 60px; margin-top: 8px; font-size: 0.85rem;" placeholder="Example: Put congregation needs before personal plans..."></textarea>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <h3>Additional Fruit of the Spirit (Galatians 5:22-23)</h3>
+                <div class="trait-grid">
+                    <div class="trait-card">
+                        <h4>Joy</h4>
+                        <input type="range" min="1" max="10" value="5">
+                        <div class="range-labels">
+                            <span>Struggling</span>
+                            <span>Abundant</span>
+                        </div>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Peace</h4>
+                        <input type="range" min="1" max="10" value="5">
+                        <div class="range-labels">
+                            <span>Struggling</span>
+                            <span>Abundant</span>
+                        </div>
+                    </div>
+
+                    <div class="trait-card">
+                        <h4>Self-Control</h4>
+                        <input type="range" min="1" max="10" value="5">
+                        <div class="range-labels">
+                            <span>Struggling</span>
+                            <span>Strong</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Weekly Reflection</h3>
+                <textarea placeholder="Review your week:
+• Which trait showed the most improvement?
+• Which trait needs more prayer and effort?
+• What specific situations challenged your new personality?
+• How did Jehovah's spirit help you this week?"></textarea>
+
+                <button class="btn">Save Weekly Progress</button>
+            </div>
+        </div>
+
+        <!-- Meeting Prep -->
+        <div id="meeting" class="tab-content">
+            <div class="card">
+                <h2>📝 Meeting Preparation - Week of Feb 2-8, 2026</h2>
+                
+                <h3>Midweek Meeting (Life &amp; Ministry)</h3>
+                <div class="meeting-content">
+                    <p><strong>Main Theme:</strong> "Find Refuge Under Jehovah's Wings" / "The Result of True Righteousness Will Be Peace"</p>
+                    <p><strong>Bible Reading:</strong> Isaiah 31:1-9</p>
+                </div>
+
+                <h3>Treasures From God's Word (10 min)</h3>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-1">
+                        <label for="meeting-1">Study Isa 31:5 — How Jehovah defends His people like bird defending young</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-2">
+                        <label for="meeting-2">Research Isa 32:1-2 — Those whom Jehovah uses to support you (w24.01 p.24)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-3">
+                        <label for="meeting-3">Meditate on Isa 32:16-18 — How righteousness brings peace (w23.10 p.17)</label>
+                    </li>
+                </ul>
+
+                <h3>Spiritual Gems (10 min)</h3>
+                <div class="scripture-box">
+                    <strong>Prepare to Comment:</strong>
+                    Isa 30:20—What is "bread in the form of distress and water in the form of oppression"? (it "Bread" ¶6)
+                </div>
+                <textarea placeholder="Research answer and prepare comment:
+
+This expression refers to..."></textarea>
+
+                <h3>Personal Spiritual Gem to Share</h3>
+                <textarea placeholder="What spiritual gem from Isaiah 30-35 touched your heart this week?
+
+Consider:
+• A quality of Jehovah that stood out
+• A promise that gave you hope
+• A principle you can apply in ministry or daily life"></textarea>
+
+                <h3>Apply Yourself to the Field Ministry</h3>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-4">
+                        <label for="meeting-4">Review demonstration: Starting a Conversation (Informal Witnessing)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-5">
+                        <label for="meeting-5">Practice offering Bible study (lmd lesson 7 point 3)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-6">
+                        <label for="meeting-6">Prepare to apply lesson from video: "The Result of True Righteousness"</label>
+                    </li>
+                </ul>
+
+                <h3>Congregation Bible Study (30 min)</h3>
+                <div class="meeting-content">
+                    <p><strong>Publication:</strong> "Enjoy Life Forever!" lessons 58-59</p>
+                </div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-7">
+                        <label for="meeting-7">Read and underline lessons 58-59</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-8">
+                        <label for="meeting-8">Look up and read all cited scriptures</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-9">
+                        <label for="meeting-9">Prepare at least 2 comments based on personal application</label>
+                    </li>
+                </ul>
+
+                <div class="section-divider"></div>
+
+                <h3>Weekend Meeting (Public Talk &amp; Watchtower Study)</h3>
+                <div class="meeting-content">
+                    <p><strong>Watchtower Study Article:</strong> Check current month's study edition for this weekend's article</p>
+                    <p class="reference-link">Visit jw.org for latest Watchtower study articles</p>
+                </div>
+
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-10">
+                        <label for="meeting-10">Read study article twice</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-11">
+                        <label for="meeting-11">Underline key points and answers to study questions</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-12">
+                        <label for="meeting-12">Research unfamiliar references or cross-references</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="meeting-13">
+                        <label for="meeting-13">Prepare 3-4 comments showing application to pioneer life</label>
+                    </li>
+                </ul>
+
+                <h3>My Comments to Prepare</h3>
+                <textarea placeholder="Write out your comments here:
+
+Paragraph #: 
+Comment: 
+
+Paragraph #:
+Comment: "></textarea>
+
+                <button class="btn btn-secondary">Print Meeting Preparation</button>
+            </div>
+        </div>
+
     </div>
 
-    <div class="footer">
-      <p>Feeling Good App Hub &copy; 2026 | Hosted on Cloudflare Pages</p>
-    </div>
-  </div>
+    <script>
+        // Tab navigation
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-btn');
+            
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Day selector
+        let selectedDay = null;
+        function selectDay(day) {
+            const buttons = document.querySelectorAll('.day-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(day)) {
+                    btn.classList.add('active');
+                }
+            });
+            selectedDay = day;
+        }
+
+        // Stats tracking (simple example - would persist with localStorage in production)
+        function updateStat(statId, value) {
+            document.getElementById(statId).textContent = value;
+        }
+
+        // Save functionality (placeholder)
+        document.querySelectorAll('.btn').forEach(btn => {
+            if (!btn.onclick) {
+                btn.addEventListener('click', function() {
+                    alert('Progress saved! In a full implementation, this would save to local storage or sync with jw.org profile.');
+                });
+            }
+        });
+
+        // Initialize current day
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const today = new Date().getDay();
+        const todayName = days[today];
+        
+        // Set example stats
+        updateStat('hours-today', '3.5');
+        updateStat('hours-week', '16.5');
+        updateStat('rvs-count', '8');
+        updateStat('studies-count', '3');
+
+        // Auto-highlight today's trait
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            if (btn.textContent.includes(todayName)) {
+                btn.classList.add('active');
+            }
+        });
+    </script>
 </body>
 </html>
+
