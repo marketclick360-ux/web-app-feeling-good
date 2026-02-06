@@ -1,12 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Feeling Good App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feeling Good - App Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+    }
+    .hub {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+      text-align: center;
+    }
+    .hub h1 {
+      font-size: 3rem;
+      background: linear-gradient(90deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .hub .subtitle {
+      color: #aaa;
+      font-size: 1.2rem;
+      margin-bottom: 3rem;
+    }
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    .app-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: transform 0.3s ease, border-color 0.3s ease;
+      text-decoration: none;
+      color: #fff;
+      display: block;
+    }
+    .app-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255,255,255,0.3);
+    }
+    .app-card .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .app-card h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .app-card p { color: #aaa; line-height: 1.6; font-size: 0.95rem; }
+    .app-card .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    .badge-gold { background: linear-gradient(90deg, #f7971e, #ffd200); color: #000; }
+    .badge-blue { background: #4fc3f7; color: #000; }
+    .badge-green { background: #81c784; color: #000; }
+    .footer {
+      color: #555;
+      font-size: 0.85rem;
+      padding-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="hub">
+    <h1>Feeling Good</h1>
+    <p class="subtitle">Your wellness app hub - all tools in one place</p>
+
+    <div class="apps">
+      <a href="/pioneer/" class="app-card">
+        <div class="icon">&#127775;</div>
+        <h2>Pioneer Tracker</h2>
+        <p>Spiritual growth tracking, meeting prep, daily routines and weekly study tools.</p>
+        <span class="badge badge-blue">Open App</span>
+      </a>
+
+      <a href="/wellness/" class="app-card">
+        <div class="icon">&#128154;</div>
+        <h2>Wellness App</h2>
+        <p>Your third app goes here. Track wellness goals and daily habits.</p>
+        <span class="badge badge-green">Open App</span>
+      </a>
+
+      <a href="#" class="app-card">
+        <div class="icon">&#128640;</div>
+        <h2>More Coming Soon</h2>
+        <p>Additional tools and features are on the way. Stay tuned!</p>
+        <span class="badge badge-gold">Coming Soon</span>
+      </a>
+    </div>
+
+    <div class="footer">
+      <p>Feeling Good App Hub &copy; 2026 | Hosted on Cloudflare Pages</p>
+    </div>
+  </div>
+</body>
 </html>
