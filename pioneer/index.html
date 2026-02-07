@@ -66,11 +66,34 @@
 
         }
 
-        .scripture-verse {
+                .scripture-verse {
             font-style: italic;
-            color: #666;
-            margin-top: 12px;
-            font-size: 0.95rem;
+            color: #555;
+            margin-top: 14px;
+            font-size: 0.92rem;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4e8 100%);
+            border-left: 4px solid var(--color-secondary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            line-height: 1.5;
+            text-align: center;
+        }
+        .daily-text-label {
+            font-style: normal;
+            font-weight: 600;
+            color: var(--color-primary);
+            font-size: 0.8rem;
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        .daily-text-ref {
+            display: block;
+            font-style: normal;
+            font-weight: 600;
+            color: var(--color-secondary);
+            margin-top: 6px;
+            font-size: 0.85rem;
         }
 
         .tabs {
@@ -390,7 +413,7 @@
             <div class="week-info">Week of February 2-8, 2026</div>
          <div class="meeting-theme">Midweek Meeting Theme:...
 
-            <div class="scripture-verse">"The result of true righteousness will be peace, and the fruitage of true righteousness will be lasting tranquility and security."—Isaiah 32:17</div>
+                         <div id="dailyText" class="scripture-verse"></div>
         </header>
 
         <div class="tabs">
@@ -1190,6 +1213,30 @@ Comment: "></textarea>
             autoExpand(ta);
         });
     });
+    </script>
+        <script>
+    // Daily Text from Examining the Scriptures Daily 2026
+    (function() {
+        var dailyTexts = {
+            '2026-02-01': { text: 'It is honorable for a man to refrain from a dispute, but every fool will become embroiled in it.', ref: 'Prov. 20:3' },
+            '2026-02-02': { text: 'He will send out the angels and will gather his chosen ones together from the four winds, from earth’s extremity to heaven’s extremity.', ref: 'Mark 13:27' },
+            '2026-02-03': { text: 'It is as a free gift that they are being declared righteous by his undeserved kindness through the release by the ransom paid by Christ Jesus.', ref: 'Rom. 3:24' },
+            '2026-02-04': { text: 'There is going to be a resurrection of both the righteous and the unrighteous.', ref: 'Acts 24:15' },
+            '2026-02-05': { text: 'Keep on seeking first the Kingdom and his righteousness, and all these other things will be added to you.', ref: 'Matt. 6:33' },
+            '2026-02-06': { text: 'We should no longer be children.', ref: 'Eph. 4:14' },
+            '2026-02-07': { text: 'O Jehovah, who may be a guest in your tent?', ref: 'Ps. 15:1' },
+            '2026-02-08': { text: 'We mustered up boldness by means of our God.', ref: '1 Thess. 2:2' }
+        };
+        var today = new Date();
+        var key = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        var el = document.getElementById('dailyText');
+        if (el && dailyTexts[key]) {
+            var d = dailyTexts[key];
+            el.innerHTML = '<span class="daily-text-label">📖 DAILY TEXT — ' + today.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'}) + '</span>"' + d.text + '"<span class="daily-text-ref">—' + d.ref + '</span>';
+        } else if (el) {
+            el.innerHTML = '<span class="daily-text-label">📖 DAILY TEXT</span>"The result of true righteousness will be peace, and the fruitage of true righteousness will be lasting tranquility and security."<span class="daily-text-ref">—Isa. 32:17</span>';
+        }
+    })();
     </script>
 </body>
 </html>
