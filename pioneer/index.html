@@ -395,6 +395,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="showTab('morning')">Morning Routine</button>
             <button class="tab-btn" onclick="showTab('daily')">Daily Progress</button>
+                <button class="tab-btn" onclick="showTab('journal')">Daily Journal</button>
             <button class="tab-btn" onclick="showTab('evening')">Evening Review</button>
             <button class="tab-btn" onclick="showTab('weekly')">Weekly Study</button>
             <button class="tab-btn" onclick="showTab('traits')">Trait Tracker</button>
@@ -549,6 +550,56 @@
 
                 <h3>Notes on Today's Experiences</h3>
                 <textarea placeholder="Record interesting ministry experiences, conversations, or spiritual observations from today..."></textarea>
+            </div>
+        </div>
+
+                <!-- Daily Journal -->
+        <div id="journal" class="tab-content">
+            <div class="card">
+                <h2>📓 Daily Journal – This Week</h2>
+
+                <!-- Week day buttons -->
+                <div class="day-selector" id="journal-day-buttons">
+                    <!-- JS will fill in Mon Feb 2 ... Sun Feb 8 -->
+                </div>
+
+                <!-- Active day label -->
+                <p id="journal-active-day" style="font-weight: 600; margin-bottom: 8px;">
+                    Selected day:
+                </p>
+
+                <!-- Journaling areas -->
+                <h3>Morning thoughts / daily text reflection</h3>
+                <textarea
+                    id="journal-morning"
+                    data-field="journal-morning"
+                    placeholder="Write reflections from the daily text, Bible reading, or morning prayer for this specific day..."
+                ></textarea>
+
+                <h3>Ministry experiences</h3>
+                <textarea
+                    id="journal-ministry"
+                    data-field="journal-ministry"
+                    placeholder="Note ministry conversations, return visits, or informal witnessing from this day..."
+                ></textarea>
+
+                <h3>Gratitude / spiritual highlights</h3>
+                <textarea
+                    id="journal-gratitude"
+                    data-field="journal-gratitude"
+                    placeholder="Record blessings, answered prayers, and spiritual highlights you noticed today..."
+                ></textarea>
+
+                <h3>Goals for tomorrow</h3>
+                <textarea
+                    id="journal-goals"
+                    data-field="journal-goals"
+                    placeholder="Set 1–3 specific spiritual or ministry goals for tomorrow..."
+                ></textarea>
+
+                <button class="btn btn-secondary" id="journal-save-btn">
+                    Save Today's Journal
+                </button>
             </div>
         </div>
 
@@ -965,6 +1016,96 @@ Comment: "></textarea>
 
     </div>
 
+
+        <script>
+    // ------- Daily Journal Week + Auto-Save Hook -------
+
+    // Helper: get Monday of current week
+    function getMonday(d) {
+        const date = new Date(d);
+        const day = date.getDay();
+        const diff = date.getDate() - (day === 0 ? 6 : day - 1);
+        return new Date(date.setDate(diff));
+    }
+
+    // Build the 7 day buttons for the current week
+    function initJournalWeek() {
+        const container = document.getElementById('journal-day-buttons');
+        if (!container) return;
+
+        const today = new Date();
+        const monday = getMonday(today);
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+
+        container.innerHTML = '';
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+
+            const btn = document.createElement('button');
+            btn.className = 'day-btn';
+            btn.dataset.dateKey = d.toISOString().slice(0, 10);
+            btn.textContent = d.toLocaleDateString(undefined, options);
+
+            btn.addEventListener('click', () => {
+                setActiveJournalDay(btn.dataset.dateKey, btn.textContent);
+            });
+
+            container.appendChild(btn);
+
+            const isToday =
+                d.getFullYear() === today.getFullYear() &&
+                d.getMonth() === today.getMonth() &&
+                d.getDate() === today.getDate();
+
+            if (isToday) {
+                setActiveJournalDay(btn.dataset.dateKey, btn.textContent);
+                btn.classList.add('active');
+            }
+        }
+    }
+
+    let currentJournalDateKey = null;
+
+    function setActiveJournalDay(dateKey, label) {
+        currentJournalDateKey = dateKey;
+
+        document
+            .querySelectorAll('#journal-day-buttons .day-btn')
+            .forEach(b => b.classList.remove('active'));
+        const activeBtn = Array.from(
+            document.querySelectorAll('#journal-day-buttons .day-btn')
+        ).find(b => b.dataset.dateKey === dateKey);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        const lbl = document.getElementById('journal-active-day');
+        if (lbl) {
+            lbl.textContent = 'Selected day: ' + label;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initJournalWeek();
+
+        const saveBtn = document.getElementById('journal-save-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (!currentJournalDateKey) return;
+
+                const data = {
+                    date: currentJournalDateKey,
+                    morning: document.getElementById('journal-morning')?.value || '',
+                    ministry: document.getElementById('journal-ministry')?.value || '',
+                    gratitude: document.getElementById('journal-gratitude')?.value || '',
+                    goals: document.getElementById('journal-goals')?.value || ''
+                };
+
+                alert('Journal saved for ' + currentJournalDateKey);
+            });
+        }
+    });
+    </script>
     <script>
         // Tab navigation
         function showTab(tabName) {
