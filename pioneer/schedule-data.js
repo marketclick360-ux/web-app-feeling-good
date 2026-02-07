@@ -1,5 +1,5 @@
 // Weekly Meeting Schedule Data - Auto-generated from jw.org
-// This file contains midweek meeting info that auto-updates based on current week
+// This file contains midweek and weekend meeting info that auto-updates based on current week
 
 const MEETING_SCHEDULE = [
   {
@@ -12,6 +12,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Jehovah's Purpose Cannot Be Thwarted",
     bibleReadingAssignment: "Isaiah 17:1-14",
     cbsLesson: "lfb lessons 54-55",
+    watchtowerArticle: "Maintain Your Joy in Old Age",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-5-11-2026/"
   },
   {
@@ -24,6 +25,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Be a Watchman in These Last Days",
     bibleReadingAssignment: "Isaiah 21:1-17",
     cbsLesson: "lfb lessons 55-56",
+    watchtowerArticle: "Maintain Your Joy as a Caregiver",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-12-18-2026/"
   },
   {
@@ -36,6 +38,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Look! This Is Our God!",
     bibleReadingAssignment: "Isaiah 25:1-9",
     cbsLesson: "lfb lessons 56-57",
+    watchtowerArticle: "Consider Our Sympathetic High Priest—Jesus",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-19-25-2026/"
   },
   {
@@ -48,6 +51,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Trust in Jehovah Forever",
     bibleReadingAssignment: "Isaiah 28:1-13",
     cbsLesson: "lfb lessons 57-58",
+    watchtowerArticle: "\"You Are Someone Very Precious\"!",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-26-February-1-2026/"
   },
   {
@@ -60,6 +64,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Find Refuge Under Jehovah's Wings",
     bibleReadingAssignment: "Isaiah 31:1-9",
     cbsLesson: "lfb lessons 58-59",
+    watchtowerArticle: "The Book of Job Can Help You When You Suffer",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/"
   },
   {
@@ -72,6 +77,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "\"He Is the Stability of Your Times\"",
     bibleReadingAssignment: "Isaiah 35:1-10",
     cbsLesson: "lfb lessons 60-61",
+    watchtowerArticle: "The Book of Job Can Help You When You Give Counsel",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/"
   },
   {
@@ -84,6 +90,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Jehovah Will Defend His People",
     bibleReadingAssignment: "Isaiah 37:1-20",
     cbsLesson: "lfb lessons 61-62",
+    watchtowerArticle: "Imitate Jehovah's Humility",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/"
   },
   {
@@ -96,6 +103,7 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Those Hoping in Jehovah Will Regain Power",
     bibleReadingAssignment: "Isaiah 40:21-31",
     cbsLesson: "lfb lessons 62-63",
+    watchtowerArticle: "How to Plan a Wedding That Brings Honor to Jehovah",
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/"
   }
 ];
@@ -104,23 +112,23 @@ const MEETING_SCHEDULE = [
 function getCurrentWeekSchedule() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   for (const week of MEETING_SCHEDULE) {
     const start = new Date(week.startDate);
     const end = new Date(week.endDate);
     end.setHours(23, 59, 59, 999);
-    
+
     if (today >= start && today <= end) {
       return week;
     }
   }
-  
+
   // If no matching week found, return the closest upcoming week
   const futureWeeks = MEETING_SCHEDULE.filter(w => new Date(w.startDate) > today);
   if (futureWeeks.length > 0) {
     return futureWeeks[0];
   }
-  
+
   // Fallback to last week in schedule
   return MEETING_SCHEDULE[MEETING_SCHEDULE.length - 1];
 }
@@ -128,41 +136,47 @@ function getCurrentWeekSchedule() {
 // Function to render the schedule on the page
 function renderCurrentSchedule() {
   const schedule = getCurrentWeekSchedule();
-  
+
   // Update header elements
   const weekInfo = document.querySelector('.week-info');
   if (weekInfo) {
     weekInfo.textContent = 'Week of ' + schedule.weekLabel;
   }
-  
+
   const themeElement = document.querySelector('.meeting-theme');
   if (themeElement) {
-    themeElement.innerHTML = 'Midweek Meeting Theme: <strong>\"' + schedule.theme + '\"</strong>';
+    themeElement.innerHTML = 'Midweek Meeting Theme: <strong>"' + schedule.theme + '"</strong>';
   }
-  
+
   const scriptureVerse = document.querySelector('.scripture-verse');
   if (scriptureVerse) {
     scriptureVerse.textContent = schedule.scripture;
   }
-  
+
   // Update Bible reading references throughout the page
   const bibleReadingRefs = document.querySelectorAll('[data-bible-reading]');
   bibleReadingRefs.forEach(el => {
     el.textContent = el.textContent.replace(/Isaiah \d+-\d+/g, schedule.bibleReading);
   });
-  
+
   // Update CBS lesson reference
   const cbsRefs = document.querySelectorAll('[data-cbs-lesson]');
   cbsRefs.forEach(el => {
     el.textContent = schedule.cbsLesson;
   });
-  
+
   // Update workbook link
   const workbookLink = document.querySelector('.workbook-link');
   if (workbookLink) {
     workbookLink.href = schedule.workbookUrl;
   }
-  
+
+  // Update weekend meeting - Watchtower Study Article
+  const wtArticleEl = document.querySelector('.wt-article-title');
+  if (wtArticleEl && schedule.watchtowerArticle) {
+    wtArticleEl.textContent = schedule.watchtowerArticle;
+  }
+
   console.log('Schedule loaded for:', schedule.weekLabel);
 }
 
