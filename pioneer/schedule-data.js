@@ -93,16 +93,15 @@ const MEETING_SCHEDULE = [
   }
 ];
 
-// Helper: create a jw.org compliance link
+// Helper: create a jw.org compliance link (HTML anchor tag)
 function jwLink(url, text) {
-  return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+  return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">' + text + '</a>';
 }
 
 // Function to get the current week's schedule
 function getCurrentWeekSchedule() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   for (const week of MEETING_SCHEDULE) {
     const start = new Date(week.startDate);
     const end = new Date(week.endDate);
@@ -111,12 +110,10 @@ function getCurrentWeekSchedule() {
       return week;
     }
   }
-
   const futureWeeks = MEETING_SCHEDULE.filter(w => new Date(w.startDate) > today);
   if (futureWeeks.length > 0) {
     return futureWeeks[0];
   }
-
   return MEETING_SCHEDULE[MEETING_SCHEDULE.length - 1];
 }
 
@@ -144,9 +141,9 @@ function renderCurrentSchedule() {
   }
 
   // === MEETING PREP SECTION ===
-  // Link the Meeting Prep heading with week label
   const meetingDiv = document.getElementById('meeting');
   if (meetingDiv) {
+    // Link the Meeting Prep heading with week label
     const meetingH2 = meetingDiv.querySelector('h2');
     if (meetingH2) {
       meetingH2.innerHTML = '\ud83d\udcdd ' + jwLink(wbUrl, 'Meeting Preparation \u2014 Week of ' + schedule.weekLabel);
@@ -157,16 +154,15 @@ function renderCurrentSchedule() {
     if (meetingContent) {
       const paragraphs = meetingContent.querySelectorAll('p');
       if (paragraphs.length >= 1) {
-        // Main Theme paragraph
         paragraphs[0].innerHTML = '<strong>Main Theme:</strong> ' + jwLink(wbUrl, '"' + schedule.treasuresTalk + '" / "' + schedule.theme + '"');
       }
     }
 
-    // Link Treasures From God's Word heading
+    // Link section headings
     const h3s = meetingDiv.querySelectorAll('h3');
     h3s.forEach(function(h3) {
       if (h3.textContent.includes('Treasures From')) {
-        h3.innerHTML = jwLink(wbUrl, 'Treasures From God\'s Word (10 min)');
+        h3.innerHTML = jwLink(wbUrl, "Treasures From God's Word (10 min)");
       }
       if (h3.textContent.includes('Spiritual Gems')) {
         h3.innerHTML = jwLink(wbUrl, 'Spiritual Gems (10 min)');
@@ -186,7 +182,7 @@ function renderCurrentSchedule() {
     }
   }
 
-  // === ALSO UPDATE STANDALONE ELEMENTS ===
+  // === STANDALONE ELEMENTS ===
   const treasuresEl = document.querySelector('.treasures-link');
   if (treasuresEl) {
     treasuresEl.innerHTML = jwLink(wbUrl, 'Treasures Talk: "' + schedule.treasuresTalk + '"');
