@@ -12,7 +12,15 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Jehovah's Purpose Cannot Be Thwarted",
     watchtowerArticle: "Maintain Your Joy in Old Age",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/Maintain-Your-Joy-in-Old-Age/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-5-11-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-5-11-2026/",
+    keyScriptures: [
+      { ref: "Ps. 92:12-14", book: "psalms", chapter: 92 },
+      { ref: "Isa. 40:29-31", book: "isaiah", chapter: 40 },
+      { ref: "Ps. 37:25", book: "psalms", chapter: 37 },
+      { ref: "Job 33:25", book: "job", chapter: 33 },
+      { ref: "Isa. 33:24", book: "isaiah", chapter: 33 },
+      { ref: "Phil. 4:6, 7", book: "philippians", chapter: 4 }
+    ]
   },
   {
     startDate: "2026-01-12",
@@ -23,7 +31,14 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Be a Watchman in These Last Days",
     watchtowerArticle: "Maintain Your Joy as a Caregiver",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/Maintain-Your-Joy-as-a-Caregiver/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-12-18-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-12-18-2026/",
+    keyScriptures: [
+      { ref: "Gal. 6:2", book: "galatians", chapter: 6 },
+      { ref: "Isa. 40:29", book: "isaiah", chapter: 40 },
+      { ref: "1 Pet. 5:7", book: "1-peter", chapter: 5 },
+      { ref: "Prov. 17:22", book: "proverbs", chapter: 17 },
+      { ref: "Phil. 4:13", book: "philippians", chapter: 4 }
+    ]
   },
   {
     startDate: "2026-01-19",
@@ -34,7 +49,14 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Look! This Is Our God!",
     watchtowerArticle: "Consider Our Sympathetic High Priest\u2014Jesus",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/Consider-Our-Sympathetic-High-Priest-Jesus/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-19-25-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-19-25-2026/",
+    keyScriptures: [
+      { ref: "Heb. 4:15, 16", book: "hebrews", chapter: 4 },
+      { ref: "Heb. 2:17, 18", book: "hebrews", chapter: 2 },
+      { ref: "Isa. 53:4, 5", book: "isaiah", chapter: 53 },
+      { ref: "1 John 2:1, 2", book: "1-john", chapter: 2 },
+      { ref: "Matt. 11:28-30", book: "matthew", chapter: 11 }
+    ]
   },
   {
     startDate: "2026-01-26",
@@ -45,7 +67,14 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Trust in Jehovah Forever",
     watchtowerArticle: "\"You Are Someone Very Precious\"!",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/You-Are-Someone-Very-Precious/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-26-February-1-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-26-February-1-2026/",
+    keyScriptures: [
+      { ref: "Ps. 139:1-4", book: "psalms", chapter: 139 },
+      { ref: "Isa. 43:4", book: "isaiah", chapter: 43 },
+      { ref: "Matt. 10:29-31", book: "matthew", chapter: 10 },
+      { ref: "Jer. 31:3", book: "jeremiah", chapter: 31 },
+      { ref: "1 John 3:19, 20", book: "1-john", chapter: 3 }
+    ]
   },
   {
     startDate: "2026-02-02",
@@ -56,7 +85,14 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Find Refuge Under Jehovah's Wings",
     watchtowerArticle: "The Book of Job Can Help You When You Suffer",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/The-Book-of-Job-Can-Help-You-When-You-Suffer/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/",
+    keyScriptures: [
+      { ref: "Job 1:21, 22", book: "job", chapter: 1 },
+      { ref: "Job 2:9, 10", book: "job", chapter: 2 },
+      { ref: "Jas. 5:11", book: "james", chapter: 5 },
+      { ref: "Rom. 8:28", book: "romans", chapter: 8 },
+      { ref: "Ps. 34:18, 19", book: "psalms", chapter: 34 }
+    ]
   },
   {
     startDate: "2026-02-09",
@@ -67,7 +103,14 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "\"He Is the Stability of Your Times\"",
     watchtowerArticle: "The Book of Job Can Help You When You Give Counsel",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/The-Book-of-Job-Can-Help-You-When-You-Give-Counsel/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/",
+    keyScriptures: [
+      { ref: "Job 4:7, 8", book: "job", chapter: 4 },
+      { ref: "Job 8:5, 6", book: "job", chapter: 8 },
+      { ref: "Job 42:7, 8", book: "job", chapter: 42 },
+      { ref: "Prov. 12:18", book: "proverbs", chapter: 12 },
+      { ref: "Col. 4:6", book: "colossians", chapter: 4 }
+    ]
   },
   {
     startDate: "2026-02-16",
@@ -78,7 +121,14 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Jehovah Will Defend His People",
     watchtowerArticle: "Imitate Jehovah's Humility",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/Imitate-Jehovahs-Humility/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/",
+    keyScriptures: [
+      { ref: "Phil. 2:3, 4", book: "philippians", chapter: 2 },
+      { ref: "Mic. 6:8", book: "micah", chapter: 6 },
+      { ref: "Isa. 57:15", book: "isaiah", chapter: 57 },
+      { ref: "Ps. 138:6", book: "psalms", chapter: 138 },
+      { ref: "1 Pet. 5:5, 6", book: "1-peter", chapter: 5 }
+    ]
   },
   {
     startDate: "2026-02-23",
@@ -89,13 +139,25 @@ const MEETING_SCHEDULE = [
     treasuresTalk: "Those Hoping in Jehovah Will Regain Power",
     watchtowerArticle: "How to Plan a Wedding That Brings Honor to Jehovah",
     watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/How-to-Plan-a-Wedding-That-Brings-Honor-to-Jehovah/",
-    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/"
+    workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/",
+    keyScriptures: [
+      { ref: "Gen. 2:22-24", book: "genesis", chapter: 2 },
+      { ref: "Matt. 19:5, 6", book: "matthew", chapter: 19 },
+      { ref: "Eph. 5:28-33", book: "ephesians", chapter: 5 },
+      { ref: "Prov. 18:22", book: "proverbs", chapter: 18 },
+      { ref: "Heb. 13:4", book: "hebrews", chapter: 13 }
+    ]
   }
 ];
 
 // Helper: create a jw.org compliance link (HTML anchor tag)
 function jwLink(url, text) {
   return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">' + text + '</a>';
+}
+
+// Helper: build a jw.org scripture URL
+function scriptureUrl(book, chapter) {
+  return 'https://www.jw.org/en/library/bible/study-bible/books/' + book + '/' + chapter + '/';
 }
 
 // Function to get the current week's schedule
@@ -125,6 +187,7 @@ function renderCurrentSchedule() {
   const wtUrl = schedule.watchtowerUrl;
 
   // === HEADER SECTION ===
+
   const weekInfo = document.querySelector('.week-info');
   if (weekInfo) {
     weekInfo.innerHTML = jwLink(wbUrl, 'Week of ' + schedule.weekLabel);
@@ -141,25 +204,23 @@ function renderCurrentSchedule() {
   }
 
   // === MEETING PREP SECTION ===
-  const meetingDiv = document.getElementById('meeting');
+
+  var meetingDiv = document.getElementById('meeting');
   if (meetingDiv) {
-    // Link the Meeting Prep heading with week label
-    const meetingH2 = meetingDiv.querySelector('h2');
+    var meetingH2 = meetingDiv.querySelector('h2');
     if (meetingH2) {
       meetingH2.innerHTML = '\ud83d\udcdd ' + jwLink(wbUrl, 'Meeting Preparation \u2014 Week of ' + schedule.weekLabel);
     }
 
-    // Link the Main Theme in meeting-content div
-    const meetingContent = meetingDiv.querySelector('.meeting-content');
+    var meetingContent = meetingDiv.querySelector('.meeting-content');
     if (meetingContent) {
-      const paragraphs = meetingContent.querySelectorAll('p');
+      var paragraphs = meetingContent.querySelectorAll('p');
       if (paragraphs.length >= 1) {
         paragraphs[0].innerHTML = '<strong>Main Theme:</strong> ' + jwLink(wbUrl, '"' + schedule.treasuresTalk + '" / "' + schedule.theme + '"');
       }
     }
 
-    // Link section headings
-    const h3s = meetingDiv.querySelectorAll('h3');
+    var h3s = meetingDiv.querySelectorAll('h3');
     h3s.forEach(function(h3) {
       if (h3.textContent.includes('Treasures From')) {
         h3.innerHTML = jwLink(wbUrl, "Treasures From God's Word (10 min)");
@@ -175,26 +236,37 @@ function renderCurrentSchedule() {
       }
     });
 
-    // Link the Watchtower Study Article
-    const wtArticleEl = meetingDiv.querySelector('.wt-article-title');
+    var wtArticleEl = meetingDiv.querySelector('.wt-article-title');
     if (wtArticleEl && schedule.watchtowerArticle) {
       wtArticleEl.innerHTML = jwLink(wtUrl, schedule.watchtowerArticle);
+    }
+
+    // === KEY SCRIPTURES FOR WATCHTOWER STUDY ===
+    var keyScripturesEl = meetingDiv.querySelector('.key-scriptures-list');
+    if (keyScripturesEl && schedule.keyScriptures && schedule.keyScriptures.length > 0) {
+      var html = '<strong>Key Scriptures:</strong><ul style="margin:8px 0;padding-left:20px;">';
+      schedule.keyScriptures.forEach(function(s) {
+        var url = scriptureUrl(s.book, s.chapter);
+        html += '<li style="margin:4px 0;">' + jwLink(url, s.ref) + '</li>';
+      });
+      html += '</ul>';
+      keyScripturesEl.innerHTML = html;
     }
   }
 
   // === STANDALONE ELEMENTS ===
-  const treasuresEl = document.querySelector('.treasures-link');
+
+  var treasuresEl = document.querySelector('.treasures-link');
   if (treasuresEl) {
     treasuresEl.innerHTML = jwLink(wbUrl, 'Treasures Talk: "' + schedule.treasuresTalk + '"');
   }
 
-  const workbookLink = document.querySelector('.workbook-link');
+  var workbookLink = document.querySelector('.workbook-link');
   if (workbookLink) {
     workbookLink.href = wbUrl;
   }
 
-  // Standalone WT article element (outside meeting prep)
-  const wtStandalone = document.querySelector('.wt-article-title');
+  var wtStandalone = document.querySelector('.wt-article-title');
   if (wtStandalone && schedule.watchtowerArticle) {
     wtStandalone.innerHTML = jwLink(wtUrl, schedule.watchtowerArticle);
   }
