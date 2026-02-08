@@ -1215,11 +1215,13 @@ Comment: "></textarea>
     </script>
     <script>
     // Daily Text from Examining the Scriptures Daily 2026
+    // Linked to jw.org for compliance
     document.addEventListener("DOMContentLoaded", function() {
+        var dailyTextUrl = "https://wol.jw.org/en/wol/dt/r1/lp-e";
         var dailyTexts = {
-            "2026-02-01": { text: "It is honorable for a man to refrain from a dispute, but every fool will become embroiled in it.", ref: "Prov. 20:3" },
-            "2026-02-02": { text: "He will send out the angels and will gather his chosen ones together from the four winds, from one extremity of earth to the extremity of heaven.", ref: "Mark 13:27" },
-            "2026-02-03": { text: "It is as a free gift that they are being declared righteous by his undeserved kindness through the release by the ransom paid by Christ Jesus.", ref: "Rom. 3:24" },
+            "2026-02-01": { text: "It is honorable for a man to refrain from a dispute, but every fool will start a quarrel.", ref: "Prov. 20:3" },
+            "2026-02-02": { text: "He will send out the angels and will gather his chosen ones together.", ref: "Mark 13:27" },
+            "2026-02-03": { text: "It is as a free gift that they are being declared righteous by his undeserved kindness.", ref: "Rom. 3:24" },
             "2026-02-04": { text: "There is going to be a resurrection of both the righteous and the unrighteous.", ref: "Acts 24:15" },
             "2026-02-05": { text: "Keep on seeking first the Kingdom and his righteousness, and all these other things will be added to you.", ref: "Matt. 6:33" },
             "2026-02-06": { text: "We should no longer be children.", ref: "Eph. 4:14" },
@@ -1231,9 +1233,15 @@ Comment: "></textarea>
         var el = document.getElementById("dailyText");
         if (el && dailyTexts[key]) {
             var d = dailyTexts[key];
-            el.innerHTML = "<span class='daily-text-label'>DAILY TEXT - " + today.toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric"}) + "</span>" + d.text + "<span class='daily-text-ref'>\u2014" + d.ref + "</span>";
+            el.innerHTML = "<a href='" + dailyTextUrl + "' target='_blank' rel='noopener noreferrer' style='color:inherit;text-decoration:none;display:block;'>" +
+                "<span class='daily-text-label'>DAILY TEXT - " + today.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'}) + "</span>" +
+                "<div style='font-style:italic;margin-top:4px;'>" + d.text + "</div>" +
+                "<div style='margin-top:2px;'>\u2014" + d.ref + "</div></a>";
         } else if (el) {
-            el.innerHTML = "<span class='daily-text-label'>DAILY TEXT</span>The result of true righteousness will be peace, and the fruitage of true righteousness will be lasting tranquility and security.<span class='daily-text-ref'>\u2014Isa. 32:17</span>";
+            el.innerHTML = "<a href='" + dailyTextUrl + "' target='_blank' rel='noopener noreferrer' style='color:inherit;text-decoration:none;display:block;'>" +
+                "<span class='daily-text-label'>DAILY TEXT</span>" +
+                "<div style='font-style:italic;margin-top:4px;'>The result of true righteousness will be peace.</div>" +
+                "<div style='margin-top:2px;'>\u2014Isa. 32:17</div></a>";
         }
     });
     </script>
