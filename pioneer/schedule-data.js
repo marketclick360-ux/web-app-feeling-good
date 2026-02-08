@@ -10,9 +10,10 @@ const MEETING_SCHEDULE = [
     theme: "Jehovah's Purpose Will Be Fulfilled",
     scripture: "\"Jehovah of armies has sworn: 'Just as I have intended, so it will be, and just as I have decided, that is what will come true.'\"—Isaiah 14:24",
     treasuresTalk: "Jehovah's Purpose Cannot Be Thwarted",
-    bibleReadingAssignment: "Isaiah 17:1-14",
-    cbsLesson: "lfb lessons 54-55",
+    
     watchtowerArticle: "Maintain Your Joy in Old Age",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/Maintain-Your-Joy-in-Old-Age/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-5-11-2026/"
   },
   {
@@ -23,9 +24,10 @@ const MEETING_SCHEDULE = [
     theme: "Stay Watchful and Alert",
     scripture: "\"Watchman, what about the night? Watchman, what about the night?\"—Isaiah 21:11",
     treasuresTalk: "Be a Watchman in These Last Days",
-    bibleReadingAssignment: "Isaiah 21:1-17",
-    cbsLesson: "lfb lessons 55-56",
+    
     watchtowerArticle: "Maintain Your Joy as a Caregiver",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/Maintain-Your-Joy-as-a-Caregiver/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-12-18-2026/"
   },
   {
@@ -35,10 +37,11 @@ const MEETING_SCHEDULE = [
     bibleReading: "Isaiah 24-27",
     theme: "Look! This Is Our God!",
     scripture: "\"In that day one will say: 'Look! This is our God! We have hoped in him, and he will save us.'\"—Isaiah 25:9",
-    treasuresTalk: "Look! This Is Our God!",
-    bibleReadingAssignment: "Isaiah 25:1-9",
+    
     cbsLesson: "lfb lessons 56-57",
     watchtowerArticle: "Consider Our Sympathetic High Priest—Jesus",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/Consider-Our-Sympathetic-High-Priest-Jesus/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-19-25-2026/"
   },
   {
@@ -49,9 +52,10 @@ const MEETING_SCHEDULE = [
     theme: "Jehovah Will Help His People",
     scripture: "\"Trust in Jehovah forever, for Jah Jehovah is the eternal Rock.\"—Isaiah 26:4",
     treasuresTalk: "Trust in Jehovah Forever",
-    bibleReadingAssignment: "Isaiah 28:1-13",
-    cbsLesson: "lfb lessons 57-58",
+    
     watchtowerArticle: "\"You Are Someone Very Precious\"!",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-november-2025/You-Are-Someone-Very-Precious/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-26-February-1-2026/"
   },
   {
@@ -62,9 +66,10 @@ const MEETING_SCHEDULE = [
     theme: "The Result of True Righteousness Will Be Peace",
     scripture: "\"The result of true righteousness will be peace, and the fruitage of true righteousness will be lasting tranquility and security.\"—Isaiah 32:17",
     treasuresTalk: "Find Refuge Under Jehovah's Wings",
-    bibleReadingAssignment: "Isaiah 31:1-9",
-    cbsLesson: "lfb lessons 58-59",
+    
     watchtowerArticle: "The Book of Job Can Help You When You Suffer",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/The-Book-of-Job-Can-Help-You-When-You-Suffer/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/"
   },
   {
@@ -75,9 +80,10 @@ const MEETING_SCHEDULE = [
     theme: "He Is the Stability of Your Times",
     scripture: "\"He is the stability of your times, an abundance of salvation, wisdom, and knowledge.\"—Isaiah 33:6",
     treasuresTalk: "\"He Is the Stability of Your Times\"",
-    bibleReadingAssignment: "Isaiah 35:1-10",
-    cbsLesson: "lfb lessons 60-61",
+    
     watchtowerArticle: "The Book of Job Can Help You When You Give Counsel",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/The-Book-of-Job-Can-Help-You-When-You-Give-Counsel/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/"
   },
   {
@@ -88,9 +94,10 @@ const MEETING_SCHEDULE = [
     theme: "Jehovah Will Defend His People",
     scripture: "\"I will defend this city and save it for my own sake and for the sake of my servant David.\"—Isaiah 37:35",
     treasuresTalk: "Jehovah Will Defend His People",
-    bibleReadingAssignment: "Isaiah 37:1-20",
-    cbsLesson: "lfb lessons 61-62",
+    
     watchtowerArticle: "Imitate Jehovah's Humility",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/Imitate-Jehovahs-Humility/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/"
   },
   {
@@ -101,9 +108,10 @@ const MEETING_SCHEDULE = [
     theme: "Those Hoping in Jehovah Will Regain Power",
     scripture: "\"Those hoping in Jehovah will regain power. They will soar on wings like eagles.\"—Isaiah 40:31",
     treasuresTalk: "Those Hoping in Jehovah Will Regain Power",
-    bibleReadingAssignment: "Isaiah 40:21-31",
-    cbsLesson: "lfb lessons 62-63",
+    
     watchtowerArticle: "How to Plan a Wedding That Brings Honor to Jehovah",
+    watchtowerUrl: "https://www.jw.org/en/library/magazines/watchtower-study-december-2025/How-to-Plan-a-Wedding-That-Brings-Honor-to-Jehovah/",
+
     workbookUrl: "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/"
   }
 ];
