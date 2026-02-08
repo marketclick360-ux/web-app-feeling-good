@@ -93,6 +93,11 @@ const MEETING_SCHEDULE = [
   }
 ];
 
+// Helper: create a jw.org compliance link
+function jwLink(url, text) {
+  return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+}
+
 // Function to get the current week's schedule
 function getCurrentWeekSchedule() {
   const today = new Date();
@@ -107,13 +112,11 @@ function getCurrentWeekSchedule() {
     }
   }
 
-  // If no matching week found, return the closest upcoming week
   const futureWeeks = MEETING_SCHEDULE.filter(w => new Date(w.startDate) > today);
   if (futureWeeks.length > 0) {
     return futureWeeks[0];
   }
 
-  // Fallback to last week in schedule
   return MEETING_SCHEDULE[MEETING_SCHEDULE.length - 1];
 }
 
@@ -121,41 +124,83 @@ function getCurrentWeekSchedule() {
 // All jw.org-sourced content is linked back to the original source for compliance
 function renderCurrentSchedule() {
   const schedule = getCurrentWeekSchedule();
+  const wbUrl = schedule.workbookUrl;
+  const wtUrl = schedule.watchtowerUrl;
 
-  // Update header elements - week label links to workbook
+  // === HEADER SECTION ===
   const weekInfo = document.querySelector('.week-info');
   if (weekInfo) {
-    weekInfo.innerHTML = '<a href="' + schedule.workbookUrl + '" target="_blank" rel="noopener noreferrer">Week of ' + schedule.weekLabel + '</a>';
+    weekInfo.innerHTML = jwLink(wbUrl, 'Week of ' + schedule.weekLabel);
   }
 
-  // Theme links to workbook (sourced from jw.org)
   const themeElement = document.querySelector('.meeting-theme');
   if (themeElement) {
-    themeElement.innerHTML = 'Midweek Meeting Theme: <a href="' + schedule.workbookUrl + '" target="_blank" rel="noopener noreferrer"><strong>"' + schedule.theme + '"</strong></a>';
+    themeElement.innerHTML = 'Midweek Meeting Theme: ' + jwLink(wbUrl, '<strong>"' + schedule.theme + '"</strong>');
   }
 
-  // Scripture links to workbook (sourced from jw.org)
   const scriptureVerse = document.querySelector('.scripture-verse');
   if (scriptureVerse) {
-    scriptureVerse.innerHTML = '<a href="' + schedule.workbookUrl + '" target="_blank" rel="noopener noreferrer">' + schedule.scripture + '</a>';
+    scriptureVerse.innerHTML = jwLink(wbUrl, schedule.scripture);
   }
 
-  // Treasures talk links to workbook (sourced from jw.org)
+  // === MEETING PREP SECTION ===
+  // Link the Meeting Prep heading with week label
+  const meetingDiv = document.getElementById('meeting');
+  if (meetingDiv) {
+    const meetingH2 = meetingDiv.querySelector('h2');
+    if (meetingH2) {
+      meetingH2.innerHTML = '\ud83d\udcdd ' + jwLink(wbUrl, 'Meeting Preparation \u2014 Week of ' + schedule.weekLabel);
+    }
+
+    // Link the Main Theme in meeting-content div
+    const meetingContent = meetingDiv.querySelector('.meeting-content');
+    if (meetingContent) {
+      const paragraphs = meetingContent.querySelectorAll('p');
+      if (paragraphs.length >= 1) {
+        // Main Theme paragraph
+        paragraphs[0].innerHTML = '<strong>Main Theme:</strong> ' + jwLink(wbUrl, '"' + schedule.treasuresTalk + '" / "' + schedule.theme + '"');
+      }
+    }
+
+    // Link Treasures From God's Word heading
+    const h3s = meetingDiv.querySelectorAll('h3');
+    h3s.forEach(function(h3) {
+      if (h3.textContent.includes('Treasures From')) {
+        h3.innerHTML = jwLink(wbUrl, 'Treasures From God\'s Word (10 min)');
+      }
+      if (h3.textContent.includes('Spiritual Gems')) {
+        h3.innerHTML = jwLink(wbUrl, 'Spiritual Gems (10 min)');
+      }
+      if (h3.textContent.includes('Apply Yourself')) {
+        h3.innerHTML = jwLink(wbUrl, 'Apply Yourself to the Field Ministry');
+      }
+      if (h3.textContent.includes('Congregation Bible Study')) {
+        h3.innerHTML = jwLink(wbUrl, 'Congregation Bible Study (30 min)');
+      }
+    });
+
+    // Link the Watchtower Study Article
+    const wtArticleEl = meetingDiv.querySelector('.wt-article-title');
+    if (wtArticleEl && schedule.watchtowerArticle) {
+      wtArticleEl.innerHTML = jwLink(wtUrl, schedule.watchtowerArticle);
+    }
+  }
+
+  // === ALSO UPDATE STANDALONE ELEMENTS ===
   const treasuresEl = document.querySelector('.treasures-link');
   if (treasuresEl) {
-    treasuresEl.innerHTML = '<a href="' + schedule.workbookUrl + '" target="_blank" rel="noopener noreferrer">Treasures Talk: "' + schedule.treasuresTalk + '"</a>';
+    treasuresEl.innerHTML = jwLink(wbUrl, 'Treasures Talk: "' + schedule.treasuresTalk + '"');
   }
 
-  // Update workbook link
   const workbookLink = document.querySelector('.workbook-link');
   if (workbookLink) {
-    workbookLink.href = schedule.workbookUrl;
+    workbookLink.href = wbUrl;
   }
 
-  // Weekend meeting - Watchtower Study Article links to watchtower URL
-  const wtArticleEl = document.querySelector('.wt-article-title');
-  if (wtArticleEl && schedule.watchtowerArticle) {
-    wtArticleEl.innerHTML = '<a href="' + schedule.watchtowerUrl + '" target="_blank" rel="noopener noreferrer">' + schedule.watchtowerArticle + '</a>';
+  // Standalone WT article element (outside meeting prep)
+  const wtStandalone = document.querySelector('.wt-article-title');
+  if (wtStandalone && schedule.watchtowerArticle) {
+    wtStandalone.innerHTML = jwLink(wtUrl, schedule.watchtowerArticle);
   }
 
   console.log('Schedule loaded for:', schedule.weekLabel);
