@@ -248,6 +248,9 @@ export default function App() {
 
       {tab === 'prep' && (
         <div className="prep-tab">
+                    <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn prep-workbook-link">
+            {"\ud83d\udcd6"} Open Meeting Workbook on JW.org
+          </a>
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{borderLeftColor: section.color}}>{section.label}</h3>
