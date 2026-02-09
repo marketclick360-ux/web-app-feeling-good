@@ -30,21 +30,9 @@
     <textarea rows="4" placeholder="Notes for Congregation Bible Study..."></textarea>
   </section>
 
-  <button onclick="saveNotes()">Save Notes</button>
-  <br><br>
   <a href="./index.html">← Back to Tracker</a>
 
   <script>
-    // Save notes to localStorage so they persist between sessions
-    function saveNotes() {
-      const sections = document.querySelectorAll('section');
-      sections.forEach((sec, idx) => {
-        const textarea = sec.querySelector('textarea');
-        localStorage.setItem('weeklyStudyNotes' + idx, textarea.value);
-      });
-      alert('Notes saved!');
-    }
-    // Load notes on page load
     document.addEventListener('DOMContentLoaded', () => {
       const sections = document.querySelectorAll('section');
       sections.forEach((sec, idx) => {
@@ -53,6 +41,9 @@
         if (saved) {
           textarea.value = saved;
         }
+        textarea.addEventListener('input', () => {
+          localStorage.setItem('weeklyStudyNotes' + idx, textarea.value);
+        });
       });
     });
   </script>
