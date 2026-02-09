@@ -370,4 +370,24 @@ textarea:focus {
   box-sizing: border-box;
 }
 
+/* -- Treasures Comments -- */
+.treasures-comments {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #c0c8e0;
+}
+
+.treasures-comments-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5b6abf;
+  margin: 0 0 8px;
+}
+
+.treasures-comments textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
 
