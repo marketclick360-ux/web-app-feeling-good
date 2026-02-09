@@ -40,6 +40,7 @@ const WEEKLY_MEETINGS = {
     theme: 'He Is the Stability of Your Times',
     bibleReading: 'Isaiah 33-35',
     song: 'Song 3 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/',
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cHe Is the Stability of Your Times\u201d (10 min.) \u2014 Isa 33:6' },
@@ -61,6 +62,7 @@ const WEEKLY_MEETINGS = {
     theme: 'Jehovah Will Hear Your Cry for Help',
     bibleReading: 'Isaiah 30-32',
     song: 'Song 102 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/',
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cJehovah Will Hear Your Cry for Help\u201d (10 min.) \u2014 Isa 30:19' },
@@ -82,6 +84,7 @@ const WEEKLY_MEETINGS = {
     theme: 'Do Not Be Afraid of the Assyrian',
     bibleReading: 'Isaiah 36-38',
     song: 'Song 150 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid of the Assyrian\u201d (10 min.) \u2014 Isa 37:6' },
@@ -104,9 +107,8 @@ const WEEKLY_MEETINGS = {
 function getWeekData(weekKey) {
   if (WEEKLY_MEETINGS[weekKey]) return WEEKLY_MEETINGS[weekKey]
   return {
-    theme: '',
-    bibleReading: '',
-    song: 'Song and Prayer',
+    theme: '', bibleReading: '', song: 'Song and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/',
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk (10 min.)' },
@@ -146,16 +148,8 @@ export default function App() {
   const weekData = getWeekData(weekKey)
   const allItems = SECTION_LABELS.flatMap(s => weekData.sections[s.key])
 
-  const prevWeek = () => {
-    const d = new Date(weekStart)
-    d.setDate(d.getDate() - 7)
-    setWeekStart(d)
-  }
-  const nextWeek = () => {
-    const d = new Date(weekStart)
-    d.setDate(d.getDate() + 7)
-    setWeekStart(d)
-  }
+  const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
+  const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
 
   /* active tab */
   const [tab, setTab] = useState('prep')
@@ -260,8 +254,8 @@ export default function App() {
     <div className="app">
       {/* HEADER */}
       <header className="header">
-        <h1 className="app-title">Pioneer Spiritual Growth Tracker</h1>
-        <p className="week-range">{weekLabel}</p>
+        <h1>Pioneer Spiritual Growth Tracker</h1>
+        <p className="week-label">{weekLabel}</p>
         <div className="week-nav">
           <button onClick={prevWeek}>&larr; Prev Week</button>
           <button onClick={nextWeek}>Next Week &rarr;</button>
@@ -270,12 +264,18 @@ export default function App() {
 
       {/* MEETING SUMMARY CARD */}
       <section className="card meeting-card">
-        <h2 className="meeting-title">Our Christian Life &amp; Ministry</h2>
+        <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="meeting-title-link">
+          <h2>Our Christian Life &amp; Ministry</h2>
+        </a>
         <p className="meeting-sub"><em>Midweek Meeting &bull; {weekData.song}</em></p>
+        <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">
+          \ud83d\udcd6 View Meeting Workbook on JW.org
+        </a>
+
         <label>Theme
           <input type="text" value={theme}
             onChange={e => setTheme(e.target.value)}
-            placeholder={weekData.theme || 'This week\'s main theme...'} />
+            placeholder={weekData.theme || "This week's main theme..."} />
         </label>
         <label>Bible Reading
           <input type="text" value={bibleReading}
@@ -284,32 +284,25 @@ export default function App() {
         </label>
 
         {/* PROGRESS BAR */}
-        <div className="progress-area">
-          <span>Meeting Prep Progress</span>
-          <span className="pct">&nbsp;{pct}%</span>
+        <div className="progress-wrap">
+          <div className="progress-bar" style={{width: pct + '%'}} />
+          <span className="progress-text">Meeting Prep Progress&nbsp;&nbsp;&nbsp;{pct}%</span>
         </div>
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: pct + '%' }} />
-        </div>
-        {pct === 100 && <p className="congrats">\u2728 Great job! Fully prepared! \u2728</p>}
+        {pct === 100 && <p className="complete-msg">\u2728 Great job! Fully prepared! \u2728</p>}
       </section>
 
       {/* TAB BUTTONS */}
-      <div className="tab-bar">
-        <button className={tab === 'prep' ? 'tab active' : 'tab'}
-          onClick={() => setTab('prep')}>Meeting Prep</button>
-        <button className={tab === 'journal' ? 'tab active' : 'tab'}
-          onClick={() => setTab('journal')}>Daily Journal</button>
+      <div className="tab-row">
+        <button className={tab === 'prep' ? 'tab active' : 'tab'} onClick={() => setTab('prep')}>Meeting Prep</button>
+        <button className={tab === 'journal' ? 'tab active' : 'tab'} onClick={() => setTab('journal')}>Daily Journal</button>
       </div>
 
       {/* -- MEETING PREP TAB -- */}
       {tab === 'prep' && (
         <div className="prep-tab">
           {SECTION_LABELS.map(section => (
-            <section key={section.key} className="card section-card">
-              <h3 className="section-heading" style={{ borderLeftColor: section.color }}>
-                {section.label}
-              </h3>
+            <section key={section.key} className="card">
+              <h3 className="section-heading" style={{borderLeftColor: section.color}}>{section.label}</h3>
               {weekData.sections[section.key].map(item => (
                 <label key={item.id} className="check-row">
                   <input type="checkbox"
