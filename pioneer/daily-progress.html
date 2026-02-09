@@ -1,30 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Daily Progress</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Daily Progress</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="../style.css">
 </head>
 <body>
-  <h2>Daily Progress</h2>
-  <form>
-    <label>
-      Minutes in prayer:
-      <input type="number" min="0" max="120" step="5">
-    </label><br><br>
-    <label>
-      Exercise done?
-      <select>
-        <option>No</option>
-        <option>Yes</option>
-      </select>
-    </label><br><br>
-    <label>
-      Mood:
-      <input type="range" min="1" max="5">
-    </label><br><br>
-    <button type="submit">Save</button>
-  </form>
-  <a href="../pioneer/index.html">← Back to Tracker</a>
+<h2>Daily Progress</h2>
+<form>
+<label>
+ Minutes in prayer:
+ <input type="number" min="0" max="120" step="5">
+</label><br><br>
+<label>
+ Exercise done?
+ <select>
+  <option>No</option>
+  <option>Yes</option>
+ </select>
+</label><br><br>
+<label>
+ Mood:
+ <input type="range" min="1" max="5">
+</label><br><br>
+<button type="submit">Save</button>
+</form>
+<h2>To-Do List</h2>
+<ul id="todo-list"></ul>
+<input type="text" id="new-task" placeholder="Add new task…">
+<button type="button" onclick="addTask()">Add</button>
+<a href="../pioneer/index.html">← Back to Tracker</a>
+<script>
+// To-do list script
+const STORAGE_KEY = "daily-tasks";
+function loadTasks() {
+ const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+ const list = document.getElementById("todo-list");
+ list.innerHTML = "";
+ saved.forEach(({text, done}, index) => {
+   const li = document.createElement("li");
+   const chk = document.createElement("input");
+   chk.type = "checkbox";
+   chk.checked = done;
+   chk.onchange = () => toggleTask(index);
+   li.appendChild(chk);
+   li.appendChild(document.createTextNode(" " + text));
+   list.appendChild(li);
+ });
+}
+function addTask() {
+ const input = document.getElementById("new-task");
+ const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+ if (input.value.trim() !== "") {
+  tasks.push({text: input.value.trim(), done: false});
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  input.value = "";
+  loadTasks();
+ }
+}
+function toggleTask(index) {
+ const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+ tasks[index].done = !tasks[index].done;
+ localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+ loadTasks();
+}
+document.addEventListener("DOMContentLoaded", loadTasks);
+</script>
 </body>
 </html>
