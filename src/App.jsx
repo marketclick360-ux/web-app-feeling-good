@@ -269,7 +269,7 @@ export default function App() {
         </a>
         <p className="meeting-sub"><em>Midweek Meeting &bull; {weekData.song}</em></p>
         <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">
-          \ud83d\udcd6 View Meeting Workbook on JW.org
+                    {"\ud83d\udcd6"} View Meeting Workbook on JW.org
         </a>
 
         <label>Theme
@@ -288,7 +288,7 @@ export default function App() {
           <div className="progress-bar" style={{width: pct + '%'}} />
           <span className="progress-text">Meeting Prep Progress&nbsp;&nbsp;&nbsp;{pct}%</span>
         </div>
-        {pct === 100 && <p className="complete-msg">\u2728 Great job! Fully prepared! \u2728</p>}
+                {pct === 100 && <p className="complete-msg">{"\u2728"} Great job! Fully prepared! {"\u2728"}</p>}
       </section>
 
       {/* TAB BUTTONS */}
