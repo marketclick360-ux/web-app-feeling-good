@@ -389,5 +389,54 @@ textarea:focus {
   box-sizing: border-box;
 }
 
+/* -- Daily Text -- */
+.daily-text-card {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f5e9 100%);
+  border-left: 4px solid #5b6abf;
+}
+
+.daily-text-loading {
+  color: #888;
+  font-style: italic;
+}
+
+.daily-text-date {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.daily-text-scripture {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.daily-text-scripture em {
+  font-style: italic;
+  color: #1a237e;
+}
+
+.daily-text-ref {
+  font-size: 0.9rem;
+  color: #5b6abf;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.daily-text-comment {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.daily-text-content .workbook-link {
+  display: inline-block;
+  margin-top: 8px;
+}
+
 
 

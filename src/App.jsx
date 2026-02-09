@@ -137,6 +137,9 @@ export default function App() {
   const [journalTasks, setJournalTasks] = useState({})
   const [journalNotes, setJournalNotes] = useState('')
 
+    const [dailyText, setDailyText] = useState(null)
+  const [dailyTextLoading, setDailyTextLoading] = useState(true)
+
   const totalItems = allItems.length
   const doneItems = allItems.filter(i => checks[i.id]).length
   const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0
@@ -184,6 +187,13 @@ export default function App() {
 
   const toggleCheck = (id) => setChecks(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleJournalTask = (key) => setJournalTasks(prev => ({ ...prev, [key]: !prev[key] }))
+
+    useEffect(() => {
+    fetch('/api/daily-text')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setDailyText(data); setDailyTextLoading(false) })
+      .catch(() => setDailyTextLoading(false))
+  }, [])
 
   return (
     <div className="app">
@@ -236,6 +246,26 @@ export default function App() {
               <button className="home-action-btn" onClick={() => setTab('journal')}>{"\ud83d\udcd3"} Go to Daily Journal</button>
             </div>
           </section>
+
+            <section className="card daily-text-card">
+              <h3 className="section-heading notes-heading">{"\ud83d\udcd6"} Daily Text</h3>
+              {dailyTextLoading ? (
+                <p className="daily-text-loading">Loading today's daily text...</p>
+              ) : dailyText ? (
+                <div className="daily-text-content">
+                  <p className="daily-text-date">{dailyText.dateLabel}</p>
+                  <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
+                  {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
+                  {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 300 ? dailyText.comment.slice(0, 300) + '...' : dailyText.comment}</p>}
+                  <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text on JW.org</a>
+                </div>
+              ) : (
+                <div className="daily-text-content">
+                  <p>Could not load daily text.</p>
+                  <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a>
+                </div>
+              )}
+            </section>
           <section className="card">
             <h3 className="section-heading notes-heading">{"\ud83d\udcc5"} This Week at a Glance</h3>
             <p><strong>Theme:</strong> {weekData.theme || 'Not set'}</p>
@@ -248,9 +278,10 @@ export default function App() {
 
       {tab === 'prep' && (
         <div className="prep-tab">
-                    <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn prep-workbook-link">
-            {"\ud83d\udcd6"} Open Meeting Workbook on JW.org
-          </a>
+                      <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">
+              {"\ud83d\udcd6"} Open Meeting Workbook on JW.org
+            </a>
+          
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{borderLeftColor: section.color}}>{section.label}</h3>
