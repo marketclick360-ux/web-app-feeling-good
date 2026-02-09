@@ -416,7 +416,7 @@
         </header>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('morning')">Morning Routine</button>
+            <button class="tab-btn active" onclick="showTab(event,'morning')">Morning Routine</button>
             <button class="tab-btn" onclick="showTab('daily')">Daily Progress</button>
                 <button class="tab-btn" onclick="showTab('journal')">Daily Journal</button>
             <button class="tab-btn" onclick="showTab('evening')">Evening Review</button>
@@ -471,7 +471,8 @@
                 <h3>3. Trait Meditation (10-15 min)</h3>
                 <p style="margin-bottom: 12px;">Focus on one quality from Colossians 3:12-14:</p>
                 
-                <div class="day-selector">
+                <div class="day-selector trait-days">
+        
                     <button class="day-btn" onclick="selectDay('Monday')">Mon: Compassion</button>
                     <button class="day-btn" onclick="selectDay('Tuesday')">Tue: Kindness</button>
                     <button class="day-btn" onclick="selectDay('Wednesday')">Wed: Humility</button>
@@ -1248,4 +1249,106 @@ Comment: "></textarea>
     </script>
 </body>
 </html>
+<script>
+/* =========================================================
+   GLOBAL UI FIX PATCH – Tabs, Journal Save, Day Buttons
+   Paste once at bottom of index.html
+   ========================================================= */
 
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ---------------- TAB FIX ---------------- */
+  window.showTab = function (e, tabName) {
+    const tabs = document.querySelectorAll('.tab-content');
+    const buttons = document.querySelectorAll('.tab-btn');
+
+    tabs.forEach(t => t.classList.remove('active'));
+    buttons.forEach(b => b.classList.remove('active'));
+
+    const targetTab = document.getElementById(tabName);
+    if (targetTab) targetTab.classList.add('active');
+
+    if (e && e.target) e.target.classList.add('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  /* ---------------- TRAIT DAY BUTTON SCOPE ---------------- */
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const todayName = days[new Date().getDay()];
+
+  document.querySelectorAll('.trait-days .day-btn').forEach(btn => {
+    if (btn.textContent.includes(todayName)) {
+      btn.classList.add('active');
+    }
+  });
+
+  /* ---------------- JOURNAL STORAGE ---------------- */
+  let currentJournalDateKey = null;
+
+  function loadJournal(dateKey) {
+    const saved = JSON.parse(localStorage.getItem('journal_' + dateKey) || '{}');
+
+    const morning = document.getElementById('journal-morning');
+    const ministry = document.getElementById('journal-ministry');
+    const gratitude = document.getElementById('journal-gratitude');
+    const goals = document.getElementById('journal-goals');
+
+    if (morning) morning.value = saved.morning || '';
+    if (ministry) ministry.value = saved.ministry || '';
+    if (gratitude) gratitude.value = saved.gratitude || '';
+    if (goals) goals.value = saved.goals || '';
+  }
+
+  window.setActiveJournalDay = function (dateKey, label) {
+    currentJournalDateKey = dateKey;
+
+    document.querySelectorAll('#journal-day-buttons .day-btn')
+      .forEach(b => b.classList.remove('active'));
+
+    const btn = Array.from(
+      document.querySelectorAll('#journal-day-buttons .day-btn')
+    ).find(b => b.dataset.dateKey === dateKey);
+
+    if (btn) btn.classList.add('active');
+
+    const lbl = document.getElementById('journal-active-day');
+    if (lbl) lbl.textContent = 'Selected day: ' + label;
+
+    loadJournal(dateKey);
+  };
+
+  const saveBtn = document.getElementById('journal-save-btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function () {
+      if (!currentJournalDateKey) return;
+
+      const data = {
+        morning: document.getElementById('journal-morning')?.value || '',
+        ministry: document.getElementById('journal-ministry')?.value || '',
+        gratitude: document.getElementById('journal-gratitude')?.value || '',
+        goals: document.getElementById('journal-goals')?.value || ''
+      };
+
+      localStorage.setItem(
+        'journal_' + currentJournalDateKey,
+        JSON.stringify(data)
+      );
+
+      alert('Journal saved!');
+    });
+  }
+
+  /* ---------------- AUTO EXPAND TEXTAREAS ---------------- */
+  function autoExpand(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
+  document.querySelectorAll('textarea').forEach(function (ta) {
+    ta.addEventListener('input', () => autoExpand(ta));
+    autoExpand(ta);
+  });
+
+});
+</script>
