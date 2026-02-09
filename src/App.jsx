@@ -286,6 +286,7 @@ export default function App() {
         </div>
       </header>
 
+      {tab !== 'sunday' && (
       <section className="card meeting-card">
         <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="meeting-title-link">
           <h2>Our Christian Life & Ministry</h2>
@@ -303,6 +304,7 @@ export default function App() {
             placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} />
         </label>
       </section>
+            )}
 
       <div className="tab-row">
         {TABS.map(t => (
