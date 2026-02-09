@@ -119,7 +119,6 @@ export default function App() {
   const weekLabel = formatRange(weekStart)
   const weekKey = toISO(weekStart)
   const weekData = getWeekData(weekKey)
-  const allItems = SECTION_LABELS.flatMap(s => weekData.sections[s.key])
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
 
@@ -140,10 +139,7 @@ export default function App() {
     const [dailyText, setDailyText] = useState(null)
   const [dailyTextLoading, setDailyTextLoading] = useState(true)
 
-  const totalItems = allItems.length
-  const doneItems = allItems.filter(i => checks[i.id]).length
-  const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0
-
+  
   const loadWeek = useCallback(async () => {
     const wd = getWeekData(weekKey)
     const { data } = await supabase.from('weeks').select('*').eq('week_start', weekKey).maybeSingle()
@@ -222,12 +218,7 @@ export default function App() {
           <input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)}
             placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} />
         </label>
-        <div className="progress-wrap">
-          <div className="progress-bar" style={{width: pct + '%'}} />
-          <span className="progress-text">Meeting Prep Progress&nbsp;&nbsp;&nbsp;{pct}%</span>
-        </div>
-        {pct === 100 && <p className="complete-msg">{"\u2728"} Great job! Fully prepared! {"\u2728"}</p>}
-      </section>
+                  </section>
 
       <div className="tab-row">
         <button className={tab === 'home' ? 'tab active' : 'tab'} onClick={() => setTab('home')}>{"\ud83c\udfe0"} Home</button>
@@ -271,7 +262,6 @@ export default function App() {
             <p><strong>Theme:</strong> {weekData.theme || 'Not set'}</p>
             <p><strong>Bible Reading:</strong> {weekData.bibleReading || 'Not set'}</p>
             <p><strong>Song:</strong> {weekData.song}</p>
-            <p><strong>Meeting Prep:</strong> {pct}% complete</p>
           </section>
         </div>
       )}
@@ -282,7 +272,7 @@ export default function App() {
               {"\ud83d\udcd6"} Open Meeting Workbook on JW.org
             </a>
           
-          {SECTION_LABELS.map(section => (
+          {SECTION_LABELS.filter(s => s.key !== 'ministry').map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{borderLeftColor: section.color}}>{section.label}</h3>
               {weekData.sections[section.key].map(item => (
