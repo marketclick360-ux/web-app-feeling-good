@@ -320,3 +320,54 @@ textarea:focus {
   transform: translateY(0);
 }
 
+/* -- Home Tab -- */
+.home-greeting {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.home-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.home-action-btn {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  background: #3a7ca5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.home-action-btn:hover {
+  background: #2d6a8f;
+  transform: translateY(-1px);
+}
+
+.home-action-btn:active {
+  transform: translateY(0);
+}
+
+.home-tab .card p {
+  margin: 6px 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.home-links .workbook-btn {
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+

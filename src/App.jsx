@@ -152,7 +152,7 @@ export default function App() {
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
 
   /* active tab */
-  const [tab, setTab] = useState('prep')
+  const [tab, setTab] = useState('home')
 
   /* -- Meeting Prep state -- */
   const [checks, setChecks] = useState({})
@@ -293,9 +293,32 @@ export default function App() {
 
       {/* TAB BUTTONS */}
       <div className="tab-row">
+                <button className={tab === 'home' ? 'tab active' : 'tab'} onClick={() => setTab('home')}>{"\ud83c\udfe0"} Home</button>
         <button className={tab === 'prep' ? 'tab active' : 'tab'} onClick={() => setTab('prep')}>Meeting Prep</button>
         <button className={tab === 'journal' ? 'tab active' : 'tab'} onClick={() => setTab('journal')}>Daily Journal</button>
       </div>
+
+      {/* -- HOME TAB -- */}
+      {tab === 'home' && (
+        <div className="home-tab">
+          <section className="card">
+            <h3 className="section-heading notes-heading">{"\ud83c\udfe0"} Welcome Back, Pioneer!</h3>
+            <p className="home-greeting">Use this app to stay organized with your weekly meeting preparation and daily spiritual routine.</p>
+            <div className="home-links">
+              <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} Meeting Workbook on JW.org</a>
+              <button className="home-action-btn" onClick={() => setTab('prep')}>{"\ud83d\udcdd"} Go to Meeting Prep</button>
+              <button className="home-action-btn" onClick={() => setTab('journal')}>{"\ud83d\udcd3"} Go to Daily Journal</button>
+            </div>
+          </section>
+          <section className="card">
+            <h3 className="section-heading notes-heading">{"\ud83d\udcc5"} This Week at a Glance</h3>
+            <p><strong>Theme:</strong> {weekData.theme || 'Not set'}</p>
+            <p><strong>Bible Reading:</strong> {weekData.bibleReading || 'Not set'}</p>
+            <p><strong>Song:</strong> {weekData.song}</p>
+            <p><strong>Meeting Prep:</strong> {pct}% complete</p>
+          </section>
+        </div>
+      )}
 
       {/* -- MEETING PREP TAB -- */}
       {tab === 'prep' && (
