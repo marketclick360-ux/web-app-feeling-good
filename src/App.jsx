@@ -69,18 +69,18 @@ const WEEKLY_MEETINGS = {
     sundayArticle: 'The Book of Job Can Help You When You Suffer',
     sections: {
       treasures: [
-        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cHe Is the Stability of Your Times\u201d (10 min.) \u2014 Isa 33:6' },
-        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) \u2014 Isa 35:8: What does \u201cthe Way of Holiness\u201d represent today?' },
-        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) \u2014 Isaiah 35:1-10' }
+        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cHe Is the Stability of Your Times\u201d (10 min.) — Isa 33:6' },
+        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) — Isa 35:8: What does \u201cthe Way of Holiness\u201d represent today?' },
+        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) — Isaiah 35:1-10' }
       ],
       ministry: [
-        { id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.) \u2014 Public Witnessing: Invite person to a meeting' },
-        { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.) \u2014 House to House: Feature a video from Teaching Toolbox' },
-        { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.) \u2014 Theme: The Bible Teaches Us How to Pray' }
+        { id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.) — Public Witnessing: Invite person to a meeting' },
+        { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.) — House to House: Feature a video from Teaching Toolbox' },
+        { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.) — Theme: The Bible Teaches Us How to Pray' }
       ],
       living: [
         { id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' },
-        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 60-61' }
+        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) — lfb lessons 60-61' }
       ]
     }
   },
@@ -91,18 +91,18 @@ const WEEKLY_MEETINGS = {
     sundayArticle: 'How the Book of Job Can Help You',
     sections: {
       treasures: [
-        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cJehovah Will Hear Your Cry for Help\u201d (10 min.) \u2014 Isa 30:19' },
-        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) \u2014 Isa 30:21: How does Jehovah guide us today?' },
-        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) \u2014 Isaiah 30:1-18' }
+        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cJehovah Will Hear Your Cry for Help\u201d (10 min.) — Isa 30:19' },
+        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) — Isa 30:21: How does Jehovah guide us today?' },
+        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) — Isaiah 30:1-18' }
       ],
       ministry: [
-        { id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.) \u2014 Door to door' },
-        { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.) \u2014 Return visit' },
-        { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.) \u2014 Student assignment' }
+        { id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.) — Door to door' },
+        { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.) — Return visit' },
+        { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.) — Student assignment' }
       ],
       living: [
         { id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' },
-        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 58-59' }
+        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) — lfb lessons 58-59' }
       ]
     }
   },
@@ -113,18 +113,18 @@ const WEEKLY_MEETINGS = {
     sundayArticle: 'Strengthen Your Faith in the Last Days',
     sections: {
       treasures: [
-        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid of the Assyrian\u201d (10 min.) \u2014 Isa 37:6' },
-        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) \u2014 Isa 38:8: What was the sign Jehovah gave Hezekiah?' },
-        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) \u2014 Isaiah 36:1-22' }
+        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid of the Assyrian\u201d (10 min.) — Isa 37:6' },
+        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) — Isa 38:8: What was the sign Jehovah gave Hezekiah?' },
+        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) — Isaiah 36:1-22' }
       ],
       ministry: [
-        { id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.) \u2014 Informal witnessing' },
-        { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.) \u2014 Making a return visit' },
-        { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.) \u2014 Student assignment' }
+        { id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.) — Informal witnessing' },
+        { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.) — Making a return visit' },
+        { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.) — Student assignment' }
       ],
       living: [
         { id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' },
-        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 62-63' }
+        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) — lfb lessons 62-63' }
       ]
     }
   }
@@ -281,8 +281,8 @@ export default function App() {
         <h1>Pioneer Spiritual Growth Tracker</h1>
         <p className="week-label">{weekLabel}</p>
         <div className="week-nav">
-          <button onClick={prevWeek}>\u2190 Prev Week</button>
-          <button onClick={nextWeek}>Next Week \u2192</button>
+          <button onClick={prevWeek}>← Prev Week</button>
+          <button onClick={nextWeek}>Next Week →</button>
         </div>
       </header>
 
@@ -290,7 +290,7 @@ export default function App() {
         <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="meeting-title-link">
           <h2>Our Christian Life & Ministry</h2>
         </a>
-        <p className="meeting-subtitle">Midweek Meeting \u2022 {weekData.song}</p>
+        <p className="meeting-subtitle">Midweek Meeting • {weekData.song}</p>
         <a className="workbook-btn" href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer">
           {"\ud83d\udcd6"} View Meeting Workbook on JW.org
         </a>
@@ -359,7 +359,7 @@ export default function App() {
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <p className="routine-date">Date: {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-            <p className="routine-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em> \u2014 Proverbs 3:5</p>
+            <p className="routine-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em> — Proverbs 3:5</p>
             {MORNING_ROUTINE.map(item => (
               <label key={item.key} className="check-row">
                 <input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} />
@@ -375,7 +375,7 @@ export default function App() {
           <section className="card">
             <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
             <p className="routine-date">Date: {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-            <p className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> \u2014 Psalm 9:2</p>
+            <p className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> — Psalm 9:2</p>
             {EVENING_ROUTINE.map(item => (
               <label key={item.key} className="check-row">
                 <input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} />
@@ -468,7 +468,7 @@ export default function App() {
                   <input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id, todo.done)} />
                   <span className={todo.done ? 'done' : ''}>{todo.text}</span>
                 </label>
-                <button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>\u2715</button>
+                <button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>✕</button>
               </div>
             ))}
           </section>
@@ -499,7 +499,7 @@ export default function App() {
       )}
 
       <footer className="footer">
-        <p>Pioneer Spiritual Growth Tracker \u00a9 2026</p>
+        <p>Pioneer Spiritual Growth Tracker © 2026</p>
       </footer>
     </div>
   )
