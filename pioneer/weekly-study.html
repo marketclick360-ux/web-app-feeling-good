@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weekly Study</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h2>Weekly Study – Week of February 9-15, 2026</h2>
+  <p>Below are the sections for this week's meeting. Tap the title to view the related material on JW.org, and use the notes boxes to jot down your comments or insights.</p>
+
+  <section>
+    <h3><a href="https://www.jw.org/en/library/jw-meeting-workbook/schedule/2026/02/9-15/" target="_blank">Treasures From God's Word: “He Is the Stability of Your Times”</a></h3>
+    <textarea rows="4" placeholder="Notes for Treasures From God's Word..."></textarea>
+  </section>
+
+  <section>
+    <h3><a href="https://www.jw.org/en/library/jw-meeting-workbook/schedule/2026/02/9-15/" target="_blank">Apply Yourself to the Field Ministry</a></h3>
+    <textarea rows="4" placeholder="Notes for Field Ministry section..."></textarea>
+  </section>
+
+  <section>
+    <h3><a href="https://www.jw.org/en/library/jw-meeting-workbook/schedule/2026/02/9-15/" target="_blank">Living as Christians</a></h3>
+    <textarea rows="4" placeholder="Notes for Living as Christians..."></textarea>
+  </section>
+
+  <section>
+    <h3><a href="https://www.jw.org/en/library/jw-meeting-workbook/schedule/2026/02/9-15/" target="_blank">Congregation Bible Study</a></h3>
+    <textarea rows="4" placeholder="Notes for Congregation Bible Study..."></textarea>
+  </section>
+
+  <button onclick="saveNotes()">Save Notes</button>
+  <br><br>
+  <a href="./index.html">← Back to Tracker</a>
+
+  <script>
+    // Save notes to localStorage so they persist between sessions
+    function saveNotes() {
+      const sections = document.querySelectorAll('section');
+      sections.forEach((sec, idx) => {
+        const textarea = sec.querySelector('textarea');
+        localStorage.setItem('weeklyStudyNotes' + idx, textarea.value);
+      });
+      alert('Notes saved!');
+    }
+    // Load notes on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const sections = document.querySelectorAll('section');
+      sections.forEach((sec, idx) => {
+        const textarea = sec.querySelector('textarea');
+        const saved = localStorage.getItem('weeklyStudyNotes' + idx);
+        if (saved) {
+          textarea.value = saved;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
