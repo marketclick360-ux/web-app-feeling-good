@@ -81,7 +81,7 @@ const WEEKLY_MEETINGS = {
   '2026-02-16': {
     theme: 'Do Not Be Afraid of the Assyrian',
     bibleReading: 'Isaiah 36-38',
-    song: 'Song 30 and Prayer',
+    song: 'Song 150 and Prayer',
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid of the Assyrian\u201d (10 min.) \u2014 Isa 37:6' },
