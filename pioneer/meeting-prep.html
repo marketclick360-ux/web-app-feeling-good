@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meeting Preparation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h2>Meeting Preparation – Week of February 9-15, 2026</h2>
+  <p>Use this page to prepare for your midweek meeting and weekend meeting. Resources from jw.org can help you prepare comments.</p>
+  <p><a href="https://www.jw.org/en/library/books/bible-study-aids/how-to-prepare-for-meetings-of-jehovahs-witnesses/" target="_blank">How to Prepare for Meetings of Jehovah's Witnesses</a></p>
+  <p><a href="https://www.jw.org/en/library/jw-meeting-workbook/schedule/2026/02/9-15/" target="_blank">Life and Ministry Meeting schedule (Feb 9–15, 2026)</a></p>
+
+  <section>
+    <h3>Public Talk</h3>
+    <input type="text" placeholder="Talk title"><br><br>
+    <input type="text" placeholder="Speaker"><br><br>
+    <textarea rows="4" placeholder="Notes for the public talk..."></textarea>
+  </section>
+
+  <section>
+    <h3>Watchtower Study</h3>
+    <textarea rows="4" placeholder="Notes for the Watchtower study..."></textarea>
+  </section>
+
+  <section>
+    <h3>Other Comments</h3>
+    <textarea rows="4" placeholder="Any additional comments..."></textarea>
+  </section>
+
+  <a href="./index.html">← Back to Tracker</a>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('input[type="text"], textarea');
+      inputs.forEach((el, idx) => {
+        const saved = localStorage.getItem('meetingPrep' + idx);
+        if (saved) {
+          el.value = saved;
+        }
+        el.addEventListener('input', () => {
+          localStorage.setItem('meetingPrep' + idx, el.value);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
