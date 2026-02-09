@@ -1,4 +1,4 @@
-/* ── Reset ── */
+/* -- Reset -- */
 * {
   margin: 0;
   padding: 0;
@@ -7,167 +7,276 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f2f5;
+  background: linear-gradient(135deg, #e8ecf1 0%, #d5dce6 100%);
   color: #1a1a2e;
   min-height: 100vh;
 }
 
-/* ── App wrapper ── */
+/* -- App wrapper -- */
 .app {
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
   padding: 16px;
   padding-bottom: 80px;
 }
 
-/* ── Header ── */
+/* -- Header -- */
 .header {
   text-align: center;
-  padding: 20px 0 12px;
-}
-.header h1 {
-  font-size: 1.35rem;
-  color: #2C5F8D;
-  margin-bottom: 4px;
-}
-.week-label {
-  font-size: 0.95rem;
-  color: #555;
-  margin-bottom: 10px;
-}
-.week-nav {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-.week-nav button {
-  background: #2C5F8D;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.week-nav button:hover {
-  background: #1e4468;
+  padding: 24px 0 16px;
 }
 
-/* ── Cards ── */
-.card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 18px;
-  margin-top: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.meeting-card h2 {
-  font-size: 1.1rem;
+.header h1 {
+  font-size: 1.4rem;
   color: #2C5F8D;
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+
+.week-label {
+  font-size: 0.95rem;
+  color: #5a6a7a;
   margin-bottom: 12px;
 }
 
-/* ── Labels & inputs ── */
-.card label {
-  display: block;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #444;
-  margin-top: 10px;
-}
-.card input[type="text"],
-.card input[type="date"] {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 4px;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border 0.2s;
-}
-.card input[type="text"]:focus,
-.card input[type="date"]:focus {
-  border-color: #2C5F8D;
-}
-
-.card textarea {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 6px;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  resize: vertical;
-  outline: none;
-  font-family: inherit;
-  transition: border 0.2s;
-}
-.card textarea:focus {
-  border-color: #2C5F8D;
-}
-
-/* ── Tab bar ── */
-.tab-bar {
+.week-nav {
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  justify-content: center;
 }
-.tab {
-  flex: 1;
-  padding: 10px;
-  border: 2px solid #d0d5dd;
-  border-radius: 10px;
-  background: #fff;
-  font-size: 0.9rem;
+
+.week-nav button {
+  background: #2C5F8D;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #666;
   cursor: pointer;
   transition: all 0.2s;
 }
-.tab.active {
-  background: #2C5F8D;
-  color: #fff;
-  border-color: #2C5F8D;
+
+.week-nav button:hover {
+  background: #1e4a6e;
+  transform: translateY(-1px);
 }
 
-/* ── Checkbox rows ── */
-.check-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-weight: 400;
-  cursor: pointer;
-}
-.check-row input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  accent-color: #2C5F8D;
-  cursor: pointer;
-}
-.check-row span {
-  font-size: 0.95rem;
-}
-.check-row span.done {
-  text-decoration: line-through;
-  color: #999;
+.week-nav button:active {
+  transform: translateY(0);
 }
 
-/* ── Section headings inside cards ── */
-.card h3 {
-  font-size: 1rem;
+/* -- Cards -- */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.meeting-card h2 {
   color: #2C5F8D;
-  margin-top: 18px;
+  font-size: 1.15rem;
+  margin-bottom: 2px;
+}
+
+.meeting-subtitle {
+  font-size: 0.82rem;
+  color: #8899aa;
+  margin-bottom: 14px;
+  font-style: italic;
+}
+
+/* -- Progress Bar -- */
+.progress-wrap {
+  margin-top: 16px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: #5a6a7a;
   margin-bottom: 6px;
 }
 
-/* ── Footer ── */
+.progress-pct {
+  font-weight: 700;
+  color: #2C5F8D;
+}
+
+.progress-bar {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5b6abf, #2C5F8D);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+
+.congrats {
+  text-align: center;
+  color: #2C5F8D;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* -- Tab Bar -- */
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #c8d3de;
+  background: white;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5a6a7a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  border-color: #2C5F8D;
+  color: #2C5F8D;
+}
+
+.tab.active {
+  background: #2C5F8D;
+  color: white;
+  border-color: #2C5F8D;
+}
+
+/* -- Section Headings -- */
+.section-heading {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 0 8px 12px;
+  margin-bottom: 10px;
+  border-left: 4px solid #5b6abf;
+  color: #2a3a4a;
+}
+
+.notes-heading {
+  border-left-color: #2C5F8D;
+  margin-top: 6px;
+}
+
+/* -- Checkbox Rows -- */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 8px;
+  border-bottom: 1px solid #eef2f6;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 8px;
+}
+
+.check-row:hover {
+  background: #f5f8fb;
+}
+
+.check-row:last-of-type {
+  border-bottom: none;
+}
+
+.check-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: #2C5F8D;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.check-row span {
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #2a3a4a;
+}
+
+.check-row span.done {
+  text-decoration: line-through;
+  color: #99aabb;
+}
+
+/* -- Form Inputs -- */
+label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5a6a7a;
+  margin-bottom: 10px;
+}
+
+input[type="text"],
+input[type="date"] {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 4px;
+  border: 2px solid #dde4ec;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #1a1a2e;
+  background: #fafbfd;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus {
+  outline: none;
+  border-color: #2C5F8D;
+  background: white;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 4px;
+  border: 2px solid #dde4ec;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #1a1a2e;
+  background: #fafbfd;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #2C5F8D;
+  background: white;
+}
+
+/* -- Footer -- */
 .footer {
   text-align: center;
-  padding: 24px 0 12px;
+  padding: 20px;
+  color: #8899aa;
   font-size: 0.8rem;
-  color: #999;
 }
