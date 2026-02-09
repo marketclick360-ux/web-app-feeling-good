@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const bodyStart = item.content.indexOf('bodyTxt')
     let comment = ''
     if (bodyStart > -1) {
-      const bodyHtml = item.content.slice(bodyStart)
+            const bodyHtml = item.content.slice(item.content.indexOf('>', bodyStart) + 1)
       comment = bodyHtml
         .replace(/<a[^>]*>[\s\S]*?<\/a>/g, '')
         .replace(/<[^>]+>/g, ' ')
