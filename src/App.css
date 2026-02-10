@@ -880,3 +880,43 @@ html, body {
   border-color: #818cf8;
   transform: translateY(-1px);
 }
+
+/* -- Copy to clipboard buttons -- */
+.copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    margin-left: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+    vertical-align: middle;
+  }
+.copy-btn:hover {
+    opacity: 1;
+    background: rgba(99,102,241,0.15);
+  }
+.copy-btn.copied {
+    opacity: 1;
+    color: #22c55e;
+  }
+.meeting-part-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+.section-heading .copy-btn {
+    font-size: 0.75rem;
+  }
+.scripture-list li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+.treasures-comments-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
