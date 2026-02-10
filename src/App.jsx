@@ -171,7 +171,7 @@ export default function App() {
   const weekData = getWeekData(weekKey)
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
-  const [tab, setTab] = useState('morning')
+  const [tab, setTab] = useState('today')
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -253,6 +253,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
   const toggleEvening = (key) => setEveningChecks(prev => ({ ...prev, [key]: !prev[key] }))
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
   const TABS = [
+    { id: 'today', label: '\u2705 Today' },
     { id: 'morning', label: '\u2600\ufe0f Morning' },
     { id: 'evening', label: '\ud83c\udf19 Evening' },
     { id: 'prep', label: '\ud83d\udcdd Midweek' },
@@ -264,7 +265,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
   return (
     <div className="app">
       <header className="header">
-        <h1>Pioneer Spiritual Growth Tracker</h1>
+            <h1>Eat Pray Study</h1>
         <p className="week-label">{weekLabel}</p>
         <div className="week-nav">
           <button onClick={prevWeek}>{"\u2190"} Prev Week</button>
@@ -275,6 +276,51 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>))}
       </nav>
 
+
+        {tab === 'today' && (
+          <div className="today-tab">
+            <section className="card today-greeting-card">
+              <h2 className="today-greeting">{getGreeting()}, Friend!</h2>
+              <p className="today-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            </section>
+
+            <section className="card today-daily-text-card">
+              <h3 className="section-heading morning-heading">{"\ud83d\udcdc"} Today's Daily Text</h3>
+              {dailyTextLoading ? (
+                <p className="daily-text-loading">Loading today's daily text...</p>
+              ) : dailyText ? (
+                <div className="daily-text-content">
+                  <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
+                  {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
+                  {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 200 ? dailyText.comment.slice(0, 200) + '...' : dailyText.comment}</p>}
+                  <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {"\u2192"}</a>
+                </div>
+              ) : (
+                <div>
+                  <p>Could not load daily text.</p>
+                  <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a>
+                </div>
+              )}
+            </section>
+
+            <section className="card today-encouragement-card">
+              <h3 className="section-heading morning-heading">{"\u2728"} Encouragement for Today</h3>
+              <div className="routine-verse">
+                <em>"For I well know the thoughts that I am thinking toward you, thoughts of peace, and not of calamity, to give you a future and a hope."</em> {"\u2014"} Jeremiah 29:11
+              </div>
+            </section>
+
+            <section className="card today-links-card">
+              <h3 className="section-heading morning-heading">{"\ud83d\udd17"} Quick Links</h3>
+              <div className="today-links-grid">
+                <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83c\udf10"} JW.org</a>
+                <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83d\udcda"} Online Library</a>
+                <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83d\udcd3"} Meeting Workbook</a>
+                <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83d\udcc3"} Daily Text</a>
+              </div>
+            </section>
+          </div>
+        )}
       {tab === 'morning' && (
         <div className="morning-tab">
           <section className="card">
@@ -407,7 +453,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
         </div>
       )}
 
-      <footer className="footer"><p>Pioneer Spiritual Growth Tracker {"\u00a9"} 2026</p></footer>
+      <footer className="footer"><p>Eat Pray Study {"\u00a9"} 2026</p></footer>
     </div>
   )
 }

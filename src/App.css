@@ -819,3 +819,64 @@ html, body {
   color: #c7d2fe;
   line-height: 1.5;
 }
+
+/* -- Today Tab -- */
+.today-tab {
+  max-width: 100%;
+}
+.today-greeting-card {
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
+  border-color: rgba(129,140,248,0.3);
+  text-align: center;
+  padding: 28px 20px;
+}
+.today-greeting {
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.today-date {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+.today-daily-text-card {
+  background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(49,46,129,0.3));
+  border-color: rgba(129,140,248,0.2);
+}
+.today-encouragement-card {
+  background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(99,102,241,0.1));
+}
+.today-links-card {
+  background: rgba(30,41,59,0.7);
+}
+.today-links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.today-link-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 12px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
+  color: #a5b4fc;
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  text-align: center;
+}
+.today-link-btn:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25));
+  border-color: #818cf8;
+  transform: translateY(-1px);
+}
