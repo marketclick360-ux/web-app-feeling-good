@@ -66,7 +66,14 @@ const WEEKLY_MEETINGS = {
     theme: 'He Is the Stability of Your Times', bibleReading: 'Isaiah 33-35',
     song: 'Song 3 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/',
-    sundayArticle: 'The Book of Job Can Help You When You Suffer',
+    sundayArticle: 'The Book of Job Can Help You When You Give Counsel',
+    sundayScriptures: [
+      { ref: 'Job 33:1', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=job+33%3A1' },
+      { ref: 'Job 4:7, 8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=job+4%3A7-8' },
+      { ref: 'Job 42:7, 8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=job+42%3A7-8' },
+      { ref: 'Prov. 27:9', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=proverbs+27%3A9' },
+      { ref: 'Job 33:6, 7', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=job+33%3A6-7' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cHe Is the Stability of Your Times\u201d (10 min.) — Isa 33:6' },
@@ -88,7 +95,14 @@ const WEEKLY_MEETINGS = {
     theme: 'Jehovah Will Hear Your Cry for Help', bibleReading: 'Isaiah 30-32',
     song: 'Song 102 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/',
-    sundayArticle: 'How the Book of Job Can Help You',
+    sundayArticle: 'The Book of Job Can Help You When You Suffer',
+    sundayScriptures: [
+      { ref: 'Job 34:12', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=job+34%3A12' },
+      { ref: 'Job 4:7, 8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=job+4%3A7-8' },
+      { ref: 'Eccl. 9:11', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=ecclesiastes+9%3A11' },
+      { ref: 'Prov. 27:11', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=proverbs+27%3A11' },
+      { ref: 'Heb. 4:12', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=hebrews+4%3A12' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cJehovah Will Hear Your Cry for Help\u201d (10 min.) — Isa 30:19' },
@@ -110,7 +124,14 @@ const WEEKLY_MEETINGS = {
     theme: 'Do Not Be Afraid of the Assyrian', bibleReading: 'Isaiah 36-38',
     song: 'Song 150 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
-    sundayArticle: 'Strengthen Your Faith in the Last Days',
+    sundayArticle: 'Imitate Jehovah\'s Humility',
+    sundayScriptures: [
+      { ref: 'Eph. 5:1', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=ephesians+5%3A1' },
+      { ref: 'Ps. 113:5-8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=psalm+113%3A5-8' },
+      { ref: 'Ps. 62:8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=psalm+62%3A8' },
+      { ref: 'Mark 3:1-6', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=mark+3%3A1-6' },
+      { ref: 'Ps. 138:6', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=psalm+138%3A6' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid of the Assyrian\u201d (10 min.) — Isa 37:6' },
@@ -135,7 +156,7 @@ function getWeekData(weekKey) {
   return {
     theme: '', bibleReading: '', song: 'Song and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/',
-    sundayArticle: '',
+    sundayArticle: '', sundayScriptures: [],
     sections: {
       treasures: [{ id: 'talk', text: '\ud83c\udfa4 Talk (10 min.)' }, { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.)' }, { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.)' }],
       ministry: [{ id: 'convo', text: '\ud83d\udde3\ufe0f Starting a Conversation (3 min.)' }, { id: 'followup', text: '\ud83d\udd04 Following Up (4 min.)' }, { id: 'student_talk', text: '\ud83c\udfa4 Talk (5 min.)' }],
@@ -446,11 +467,24 @@ export default function App() {
               </label>
             ))}
           </section>
+                  {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (
+          <section className="card">
+            <h3 className="section-heading notes-heading">Key Scriptures:</h3>
+            <ul className="scripture-list">
+              {weekData.sundayScriptures.map(s => (
+                <li key={s.ref}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
           <section className="card">
             <h3 className="section-heading notes-heading">My Comments to Prepare</h3>
             <textarea rows={6} value={sundayComments} onChange={e => setSundayComments(e.target.value)}
               placeholder="Write your prepared comments for the Watchtower study here..." />
           </section>
+                  <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
         </div>
       )}
 

@@ -416,3 +416,46 @@ textarea:focus {
   font-size: 0.75rem;
   letter-spacing: 0.5px;
 }
+
+/* -- Scripture List -- */
+.scripture-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.scripture-list li {
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid #6c63ff;
+  border-radius: 6px;
+}
+.scripture-link {
+  color: #7c9cff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.scripture-link:hover {
+  text-decoration: underline;
+  color: #a8b8ff;
+}
+
+/* -- Print Button -- */
+.print-btn {
+  display: block;
+  width: 100%;
+  margin: 16px 0;
+  padding: 14px;
+  background: linear-gradient(135deg, #4a7c59, #5a9e6f);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+.print-btn:hover {
+  opacity: 0.9;
+}
