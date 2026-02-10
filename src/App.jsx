@@ -223,18 +223,16 @@ export default function App() {
     const { data } = await supabase.from('journal_entries').select('*').eq('entry_date', journalDate).maybeSingle()
     if (data) {
       setJournalText(data.journal_text || ''); setJournalTasks(data.tasks || {}); setJournalNotes(data.notes || '')
-      const [eveningChecks, setEveningChecks] = useState({})
 setMorningChecks(data.morning_checks || {}); setEveningChecks(data.evening_checks || {})
-      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '')  const [eveningGoals, setEveningGoals] = useState('')
-    } else { const [eveningChecks, setEveningChecks] = useState({})
-setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('')      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '')  const [eveningGoals, setEveningGoals] = useState('') }
+      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '')  
+    } else {
+setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('')         }
   }, [journalDate])
   useEffect(() => { loadJournal() }, [loadJournal])
   const saveJournal = useCallback(async () => {
-    await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, const [eveningChecks, setEveningChecks] = useState({})
+    await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, 
 morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }, { onConflict: 'entry_date' })
-  }, [const [eveningChecks, setEveningChecks] = useState({})
-journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals])
+  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
     const { data } = await supabase.from('todo_items').select('*').order('created_at', { ascending: true })
