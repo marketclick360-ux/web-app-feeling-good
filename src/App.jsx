@@ -362,7 +362,7 @@ export default function App() {
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
-              {weekData.sections[section.key].map(item => (<label key={item.id} className="check-row"><input type="checkbox" checked={!!checks[item.id]} onChange={() => toggleCheck(item.id)} /><span className={checks[item.id] ? 'done' : ''}>{item.text}</span></label>))}
+                          {weekData.sections[section.key].map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span></div>))}
               {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes</h4><textarea rows={5} value={treasuresComments} onChange={e => setTreasuresComments(e.target.value)} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." /></div>)}
             </section>
           ))}

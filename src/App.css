@@ -807,3 +807,15 @@ html, body {
 .todo-priority-badge.low {
   color: #22c55e;
 }
+
+/* Meeting Part Items (Midweek outline) */
+.meeting-part-item {
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: rgba(129,140,248,0.08);
+  border-left: 3px solid #818cf8;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #c7d2fe;
+  line-height: 1.5;
+}
