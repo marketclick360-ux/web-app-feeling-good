@@ -978,24 +978,27 @@ html, body {
 
 .quick-links-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
   margin-top: 1rem;
 }
 
 .quick-link-btn {
-  display: flex;
-  flex-direction: column;
+    display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 0.5rem;
-  background: #334155;
-  border: none;
-  border-radius: 0.75rem;
-  color: #e2e8f0;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 12px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
+  color: #a5b4fc;
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1.5rem;
 }
 
 .quick-link-btn span {
@@ -1004,7 +1007,8 @@ html, body {
 }
 
 .quick-link-btn:hover {
-  background: #475569;
+    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25));
+    border-color: #818cf8;
   transform: translateY(-2px);
 }
 
