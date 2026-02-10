@@ -272,14 +272,6 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
 
   return (
     <div className="app">
-      {tab !== 'today' && (<header className="header">
-            <h1>Eat Pray Study</h1>
-        <p className="week-label">{weekLabel}</p>
-        <div className="week-nav">
-          <button onClick={prevWeek}>{"\u2190"} Prev Week</button>
-          <button onClick={nextWeek}>Next Week {"\u2192"}</button>
-        </div>
-      </header>)}
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>))}
       </nav>
