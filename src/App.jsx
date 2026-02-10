@@ -324,19 +324,6 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
               <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
             </div>
           </section>
-
-                  <section className="card">
-          <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83c\udfb5"} Original Songs Player</h3>
-          <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', marginTop: '12px'}}>
-            <iframe
-              style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '12px'}}
-              src="https://www.youtube.com/embed/videoseries?list=PL9laRO9GVv4ppCuuTwMICWa0jExUEhTky&autoplay=1&loop=1"
-              title="JW Original Songs"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-            />
-          </div>
-        </section>
         </div>
       )}
 
