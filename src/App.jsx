@@ -316,7 +316,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
                 <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83c\udf10"} JW.org</a>
                 <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83d\udcda"} Online Library</a>
                 <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83d\udcd3"} Meeting Workbook</a>
-                <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83d\udcc3"} Daily Text</a>
+                                <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="today-link-btn">{"\ud83c\udfb5"} Original Songs</a>
               </div>
             </section>
           </div>
