@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Today Tab - Mockup Preview</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0e1a;color:#e2e0f0;min-height:100vh}
+.tab-bar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;gap:6px;padding:10px 8px;background:linear-gradient(135deg,#1a1830 0%,#0f0e1a 100%);border-bottom:1px solid rgba(129,140,248,.15);z-index:100;flex-wrap:wrap}
+.tab-btn{padding:8px 14px;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;background:transparent;color:#a5a3c0;letter-spacing:.3px}
+.tab-btn.active{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;box-shadow:0 2px 12px rgba(99,102,241,.4)}
+.tab-btn:hover:not(.active){background:rgba(129,140,248,.12);color:#c4b5fd}
+.container{max-width:500px;margin:0 auto;padding:70px 16px 30px}
+.header{text-align:center;padding:24px 0 18px;background:linear-gradient(135deg,rgba(26,24,48,.9),rgba(15,14,26,.95));border-radius:16px;margin-bottom:20px}
+.header h1{background:linear-gradient(135deg,#c084fc,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:22px;font-weight:700;margin-bottom:4px}
+.header .date{color:#a5a3c0;font-size:14px}
+.greeting{font-size:20px;font-weight:600;margin-bottom:18px;color:#e2e0f0}
+.greeting span{color:#fbbf24}
+.card{background:linear-gradient(135deg,rgba(30,27,55,.95),rgba(20,18,40,.98));border:1px solid rgba(129,140,248,.12);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.section-heading{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px;padding-left:12px;border-left:3px solid #818cf8}
+.section-heading.gold{border-left-color:#fbbf24}
+.section-heading.green{border-left-color:#34d399}
+.daily-text-scripture{color:#c084fc;font-style:italic;font-size:16px;line-height:1.5;margin-bottom:6px}
+.daily-text-ref{color:#818cf8;font-size:13px;font-weight:600;margin-bottom:10px}
+.daily-text-comment{color:#a5a3c0;font-size:13.5px;line-height:1.6;margin-bottom:14px}
+.jw-link{display:inline-flex;align-items:center;gap:6px;color:#818cf8;font-weight:600;font-size:14px;text-decoration:none;padding:8px 16px;border-radius:10px;background:rgba(129,140,248,.1);transition:.2s}
+.jw-link:hover{background:rgba(129,140,248,.2)}
+.routine-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;background:rgba(129,140,248,.06);margin-bottom:10px;cursor:pointer;transition:.2s}
+.routine-card:hover{background:rgba(129,140,248,.12)}
+.routine-icon{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px}
+.routine-icon.morning{background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.08))}
+.routine-icon.evening{background:linear-gradient(135deg,rgba(129,140,248,.2),rgba(129,140,248,.08))}
+.routine-info{flex:1}
+.routine-title{font-weight:600;font-size:15px;margin-bottom:2px}
+.routine-sub{color:#a5a3c0;font-size:12.5px}
+.progress-mini{display:flex;align-items:center;gap:8px;margin-top:6px}
+.progress-bar-bg{flex:1;height:6px;background:rgba(129,140,248,.12);border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:3px;transition:.3s}
+.progress-bar-fill.morning-fill{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+.progress-bar-fill.evening-fill{background:linear-gradient(90deg,#818cf8,#6366f1)}
+.progress-text{font-size:11px;color:#a5a3c0;font-weight:600;min-width:32px;text-align:right}
+.next-action-card{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(129,140,248,.08));border:1px solid rgba(129,140,248,.25);text-align:center;padding:24px 20px}
+.next-action-emoji{font-size:32px;margin-bottom:8px}
+.next-action-label{font-size:12px;color:#a5a3c0;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.next-action-text{font-size:16px;font-weight:600;color:#e2e0f0;margin-bottom:14px}
+.next-action-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);transition:.2s}
+.next-action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,.5)}
+.verse-box{background:rgba(192,132,252,.08);border-left:3px solid #c084fc;padding:14px 16px;border-radius:0 10px 10px 0;margin-bottom:14px}
+.verse-text{color:#c4b5fd;font-style:italic;font-size:14px;line-height:1.5}
+.verse-ref{color:#818cf8;font-size:12px;font-weight:600;margin-top:4px}
+.quick-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.quick-link{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;border-radius:12px;background:rgba(129,140,248,.06);border:1px solid rgba(129,140,248,.08);text-decoration:none;color:#e2e0f0;transition:.2s;font-size:12.5px;font-weight:500}
+.quick-link:hover{background:rgba(129,140,248,.12);border-color:rgba(129,140,248,.2)}
+.quick-link-icon{font-size:22px}
+.footer{text-align:center;color:#64618a;font-size:12px;padding:20px 0 30px}
+.mockup-banner{background:linear-gradient(90deg,#f59e0b,#fbbf24);color:#1a1830;text-align:center;padding:8px;font-size:12px;font-weight:700;letter-spacing:.5px;position:fixed;bottom:0;left:0;right:0;z-index:200}
+</style>
+</head>
+<body>
+
+<div class="mockup-banner">MOCKUP PREVIEW ONLY — This is a design concept, not the live app</div>
+
+<nav class="tab-bar">
+  <button class="tab-btn active">&#9775; Today</button>
+  <button class="tab-btn">&#9728;&#65039; Morning</button>
+  <button class="tab-btn">&#127769; Evening</button>
+  <button class="tab-btn">&#128221; Midweek</button>
+  <button class="tab-btn">&#128214; Sunday</button>
+  <button class="tab-btn">&#9989; To-Do</button>
+  <button class="tab-btn">&#128211; Journal</button>
+</nav>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Pioneer Spiritual Growth Tracker</h1>
+    <div class="date">Tuesday, February 10, 2026</div>
+  </div>
+
+  <p class="greeting"><span>&#9728;&#65039;</span> Good Morning, Pioneer!</p>
+
+  <!-- DAILY TEXT CARD -->
+  <div class="card">
+    <div class="section-heading gold">&#128195; Today's Daily Text</div>
+    <p class="daily-text-scripture">"Make sure of the more important things."</p>
+    <p class="daily-text-ref">&#8212; Philippians 1:10</p>
+    <p class="daily-text-comment">Most of Jehovah's people lead very busy lives. We work secularly to provide for ourselves and for our families. Many Christians look after sick or elderly relatives. And all of us need to care for...</p>
+    <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" class="jw-link" target="_blank">Read Full Daily Text on JW.org &#8594;</a>
+  </div>
+
+  <!-- TODAY'S ROUTINES -->
+  <div class="card">
+    <div class="section-heading">&#128337; Today's Routines</div>
+
+    <div class="routine-card">
+      <div class="routine-icon morning">&#9728;&#65039;</div>
+      <div class="routine-info">
+        <div class="routine-title">Morning Routine</div>
+        <div class="routine-sub">4 of 6 completed</div>
+        <div class="progress-mini">
+          <div class="progress-bar-bg"><div class="progress-bar-fill morning-fill" style="width:67%"></div></div>
+          <span class="progress-text">67%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="routine-card">
+      <div class="routine-icon evening">&#127769;</div>
+      <div class="routine-info">
+        <div class="routine-title">Evening Routine</div>
+        <div class="routine-sub">0 of 6 completed</div>
+        <div class="progress-mini">
+          <div class="progress-bar-bg"><div class="progress-bar-fill evening-fill" style="width:0%"></div></div>
+          <span class="progress-text">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXT ACTION -->
+  <div class="card next-action-card">
+    <div class="next-action-emoji">&#128214;</div>
+    <div class="next-action-label">Your Next Step</div>
+    <div class="next-action-text">Continue your Morning Routine</div>
+    <button class="next-action-btn">&#9758; Prepare for Field Service</button>
+  </div>
+
+  <!-- DAILY VERSE -->
+  <div class="card">
+    <div class="section-heading green">&#128156; Encouragement for Today</div>
+    <div class="verse-box">
+      <div class="verse-text">"Trust in Jehovah with all your heart, and do not rely on your own understanding. In all your ways take notice of him, and he will make your paths straight."</div>
+      <div class="verse-ref">&#8212; Proverbs 3:5, 6</div>
+    </div>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="card">
+    <div class="section-heading">&#128279; Quick Links</div>
+    <div class="quick-links">
+      <a href="https://www.jw.org" class="quick-link" target="_blank">
+        <span class="quick-link-icon">&#127760;</span>JW.org
+      </a>
+      <a href="https://wol.jw.org" class="quick-link" target="_blank">
+        <span class="quick-link-icon">&#128218;</span>Online Library
+      </a>
+      <a href="https://www.jw.org/en/library/jw-meeting-workbook/" class="quick-link" target="_blank">
+        <span class="quick-link-icon">&#128221;</span>Meeting Workbook
+      </a>
+      <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" class="quick-link" target="_blank">
+        <span class="quick-link-icon">&#128195;</span>Daily Text
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">Pioneer Spiritual Growth Tracker &copy; 2026</div>
+
+</div>
+
+</body>
+</html>
