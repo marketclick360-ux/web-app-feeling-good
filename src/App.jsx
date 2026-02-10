@@ -317,15 +317,6 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
               <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
               <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
             </section>
-
-                        <section className="card header today-week-card">
-              <h1>Eat Pray Study</h1>
-              <p className="week-label">{weekLabel}</p>
-              <div className="week-nav">
-                <button onClick={prevWeek}>{"\u2190"} Prev Week</button>
-                <button onClick={nextWeek}>Next Week {"\u2192"}</button>
-              </div>
-            </section>
           </div>
         )}
 
