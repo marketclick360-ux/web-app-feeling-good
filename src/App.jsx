@@ -324,10 +324,6 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
 
       {tab === 'morning' && (
         <div className="morning-tab">
-                    <div className="today-greeting-card" style={{textAlign: 'center', marginBottom: '1rem'}}>
-            <h2 className="today-greeting">{getGreeting()}, Friend!</h2>
-            <p className="today-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          </div>
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <p className="routine-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
