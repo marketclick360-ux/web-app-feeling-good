@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const dateLabel = now.toLocaleDateString('en-US', {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
     })
-    const wolUrl = item.url ? `https://wol.jw.org${item.url}` : url
+      const wolUrl = 'https://wol.jw.org/en/wol/dt/r1/lp-e'
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600')
     return res.status(200).json({ scripture, reference, comment, dateLabel, wolUrl })
   } catch (err) {
