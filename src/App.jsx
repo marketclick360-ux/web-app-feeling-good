@@ -171,7 +171,7 @@ export default function App() {
   const weekData = getWeekData(weekKey)
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
-  const [tab, setTab] = useState('today')
+  const [tab, setTab] = useState('morning')
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -260,9 +260,8 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
                 })
         }
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
-  const TABS = [
-        { id: 'today', label: '\ud83d\udcc5 Today' },
-    { id: 'morning', label: '\u2600\ufe0f Morning' },
+  const TABS = [        
+  { id: 'morning', label: '\u2600\ufe0f Morning' },
     { id: 'evening', label: '\ud83c\udf19 Evening' },
     { id: 'prep', label: '\ud83d\udcdd Midweek' },
     { id: 'sunday', label: '\ud83d\udcd6 Sunday' },
@@ -277,52 +276,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
       </nav>
 
 
-              {tab === 'today' && (
-          <div className="today-tab">
-            <div className="today-header">
-              <h2 className="today-title">Eat · Pray · Study</h2>
-              <p className="today-greeting">{getGreeting()}</p>
-              <p className="today-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-            </div>
-
-            <section className="card daily-text-card">
-              <h3 className="section-heading">{"\ud83d\udcd6"} Daily Text</h3>
-              {dailyTextLoading ? (
-                <p className="daily-text-loading">Loading today's daily text...</p>
-              ) : dailyText ? (
-                <div className="daily-text-content">
-                  <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
-                  {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
-                  {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 200 ? dailyText.comment.slice(0, 200) + '...' : dailyText.comment}</p>}
-                  <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {"\u2192"}</a>
-                </div>
-              ) : (
-                <div>
-                  <p>Could not load daily text.</p>
-                  <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a>
-                </div>
-              )}
-            </section>
-
-            <section className="card encouragement-card">
-              <h3 className="section-heading">{"\u2728"} Encouragement</h3>
-              <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
-              <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
-            </section>
-
-                      <section className="card">
-            <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83d\udd17"} Quick Links</h3>
-            <div className="quick-links-grid">
-              <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf10"} JW.org</a>
-              <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcda"} Online Library</a>
-              <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcd3"} Meeting Workbook</a>
-              <a href="https://www.jw.org/en/library/music/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
-            </div>
-          </section>
-          </div>
-        )}
-
-      {tab === 'morning' && (
+                    {tab === 'morning' && (
         <div className="morning-tab">
                   <div className="today-header">
           <h2 className="today-title">Eat · Pray · Study</h2>
