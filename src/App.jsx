@@ -239,7 +239,7 @@ export default function App() {
   const deleteTodo = async (id) => { await supabase.from('todo_items').delete().eq('id', id); setTodos(prev => prev.filter(t => t.id !== id)) }
     const clearCompleted = async () => { const done = todos.filter(t => t.done); for (const t of done) { await supabase.from('todo_items').delete().eq('id', t.id) }; setTodos(prev => prev.filter(t => !t.done)) }
   const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 }
-  const sortedTodos = [...todos].sort((a, b) => { if (a.done !== b.done) return a.done ? 1 : -1; return (PRIORITY_ORDER[a.priority || 'medium'] || 1) - (PRIORITY_ORDER[b.priority || 'medium'] || 1) })
+    const sortedTodos = [...todos].sort((a, b) => { if (a.done !== b.done) return a.done ? 1 : -1; const pa = PRIORITY_ORDER[a.priority || 'medium'] ?? 1; const pb = PRIORITY_ORDER[b.priority || 'medium'] ?? 1; return pa - pb })
   const filteredTodos = todoFilter === 'all' ? sortedTodos : todoFilter === 'active' ? sortedTodos.filter(t => !t.done) : sortedTodos.filter(t => t.done)
   const todoDoneCount = todos.filter(t => t.done).length
   const toggleCheck = (id) => setChecks(prev => ({ ...prev, [id]: !prev[id] }))
