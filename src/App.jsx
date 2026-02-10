@@ -171,7 +171,7 @@ export default function App() {
   const weekData = getWeekData(weekKey)
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState('morning')
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -248,7 +248,6 @@ export default function App() {
   const toggleEvening = (key) => setEveningChecks(prev => ({ ...prev, [key]: !prev[key] }))
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
   const TABS = [
-    { id: 'home', label: '\ud83c\udfe0 Home' },
     { id: 'morning', label: '\u2600\ufe0f Morning' },
     { id: 'evening', label: '\ud83c\udf19 Evening' },
     { id: 'prep', label: '\ud83d\udcdd Midweek' },
@@ -270,55 +269,6 @@ export default function App() {
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>))}
       </nav>
-
-      {tab === 'home' && (
-        <div className="home-tab">
-          <section className="card greeting-card">
-            <h2 className="greeting-title">{getGreeting()}, Pioneer!</h2>
-            <p className="greeting-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          </section>
-          <section className="card progress-card">
-            <h3 className="section-heading">{"\ud83d\udcc8"} Today's Spiritual Progress</h3>
-            <div className="progress-grid">
-              <div className="progress-item" onClick={() => setTab('morning')}>
-                <ProgressRing progress={morningProgress} color="#fbbf24" />
-                <span className="progress-label">Morning</span>
-              </div>
-              <div className="progress-item" onClick={() => setTab('evening')}>
-                <ProgressRing progress={eveningProgress} color="#818cf8" />
-                <span className="progress-label">Evening</span>
-              </div>
-            </div>
-          </section>
-          <section className="card daily-text-card">
-            <h3 className="section-heading">{"\ud83d\udcd6"} Daily Text</h3>
-            {dailyTextLoading ? (<p className="daily-text-loading">Loading today's daily text...</p>) : dailyText ? (
-              <div className="daily-text-content">
-                <p className="daily-text-date">{dailyText.dateLabel}</p>
-                <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
-                {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
-                {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 200 ? dailyText.comment.slice(0, 200) + '...' : dailyText.comment}</p>}
-                <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {"\u2192"}</a>
-              </div>
-            ) : (<div><p>Could not load daily text.</p><a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a></div>)}
-          </section>
-          <section className="card">
-            <h3 className="section-heading">{"\ud83d\ude80"} Quick Actions</h3>
-            <div className="home-links">
-              <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} Meeting Workbook on JW.org</a>
-              <button className="home-action-btn" onClick={() => setTab('prep')}>{"\ud83d\udcdd"} Go to Midweek Prep</button>
-              <button className="home-action-btn" onClick={() => setTab('sunday')}>{"\u26ea"} Go to Sunday Meeting</button>
-              <button className="home-action-btn" onClick={() => setTab('journal')}>{"\ud83d\udcd3"} Go to Daily Journal</button>
-            </div>
-          </section>
-          <section className="card glance-card">
-            <h3 className="section-heading">{"\ud83d\udcc5"} This Week at a Glance</h3>
-            <p><strong>Theme:</strong> {weekData.theme || 'Not set'}</p>
-            <p><strong>Bible Reading:</strong> {weekData.bibleReading || 'Not set'}</p>
-            <p><strong>Song:</strong> {weekData.song}</p>
-          </section>
-        </div>
-      )}
 
       {tab === 'morning' && (
         <div className="morning-tab">
@@ -363,7 +313,7 @@ export default function App() {
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
                           {weekData.sections[section.key].map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span></div>))}1
-                          
+
               {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes</h4><textarea rows={5} value={treasuresComments} onChange={e => setTreasuresComments(e.target.value)} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." /></div>)}
             </section>
           ))}
