@@ -192,6 +192,10 @@ export default function App() {
   const [dailyTextLoading, setDailyTextLoading] = useState(true)
   const [todos, setTodos] = useState([])
   const [newTodo, setNewTodo] = useState('')
+    const [newTodoPriority, setNewTodoPriority] = useState('medium')
+  const [newTodoDue, setNewTodoDue] = useState('')
+  const [newTodoCategory, setNewTodoCategory] = useState('general')
+  const [todoFilter, setTodoFilter] = useState('all')
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
   const loadWeek = useCallback(async () => {
@@ -230,9 +234,14 @@ export default function App() {
     if (data) setTodos(data)
   }, [])
   useEffect(() => { loadTodos() }, [loadTodos])
-  const addTodo = async () => { if (!newTodo.trim()) return; const { data } = await supabase.from('todo_items').insert({ text: newTodo.trim() }).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo('') }
+    const addTodo = async () => { if (!newTodo.trim()) return; const ins = { text: newTodo.trim(), priority: newTodoPriority, category: newTodoCategory }; if (newTodoDue) ins.due_date = newTodoDue; const { data } = await supabase.from('todo_items').insert(ins).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general') }
   const toggleTodo = async (id, done) => { await supabase.from('todo_items').update({ done: !done }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t)) }
   const deleteTodo = async (id) => { await supabase.from('todo_items').delete().eq('id', id); setTodos(prev => prev.filter(t => t.id !== id)) }
+    const clearCompleted = async () => { const done = todos.filter(t => t.done); for (const t of done) { await supabase.from('todo_items').delete().eq('id', t.id) }; setTodos(prev => prev.filter(t => !t.done)) }
+  const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 }
+  const sortedTodos = [...todos].sort((a, b) => { if (a.done !== b.done) return a.done ? 1 : -1; return (PRIORITY_ORDER[a.priority || 'medium'] || 1) - (PRIORITY_ORDER[b.priority || 'medium'] || 1) })
+  const filteredTodos = todoFilter === 'all' ? sortedTodos : todoFilter === 'active' ? sortedTodos.filter(t => !t.done) : sortedTodos.filter(t => t.done)
+  const todoDoneCount = todos.filter(t => t.done).length
   const toggleCheck = (id) => setChecks(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleSundayCheck = (key) => setSundayChecks(prev => ({ ...prev, [key]: !prev[key] }))
   const toggleMorning = (key) => setMorningChecks(prev => ({ ...prev, [key]: !prev[key] }))
@@ -376,13 +385,41 @@ export default function App() {
         </div>
       )}
 
+
       {tab === 'todos' && (
         <div className="todo-tab">
           <section className="card">
             <h3 className="section-heading">{"\u2705"} To-Do List</h3>
-            <div className="todo-input-row"><input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Add a new task..." onKeyDown={e => e.key === 'Enter' && addTodo()} /><button className="todo-add-btn" onClick={addTodo}>Add</button></div>
-            {todos.length === 0 && <p className="todo-empty">No tasks yet. Add one above!</p>}
-            {todos.map(todo => (<div key={todo.id} className="todo-item"><label className="check-row"><input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id, todo.done)} /><span className={todo.done ? 'done' : ''}>{todo.text}</span></label><button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>{"\u2715"}</button></div>))}
+            <div className="todo-stats">
+              <span>{todoDoneCount} of {todos.length} completed</span>
+              {todoDoneCount > 0 && <button className="clear-done-btn" onClick={clearCompleted}>Clear done</button>}
+            </div>
+            <div className="todo-input-row">
+              <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Add a new task..." onKeyDown={e => e.key === 'Enter' && addTodo()} />
+              <button className="todo-add-btn" onClick={addTodo}>Add</button>
+            </div>
+            <div className="todo-options-row">
+              <select value={newTodoPriority} onChange={e => setNewTodoPriority(e.target.value)} className="todo-select">
+                <option value="high">{"\ud83d\udd34"} High</option>
+                <option value="medium">{"\ud83d\udfe1"} Medium</option>
+                <option value="low">{"\ud83d\udfe2"} Low</option>
+              </select>
+              <select value={newTodoCategory} onChange={e => setNewTodoCategory(e.target.value)} className="todo-select">
+                <option value="general">{"\ud83d\udccb"} General</option>
+                <option value="ministry">{"\ud83d\udce3"} Ministry</option>
+                <option value="study">{"\ud83d\udcd6"} Study</option>
+                <option value="meeting">{"\u26ea"} Meeting</option>
+                <option value="personal">{"\ud83c\udfaf"} Personal</option>
+              </select>
+              <input type="date" value={newTodoDue} onChange={e => setNewTodoDue(e.target.value)} className="todo-date" />
+            </div>
+                        <div className="todo-filter-row">
+              <button className={`todo-filter-btn ${todoFilter === 'all' ? 'active' : ''}`} onClick={() => setTodoFilter('all')}>All ({todos.length})</button>
+              <button className={`todo-filter-btn ${todoFilter === 'active' ? 'active' : ''}`} onClick={() => setTodoFilter('active')}>Active ({todos.length - todoDoneCount})</button>
+              <button className={`todo-filter-btn ${todoFilter === 'done' ? 'active' : ''}`} onClick={() => setTodoFilter('done')}>Done ({todoDoneCount})</button>
+            </div>
+            {filteredTodos.length === 0 && <p className="todo-empty">{todoFilter === 'all' ? 'No tasks yet. Add one above!' : todoFilter === 'active' ? 'All tasks completed!' : 'No completed tasks.'}</p>}
+            {filteredTodos.map(todo => (<div key={todo.id} className={`todo-item priority-${todo.priority || 'medium'}`}><label className="check-row"><input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id, todo.done)} /><span className={todo.done ? 'done' : ''}>{todo.text}</span></label><div className="todo-meta">{todo.due_date && <span className={`todo-due ${new Date(todo.due_date) < new Date() && !todo.done ? 'overdue' : ''}`}>{new Date(todo.due_date + 'T12:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>}<span className={`todo-priority-badge ${todo.priority || 'medium'}`}>{todo.priority === 'high' ? '!' : todo.priority === 'low' ? '\u25CB' : '\u25CF'}</span></div><button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>{"\u2715"}</button></div>))}
           </section>
         </div>
       )}
