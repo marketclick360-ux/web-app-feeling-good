@@ -188,6 +188,8 @@ export default function App() {
   const [journalNotes, setJournalNotes] = useState('')
   const [morningChecks, setMorningChecks] = useState({})
   const [eveningChecks, setEveningChecks] = useState({})
+  const [morningGoals, setMorningGoals] = useState('')
+  const [eveningGoals, setEveningGoals] = useState('')
   const [dailyText, setDailyText] = useState(null)
   const [dailyTextLoading, setDailyTextLoading] = useState(true)
   const [todos, setTodos] = useState([])
@@ -221,13 +223,18 @@ export default function App() {
     const { data } = await supabase.from('journal_entries').select('*').eq('entry_date', journalDate).maybeSingle()
     if (data) {
       setJournalText(data.journal_text || ''); setJournalTasks(data.tasks || {}); setJournalNotes(data.notes || '')
-      setMorningChecks(data.morning_checks || {}); setEveningChecks(data.evening_checks || {})
-    } else { setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}) }
+      const [eveningChecks, setEveningChecks] = useState({})
+setMorningChecks(data.morning_checks || {}); setEveningChecks(data.evening_checks || {})
+      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '')  const [eveningGoals, setEveningGoals] = useState('')
+    } else { const [eveningChecks, setEveningChecks] = useState({})
+setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('')      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '')  const [eveningGoals, setEveningGoals] = useState('') }
   }, [journalDate])
   useEffect(() => { loadJournal() }, [loadJournal])
   const saveJournal = useCallback(async () => {
-    await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, morning_checks: morningChecks, evening_checks: eveningChecks }, { onConflict: 'entry_date' })
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks])
+    await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, const [eveningChecks, setEveningChecks] = useState({})
+morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }, { onConflict: 'entry_date' })
+  }, [const [eveningChecks, setEveningChecks] = useState({})
+journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
     const { data } = await supabase.from('todo_items').select('*').order('created_at', { ascending: true })
@@ -276,12 +283,29 @@ export default function App() {
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <p className="routine-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
             <div className="routine-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em> {"\u2014"} Proverbs 3:5</div>
-            <div className="progress-summary">
-              <ProgressRing progress={morningProgress} size={70} color="#fbbf24" />
-              <span className="progress-text">{Object.values(morningChecks).filter(Boolean).length} of {MORNING_ROUTINE.length} completed</span>
-            </div>
+                      <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
+          <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
             {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
+                  <section className="card daily-text-card">
+          <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3>
+          {dailyTextLoading ? (
+            <p className="daily-text-loading">Loading today's daily text...</p>
+          ) : dailyText ? (
+            <div className="daily-text-content">
+              <p className="daily-text-date">{dailyText.dateLabel}</p>
+              <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
+              {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
+              {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 200 ? dailyText.comment.slice(0, 200) + '...' : dailyText.comment}</p>}
+              <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {"\u2192"}</a>
+            </div>
+          ) : (
+            <div>
+              <p>Could not load daily text.</p>
+              <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a>
+            </div>
+          )}
+        </section>
         </div>
       )}
 
@@ -290,11 +314,9 @@ export default function App() {
           <section className="card">
             <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
             <p className="routine-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Tonight's Reflections & Goals</h4>
+          <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="What are your goals for tomorrow? Reflect on today's service..." />
             <div className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> {"\u2014"} Psalm 9:2</div>
-            <div className="progress-summary">
-              <ProgressRing progress={eveningProgress} size={70} color="#818cf8" />
-              <span className="progress-text">{Object.values(eveningChecks).filter(Boolean).length} of {EVENING_ROUTINE.length} completed</span>
-            </div>
             {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
         </div>
