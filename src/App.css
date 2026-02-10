@@ -14,7 +14,7 @@ body {
 .app {
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 16px 100px;
+  padding: 60px 16px 20px;
   position: relative;
 }
 
@@ -99,10 +99,10 @@ body {
   font-style: italic;
 }
 
-/* -- Tab Bar (sticky bottom) -- */
+/* -- Tab Bar (sticky top) -- */
 .tab-row {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   display: flex;
@@ -111,7 +111,7 @@ body {
   background: rgba(15,23,42,0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(99,102,241,0.15);
+  border-bottom: 1px solid rgba(99,102,241,0.15);
   z-index: 100;
   justify-content: center;
   overflow-x: auto;
@@ -540,7 +540,7 @@ textarea:focus {
 /* -- Mobile Responsive -- */
 @media (max-width: 480px) {
     .app {
-    padding: 0 12px 120px;
+    padding: 60px 12px 20px;
   }
   .header {
     padding: 20px 0 16px;
@@ -574,7 +574,7 @@ textarea:focus {
   }
   .tab-row {
     padding: 6px 8px;
-    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    padding-top: calc(6px + env(safe-area-inset-top, 0px));
     gap: 2px;
   }
   .tab {
@@ -607,7 +607,7 @@ textarea:focus {
 
 @media (max-width: 360px) {
   .app {
-    padding: 0 8px 120px;
+    padding: 60px 8px 20px;
   }
   .header h1 {
     font-size: 1.05rem;
@@ -630,10 +630,10 @@ textarea:focus {
 /* iOS safe areas */
 @supports (padding: env(safe-area-inset-bottom)) {
   .app {
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    padding-top: calc(60px + env(safe-area-inset-top));
   }
   .tab-row {
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding-top: calc(8px + env(safe-area-inset-top));
   }
 }
 
