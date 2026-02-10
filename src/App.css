@@ -920,3 +920,96 @@ html, body {
     align-items: center;
     justify-content: space-between;
   }
+
+
+/* ===== Today Tab Styles ===== */
+.today-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.today-header {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.today-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+}
+
+.today-greeting {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+}
+
+.today-date {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.encouragement-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-left: 3px solid #a78bfa;
+}
+
+.encouragement-verse {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+.encouragement-ref {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.quick-links-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.quick-links-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.quick-link-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  background: #334155;
+  border: none;
+  border-radius: 0.75rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.5rem;
+}
+
+.quick-link-btn span {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.quick-link-btn:hover {
+  background: #475569;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .quick-links-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
