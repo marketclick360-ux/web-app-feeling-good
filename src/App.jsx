@@ -317,6 +317,16 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
               <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
               <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
             </section>
+
+                      <section className="card">
+            <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83d\udd17"} Quick Links</h3>
+            <div className="quick-links-grid">
+              <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf10"} JW.org</a>
+              <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcda"} Online Library</a>
+              <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcd3"} Meeting Workbook</a>
+              <a href="https://www.jw.org/en/library/music/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
+            </div>
+          </section>
           </div>
         )}
 
