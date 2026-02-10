@@ -286,7 +286,7 @@ export default function App() {
         </div>
       </header>
 
-      {tab !== 'sunday' && (
+      {!['sunday','morning','evening'].includes(tab) && (
       <section className="card meeting-card">
         <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="meeting-title-link">
           <h2>Our Christian Life & Ministry</h2>
