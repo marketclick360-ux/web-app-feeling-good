@@ -1,0 +1,13 @@
+{
+  "appId": "com.pioneertracker.app",
+  "appName": "Pioneer Spiritual Growth Tracker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#0f172a"
+  }
+}
