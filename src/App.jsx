@@ -318,13 +318,12 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
               <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
             </section>
 
-            <section className="card quick-links-card">
-              <h3 className="section-heading">{"\ud83d\udd17"} Quick Links</h3>
-              <div className="quick-links-grid">
-                <button className="quick-link-btn" onClick={() => setTab('morning')}>{"\u2600\ufe0f"}<span>Morning</span></button>
-                <button className="quick-link-btn" onClick={() => setTab('evening')}>{"\ud83c\udf19"}<span>Evening</span></button>
-                <button className="quick-link-btn" onClick={() => setTab('prep')}>{"\ud83d\udcdd"}<span>Midweek</span></button>
-                <button className="quick-link-btn" onClick={() => setTab('sunday')}>{"\ud83d\udcd6"}<span>Sunday</span></button>
+                        <section className="card header today-week-card">
+              <h1>Eat Pray Study</h1>
+              <p className="week-label">{weekLabel}</p>
+              <div className="week-nav">
+                <button onClick={prevWeek}>{"\u2190"} Prev Week</button>
+                <button onClick={nextWeek}>Next Week {"\u2192"}</button>
               </div>
             </section>
           </div>
