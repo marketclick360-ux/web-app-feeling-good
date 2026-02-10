@@ -251,6 +251,14 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
   const toggleSundayCheck = (key) => setSundayChecks(prev => ({ ...prev, [key]: !prev[key] }))
   const toggleMorning = (key) => setMorningChecks(prev => ({ ...prev, [key]: !prev[key] }))
   const toggleEvening = (key) => setEveningChecks(prev => ({ ...prev, [key]: !prev[key] }))
+
+    const [copiedId, setCopiedId] = useState(null)
+    const copyToClipboard = (text, id) => {
+          navigator.clipboard.writeText(text).then(() => {
+                  setCopiedId(id)
+                  setTimeout(() => setCopiedId(null), 1500)
+                })
+        }
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
   const TABS = [
     { id: 'morning', label: '\u2600\ufe0f Morning' },
@@ -337,14 +345,14 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
-                          {weekData.sections[section.key].map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span></div>))}1
+                          {weekData.sections[section.key].map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}1
 
-              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes</h4><textarea rows={5} value={treasuresComments} onChange={e => setTreasuresComments(e.target.value)} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." /></div>)}
+              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><textarea rows={5} value={treasuresComments} onChange={e => setTreasuresComments(e.target.value)} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." /></div>)}
             </section>
           ))}
-          <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References</h3><textarea rows={4} value={scriptures} onChange={e => setScriptures(e.target.value)} placeholder="Paste references and JW.org links here..." /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare</h3><textarea rows={5} value={comments} onChange={e => setComments(e.target.value)} placeholder="Write your prepared comments for the meeting..." /></section>
-          <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes</h3><textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)} placeholder="What stood out to you this week?" /></section>
+          <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={4} value={scriptures} onChange={e => setScriptures(e.target.value)} placeholder="Paste references and JW.org links here..." /></section>
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={5} value={comments} onChange={e => setComments(e.target.value)} placeholder="Write your prepared comments for the meeting..." /></section>
+          <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)} placeholder="What stood out to you this week?" /></section>
         </div>
       )}
 
@@ -355,8 +363,8 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
             <div className="sunday-article-box"><p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p><a href="https://www.jw.org/en/library/magazines/watchtower-study/" target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a></div>
             {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
-          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a></li>))}</ul></section>)}
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare</h3><textarea rows={6} value={sundayComments} onChange={e => setSundayComments(e.target.value)} placeholder="Write your prepared comments for the Watchtower study here..." /></section>
+          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference & link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={6} value={sundayComments} onChange={e => setSundayComments(e.target.value)} placeholder="Write your prepared comments for the Watchtower study here..." /></section>
           <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
         </div>
       )}
