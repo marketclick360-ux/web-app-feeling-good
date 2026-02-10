@@ -251,7 +251,7 @@ export default function App() {
     { id: 'morning', label: '\u2600\ufe0f Morning' },
     { id: 'evening', label: '\ud83c\udf19 Evening' },
     { id: 'prep', label: '\ud83d\udcdd Midweek' },
-    { id: 'sunday', label: '\u26ea Sunday' },
+    { id: 'sunday', label: '\ud83d\udcd6 Sunday' },
     { id: 'todos', label: '\u2705 To-Do' },
     { id: 'journal', label: '\ud83d\udcd3 Journal' }
   ]
