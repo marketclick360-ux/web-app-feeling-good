@@ -288,7 +288,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
               {tab === 'today' && (
           <div className="today-tab">
             <div className="today-header">
-              <h2 className="today-title">Eat \u00b7 Pray \u00b7 Study</h2>
+              <h2 className="today-title">Eat · Pray · Study</h2>
               <p className="today-greeting">{getGreeting()}</p>
               <p className="today-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
             </div>
