@@ -350,7 +350,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
       )}
 
       {tab === 'prep' && (
-        <div className="prep-tab">
+        <div className="prep-tab">             <div className="day-nav">               <button onClick={prevWeek} className="day-nav-btn">{"\u25C0"}</button>               <span className="routine-date">{weekLabel}</span>               <button onClick={nextWeek} className="day-nav-btn">{"\u25B6"}</button>               {weekKey !== toISO(mondayOf(new Date())) && <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">This Week</button>}             </div>
           <section className="card meeting-card">               <p className="meeting-subtitle">Midweek Meeting {"\u2022"} {weekData.song}</p>
             <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} View Meeting Workbook on JW.org</a>
             <label>Theme<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || "This week's main theme..."} /></label>
