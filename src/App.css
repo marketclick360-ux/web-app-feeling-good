@@ -1467,9 +1467,9 @@ textarea:focus,
   .tab-row {
     display: none !important;
   }
+}
 
-
-  /* -- Force light text color on pasted content -- */
+/* -- Force light text color on pasted content -- */
 textarea,
 textarea *,
 input[type="text"],
@@ -1478,7 +1478,6 @@ input[type="date"] {
 }
 
 .rich-note-editor,
-.rich-note-editor *,
 .rich-note-editor p,
 .rich-note-editor span,
 .rich-note-editor div,
@@ -1487,6 +1486,45 @@ input[type="date"] {
 .rich-note-editor u,
 .rich-note-editor li,
 .rich-note-editor a {
-  color: #e2e8f0 !important;
+  color: #e2e8f0;
 }
-  }
+.rich-note-editor *[style*="color"] {
+  color: inherit;
+}
+
+/* -- Color Picker -- */
+.color-picker-toggle {
+  position: relative;
+}
+.color-picker-row {
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(30,41,59,0.95);
+  border: 1px solid rgba(129,140,248,0.3);
+  border-radius: 8px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  padding: 0;
+  background: none;
+}
+.color-swatch:hover {
+  transform: scale(1.2);
+  border-color: rgba(255,255,255,0.5);
+}
+.color-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+}
