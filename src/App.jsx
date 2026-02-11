@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 
 /* --------- helpers --------- */
@@ -168,10 +168,10 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color }) {
   const strokeDashoffset = circumference - (progress / 100) * circumference
   const ringColor = color || (progress >= 80 ? '#22c55e' : progress >= 50 ? '#eab308' : '#818cf8')
   return (
-    <svg width={size} height={size} className="progress-ring">
-      <circle stroke="rgba(255,255,255,0.1)" fill="transparent" strokeWidth={strokeWidth} r={radius} cx={size/2} cy={size/2} />
-      <circle stroke={ringColor} fill="transparent" strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" r={radius} cx={size/2} cy={size/2} style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 0.6s ease' }} />
-      <text x="50%" y="50%" textAnchor="middle" dy=".3em" fill="#e2e8f0" fontSize={size * 0.22} fontWeight="700">{Math.round(progress)}%</text>
+    <svg className="progress-ring" width={size} height={size}>
+      <circle stroke="rgba(255,255,255,0.08)" fill="none" strokeWidth={strokeWidth} r={radius} cx={size/2} cy={size/2} />
+      <circle className="progress-ring-circle" stroke={ringColor} fill="none" strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} r={radius} cx={size/2} cy={size/2} style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+      <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle" fill="#e2e8f0" fontSize={size * 0.22} fontWeight="700">{Math.round(progress)}%</text>
     </svg>
   )
 }
@@ -193,15 +193,9 @@ async function computeStreak() {
   if (!data) return { morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [], weeklyAvg: 0, challengeAvg: 0 }
   const byDate = {}
   data.forEach(row => { byDate[row.entry_date] = row })
-  let morningStreak = 0
-  let eveningStreak = 0
-  let mCounting = true
-  let eCounting = true
-  let totalDays = 0
+  let morningStreak = 0, eveningStreak = 0, mCounting = true, eCounting = true, totalDays = 0
   const last7 = []
-  let weeklyTotal = 0
-  let challengeTotal = 0
-  let challengeDays = 0
+  let weeklyTotal = 0, challengeTotal = 0, challengeDays = 0
   for (let i = 0; i < dates.length; i++) {
     const dateKey = dates[i]
     const row = byDate[dateKey]
@@ -210,18 +204,10 @@ async function computeStreak() {
     const mPct = Math.round((mChecks / 6) * 100)
     const ePct = Math.round((eChecks / 6) * 100)
     const dayAvg = Math.round((mPct + ePct) / 2)
-    if (i < 7) {
-      last7.push({ date: dateKey, morningPct: mPct, eveningPct: ePct })
-      weeklyTotal += dayAvg
-    }
-    if (mPct > 0 || ePct > 0) {
-      challengeTotal += dayAvg
-      challengeDays++
-    }
-    if (mPct >= 80 && mCounting) morningStreak++
-    else mCounting = false
-    if (ePct >= 80 && eCounting) eveningStreak++
-    else eCounting = false
+    if (i < 7) { last7.push({ date: dateKey, morningPct: mPct, eveningPct: ePct }); weeklyTotal += dayAvg }
+    if (mPct > 0 || ePct > 0) { challengeTotal += dayAvg; challengeDays++ }
+    if (mPct >= 80 && mCounting) morningStreak++; else mCounting = false
+    if (ePct >= 80 && eCounting) eveningStreak++; else eCounting = false
     if (mPct > 0 || ePct > 0) totalDays++
   }
   const bestStreak = Math.max(morningStreak, eveningStreak)
@@ -240,16 +226,68 @@ function WeekChart({ data, type }) {
         const dayDate = new Date(d.date + 'T12:00')
         const dayLabel = days[dayDate.getDay()]
         return (
-          <div key={i} className="week-chart-day">
-            <div className="week-chart-bar-bg">
-              <div className="week-chart-bar" style={{ height: `${pct}%`, background: pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : 'rgba(129,140,248,0.5)' }} />
-            </div>
+          <div key={i} className="week-chart-bar">
+            <div className="week-chart-fill" style={{ height: `${Math.max(pct, 4)}%`, background: pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : 'rgba(129,140,248,0.5)' }} />
             <span className="week-chart-label">{dayLabel}</span>
           </div>
         )
       }).reverse()}
     </div>
   )
+}
+
+/* --------- Phase 3: Confetti Celebration --------- */
+function Confetti({ active }) {
+  const canvasRef = useRef(null)
+  useEffect(() => {
+    if (!active || !canvasRef.current) return
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    const particles = []
+    const colors = ['#818cf8','#c084fc','#f472b6','#22c55e','#eab308','#fbbf24','#a78bfa']
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * 200,
+        w: 4 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 3,
+        vy: 2 + Math.random() * 4,
+        rot: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 10,
+        opacity: 1
+      })
+    }
+    let frame
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      let alive = false
+      particles.forEach(p => {
+        p.x += p.vx
+        p.y += p.vy
+        p.vy += 0.08
+        p.rot += p.rotSpeed
+        if (p.y > canvas.height - 100) p.opacity -= 0.02
+        if (p.opacity <= 0) return
+        alive = true
+        ctx.save()
+        ctx.translate(p.x, p.y)
+        ctx.rotate(p.rot * Math.PI / 180)
+        ctx.globalAlpha = Math.max(0, p.opacity)
+        ctx.fillStyle = p.color
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h)
+        ctx.restore()
+      })
+      if (alive) frame = requestAnimationFrame(animate)
+    }
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [active])
+  if (!active) return null
+  return <canvas ref={canvasRef} className="confetti-canvas" />
 }
 
 export default function App() {
@@ -268,6 +306,7 @@ export default function App() {
   const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   const [tab, setTab] = useState('morning')
+  const [tabTransition, setTabTransition] = useState(false)
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -297,9 +336,41 @@ export default function App() {
   /* --- Streak state (Phase 1 + Phase 2) --- */
   const [streak, setStreak] = useState({ morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [], weeklyAvg: 0, challengeAvg: 0 })
   const [streakLoading, setStreakLoading] = useState(true)
+  /* --- Phase 3: Confetti state --- */
+  const [showConfetti, setShowConfetti] = useState(false)
+  const prevMorningProgress = useRef(0)
+  const prevEveningProgress = useRef(0)
 
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
+
+  /* Phase 3: Trigger confetti when hitting 100% */
+  useEffect(() => {
+    if (morningProgress === 100 && prevMorningProgress.current < 100) {
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 3000)
+    }
+    prevMorningProgress.current = morningProgress
+  }, [morningProgress])
+
+  useEffect(() => {
+    if (eveningProgress === 100 && prevEveningProgress.current < 100) {
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 3000)
+    }
+    prevEveningProgress.current = eveningProgress
+  }, [eveningProgress])
+
+  /* Phase 3: Smooth tab switch */
+  const switchTab = (newTab) => {
+    if (newTab === tab) return
+    setTabTransition(true)
+    setTimeout(() => {
+      setTab(newTab)
+      setTabTransition(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 150)
+  }
 
   /* Phase 2: Compute unlocked badges */
   const unlockedBadges = BADGES.filter(b => b.check(streak))
@@ -311,6 +382,7 @@ export default function App() {
     setStreak(s)
     setStreakLoading(false)
   }, [])
+
   useEffect(() => { refreshStreak() }, [refreshStreak])
 
   const loadWeek = useCallback(async () => {
@@ -332,8 +404,8 @@ export default function App() {
   const saveWeek = useCallback(async () => {
     await supabase.from('weeks').upsert({
       week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments,
-      treasures_comments: treasuresComments, notes, checks,
-      sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_article: sundayArticle
+      treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks,
+      sunday_comments: sundayComments, sunday_article: sundayArticle
     }, { onConflict: 'week_start' })
   }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayArticle])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
@@ -353,8 +425,7 @@ export default function App() {
   const saveJournal = useCallback(async () => {
     await supabase.from('journal_entries').upsert({
       entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
-      morning_checks: morningChecks, evening_checks: eveningChecks,
-      morning_goals: morningGoals, evening_goals: eveningGoals
+      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
     }, { onConflict: 'entry_date' })
     refreshStreak()
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, refreshStreak])
@@ -404,9 +475,17 @@ export default function App() {
   const toggleEvening = (key) => setEveningChecks(prev => ({ ...prev, [key]: !prev[key] }))
 
   const [copiedId, setCopiedId] = useState(null)
-  const copyToClipboard = (text, id) => { navigator.clipboard.writeText(text).then(() => { setCopiedId(id); setTimeout(() => setCopiedId(null), 1500) }) }
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id); setTimeout(() => setCopiedId(null), 1500)
+    })
+  }
 
-  useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
+  useEffect(() => {
+    fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => {
+      setDailyText(data); setDailyTextLoading(false)
+    }).catch(() => setDailyTextLoading(false))
+  }, [])
 
   const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
@@ -427,15 +506,17 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
-      <nav className="tab-bar">
+    <div className="app">
+      <Confetti active={showConfetti} />
+      <div className="tab-row">
         {TABS.map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            <span className="tab-icon">{t.icon}</span>
-            <span className="tab-label">{t.name}</span>
+          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => switchTab(t.id)}>
+            <span className="tab-icon">{t.icon}</span> <span className="tab-name">{t.name}</span>
           </button>
         ))}
-      </nav>
+      </div>
+
+      <div className={`tab-content ${tabTransition ? 'tab-fade-out' : 'tab-fade-in'}`}>
 
       {tab === 'morning' && (
         <div className="morning-tab">
@@ -447,28 +528,21 @@ export default function App() {
               <button onClick={nextDay} className="day-nav-btn">{'\u25B6'}</button>
               {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
             </div>
-
-            {/* Phase 1: Progress & Streak Summary */}
             <div className="streak-summary-card">
               <div className="streak-progress-row">
                 <ProgressRing progress={morningProgress} size={70} strokeWidth={7} />
                 <div className="streak-info">
-                  <div className="streak-count">
-                    {'\ud83d\udd25'} {streak.morningStreak} day streak
-                  </div>
+                  <div className="streak-count">{'\ud83d\udd25'} {streak.morningStreak} day streak</div>
                   <div className="streak-message">{getStreakMessage(streak.morningStreak)}</div>
-                  <div className="streak-detail">
-                    {Object.values(morningChecks).filter(Boolean).length}/{MORNING_ROUTINE.length} tasks done today
-                  </div>
+                  <div className="streak-detail">{Object.values(morningChecks).filter(Boolean).length}/{MORNING_ROUTINE.length} tasks done today</div>
                 </div>
               </div>
               {streak.last7.length > 0 && <WeekChart data={streak.last7} type="morning" />}
             </div>
-
             <h4 className="section-heading morning-heading">{'\ud83c\udfaf'} Today's Goals</h4>
             <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
             {MORNING_ROUTINE.map(item => (
-              <label key={item.key} className="check-row">
+              <label key={item.key} className={`check-row ${morningChecks[item.key] ? 'check-row-done' : ''}`}>
                 <input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} />
                 <span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span>
               </label>
@@ -575,18 +649,13 @@ export default function App() {
               <button onClick={nextDay} className="day-nav-btn">{'\u25B6'}</button>
               {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
             </div>
-            {/* Phase 1: Evening Progress & Streak */}
             <div className="streak-summary-card">
               <div className="streak-progress-row">
                 <ProgressRing progress={eveningProgress} size={70} strokeWidth={7} />
                 <div className="streak-info">
-                  <div className="streak-count">
-                    {'\ud83c\udf19'} {streak.eveningStreak} day streak
-                  </div>
+                  <div className="streak-count">{'\ud83c\udf19'} {streak.eveningStreak} day streak</div>
                   <div className="streak-message">{getStreakMessage(streak.eveningStreak)}</div>
-                  <div className="streak-detail">
-                    {Object.values(eveningChecks).filter(Boolean).length}/{EVENING_ROUTINE.length} tasks done today
-                  </div>
+                  <div className="streak-detail">{Object.values(eveningChecks).filter(Boolean).length}/{EVENING_ROUTINE.length} tasks done today</div>
                 </div>
               </div>
               {streak.last7.length > 0 && <WeekChart data={streak.last7} type="evening" />}
@@ -595,7 +664,7 @@ export default function App() {
             <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="What are your goals for tomorrow? Reflect on today's service..." />
             <div className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> {'\u2014'} Psalm 9:2</div>
             {EVENING_ROUTINE.map(item => (
-              <label key={item.key} className="check-row">
+              <label key={item.key} className={`check-row ${eveningChecks[item.key] ? 'check-row-done' : ''}`}>
                 <input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} />
                 <span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span>
               </label>
@@ -661,7 +730,7 @@ export default function App() {
               <a href="https://www.jw.org/en/library/magazines/" target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a>
             </div>
             {SUNDAY_CHECKLIST.map(item => (
-              <label key={item.key} className="check-row">
+              <label key={item.key} className={`check-row ${sundayChecks[item.key] ? 'check-row-done' : ''}`}>
                 <input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} />
                 <span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span>
               </label>
@@ -751,6 +820,8 @@ export default function App() {
           </section>
         </div>
       )}
+
+      </div>{/* end tab-content */}
 
       <footer className="footer"><p>Eat Pray Study {'\u00a9'} 2026</p></footer>
     </div>
