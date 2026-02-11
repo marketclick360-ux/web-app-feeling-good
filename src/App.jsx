@@ -840,8 +840,7 @@ export default function App() {
       {/* --- Tab Bar --- */}
       <nav className="tab-row">
         {[
-          { 849
-           , icon: '\ud83c\udfe0', name: 'Today' },
+          { id: 'today', icon: '\ud83c\udfe0', name: 'Today' },
           { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
           { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
           { id: 'midweek', icon: '\ud83d\udcda', name: 'Midweek' },
