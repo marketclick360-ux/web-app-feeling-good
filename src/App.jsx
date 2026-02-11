@@ -503,9 +503,9 @@ export default function App() {
         <h1>Spiritual Growth Companion</h1>
         <div className="week-label">{formatRange(weekStart)}</div>
         <div className="week-nav">
-          <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }}>\u2190 Prev</button>
+          <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }}>← Prev</button>
           <button onClick={() => setWeekStart(mondayOf(new Date()))}>This Week</button>
-          <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }}>Next \u2192</button>
+          <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }}>Next →</button>
         </div>
       </header>
 
