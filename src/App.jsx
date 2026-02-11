@@ -840,14 +840,13 @@ export default function App() {
       {/* --- Tab Bar --- */}
       <nav className="tab-row">
         {[
-          { id: 'today', icon: '\ud83c\udfe0', name: 'Today' },
+          { 849
+           , icon: '\ud83c\udfe0', name: 'Today' },
           { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
           { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
           { id: 'midweek', icon: '\ud83d\udcda', name: 'Midweek' },
           { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
           { id: 'todos', icon: '\ud83d\udcdd', name: 'Goals' },
-                  { id: 'calendar', icon: '\ud83d\udcc5', name: 'Calendar' },
-          { id: 'growth', icon: '\ud83c\udf31', name: 'Growth' }
         ].map(t => (
           <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => switchTab(t.id)}>
             <span className="tab-icon">{t.icon}</span>
