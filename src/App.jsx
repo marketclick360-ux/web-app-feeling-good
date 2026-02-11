@@ -342,8 +342,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
 
       {tab === 'prep' && (
         <div className="prep-tab">
-          <section className="card meeting-card">
-https://www.jw.org/en/library/magazines/             <p className="meeting-subtitle">Midweek Meeting {"\u2022"} {weekData.song}</p>
+          <section className="card meeting-card">               <p className="meeting-subtitle">Midweek Meeting {"\u2022"} {weekData.song}</p>
             <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} View Meeting Workbook on JW.org</a>
             <label>Theme<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || "This week's main theme..."} /></label>
             <label>Bible Reading<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
@@ -355,7 +354,7 @@ https://www.jw.org/en/library/magazines/             <p className="meeting-subti
 
               {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><textarea rows={5} value={treasuresComments} onChange={e => setTreasuresComments(e.target.value)} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." /></div>)}
             </section>
-          ))}https://www.jw.org/en/library/magazines/
+          ))}
           <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={4} value={scriptures} onChange={e => setScriptures(e.target.value)} placeholder="Paste references and JW.org links here..." /></section>
           <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={5} value={comments} onChange={e => setComments(e.target.value)} placeholder="Write your prepared comments for the meeting..." /></section>
           <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)} placeholder="What stood out to you this week?" /></section>
