@@ -1724,3 +1724,101 @@ textarea:focus,
   .tab-name { font-size: 0.62rem; }
   .tab { padding: 8px 4px; gap: 0; }
 }
+
+
+/* ===== PHASE 4: Behavior-Change Design System ===== */
+
+/* -- Affirm Message (shown on Today tab) -- */
+.affirm-message {
+  font-size: 1rem;
+  color: #c4b5fd;
+  font-style: italic;
+  line-height: 1.6;
+  margin: 12px 0 8px;
+  font-weight: 400;
+  opacity: 0;
+  animation: fadeInGentle 1.2s ease forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes fadeInGentle {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* -- Journey Card (replaces harsh streak display) -- */
+.journey-card {
+  background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(99,102,241,0.06));
+  border-color: rgba(167,139,250,0.15);
+}
+.journey-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #c4b5fd;
+  margin-bottom: 8px;
+}
+.journey-text {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+.journey-text strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+/* -- Warmer Greeting Card -- */
+.greeting-card {
+  background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(99,102,241,0.08));
+  border-color: rgba(167,139,250,0.2);
+  text-align: center;
+  padding: 28px 20px;
+}
+.greeting-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+.greeting-date {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 8px;
+}
+
+/* -- Softer header gradient -- */
+.header {
+  background: linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.8) 100%);
+  border-bottom: 1px solid rgba(167,139,250,0.1);
+}
+.header h1 {
+  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* -- Quick links with warm feel -- */
+.quick-link-btn {
+  font-family: inherit;
+  border: none;
+}
+
+/* -- Responsive additions for Phase 4 -- */
+@media (max-width: 480px) {
+  .affirm-message {
+    font-size: 0.9rem;
+  }
+  .greeting-card {
+    padding: 22px 16px;
+  }
+  .greeting-title {
+    font-size: 1.25rem;
+  }
+  .journey-text {
+    font-size: 0.85rem;
+  }
+}
