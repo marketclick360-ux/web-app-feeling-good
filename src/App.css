@@ -1468,4 +1468,25 @@ textarea:focus,
     display: none !important;
   }
 
+
+  /* -- Force light text color on pasted content -- */
+textarea,
+textarea *,
+input[type="text"],
+input[type="date"] {
+  color: #e2e8f0 !important;
+}
+
+.rich-note-editor,
+.rich-note-editor *,
+.rich-note-editor p,
+.rich-note-editor span,
+.rich-note-editor div,
+.rich-note-editor b,
+.rich-note-editor i,
+.rich-note-editor u,
+.rich-note-editor li,
+.rich-note-editor a {
+  color: #e2e8f0 !important;
+}
   }
