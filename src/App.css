@@ -1279,3 +1279,53 @@ textarea:focus,
 .tab.active {
   animation: glass-shimmer 3s ease-in-out infinite;
 }
+
+/* -- Day Navigation -- */
+.day-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 8px 0 16px;
+    flex-wrap: wrap;
+  }
+
+.day-nav-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #e2e8f0;
+    font-size: 1.1rem;
+    padding: 6px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+.day-nav-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+  }
+
+.today-btn {
+    background: rgba(129,140,248,0.2);
+    border: 1px solid rgba(129,140,248,0.4);
+    color: #818cf8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+.today-btn:hover {
+    background: rgba(129,140,248,0.35);
+  }
+
+.day-nav .routine-date {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    min-width: 200px;
+    text-align: center;
+  }
