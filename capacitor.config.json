@@ -1,0 +1,14 @@
+{
+  "appId": "com.pioneertracker.app",
+  "appName": "Pioneer Spiritual Growth Tracker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "url": "https://web-app-feeling-good.vercel.app"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#0f172a"
+  }
+}

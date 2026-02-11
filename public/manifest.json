@@ -1,0 +1,27 @@
+{
+  "name": "Pioneer Spiritual Growth Tracker",
+  "short_name": "Pioneer Tracker",
+  "description": "A spiritual growth tracker for pioneers - daily routines, meeting prep, journal, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#818cf8",
+  "orientation": "any",
+  "categories": ["lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "lang": "en",
+  "dir": "ltr"
+}
