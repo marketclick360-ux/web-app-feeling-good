@@ -1435,3 +1435,126 @@ textarea:focus,
     font-size: 0.6rem;
   }
 }
+
+
+/* --------- Phase 2: Challenge Bar --------- */
+.challenge-bar-wrap {
+  margin: 12px 0;
+}
+.challenge-bar-bg {
+  height: 18px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.challenge-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.8s ease;
+  min-width: 4px;
+}
+.challenge-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: rgba(226,232,240,0.5);
+  margin-top: 4px;
+}
+.challenge-goal {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(226,232,240,0.7);
+  margin-top: 8px;
+}
+
+/* --------- Phase 2: Weekly Summary --------- */
+.weekly-summary-grid {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+.weekly-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.weekly-summary-label {
+  font-size: 0.75rem;
+  color: rgba(226,232,240,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.weekly-stat-big {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  line-height: 1;
+}
+
+/* --------- Phase 2: Badges --------- */
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s ease;
+}
+.badge-item.unlocked {
+  background: rgba(129,140,248,0.12);
+  border-color: rgba(129,140,248,0.3);
+  box-shadow: 0 0 12px rgba(129,140,248,0.15);
+}
+.badge-item.locked {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+.badge-icon {
+  font-size: 1.8rem;
+  margin-bottom: 4px;
+}
+.badge-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.badge-desc {
+  font-size: 0.68rem;
+  color: rgba(226,232,240,0.5);
+  margin-top: 2px;
+}
+
+/* --------- Phase 2: Responsive --------- */
+@media (max-width: 480px) {
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .badge-item {
+    padding: 10px 6px;
+  }
+  .badge-icon {
+    font-size: 1.5rem;
+  }
+  .weekly-summary-grid {
+    gap: 10px;
+  }
+  .weekly-stat-big {
+    font-size: 1.6rem;
+  }
+  .challenge-bar-bg {
+    height: 14px;
+  }
+}
