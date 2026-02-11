@@ -4,8 +4,7 @@
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
-    "iosScheme": "https",
-    "url": "https://web-app-feeling-good.vercel.app"
+    "iosScheme": "https"
   },
   "ios": {
     "contentInset": "automatic",
