@@ -1,7 +1,16 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 
+const FONT_COLORS = [
+  { color: '#e2e8f0', label: 'Default' },
+  { color: '#fbbf24', label: 'Yellow' },
+  { color: '#4ade80', label: 'Green' },
+  { color: '#f472b6', label: 'Pink' },
+  { color: '#22d3ee', label: 'Cyan' },
+  { color: '#fb923c', label: 'Orange' },
+]
+
 /**
- * RichNoteEditor — contentEditable rich text editor
+ * RichNoteEditor - contentEditable rich text editor
  * Supports: typed text, Apple Pencil (via Scribble), pasted images (inline base64)
  * Props:
  *   value: HTML string
@@ -13,6 +22,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const editorRef = useRef(null)
   const isInternalChange = useRef(false)
   const [expandedImg, setExpandedImg] = useState(null)
+  const [showColors, setShowColors] = useState(false)
 
   // Sync external value changes (e.g. loading from Supabase)
   useEffect(() => {
@@ -88,6 +98,18 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         return
       }
     }
+
+    // For text paste: strip dark colors that would be invisible
+    const html = e.clipboardData.getData('text/html')
+    if (html) {
+      e.preventDefault()
+      const cleaned = html
+        .replace(/color\s*:\s*(#0{3,6}|#000|black|rgb\(0,\s*0,\s*0\))/gi, 'color: #e2e8f0')
+        .replace(/color\s*:\s*(#1[0-9a-f]{5}|#2[0-9a-f]{5}|#0[0-9a-f]{5})/gi, 'color: #e2e8f0')
+      document.execCommand('insertHTML', false, cleaned)
+      handleInput()
+      return
+    }
   }, [handleInput])
 
   // Handle clicking on images in the editor to expand them
@@ -103,40 +125,65 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
     handleInput()
   }
 
+  const applyColor = (color) => {
+    execCmd('foreColor', color)
+    setShowColors(false)
+  }
+
   const isEmpty = !value || value === '<br>' || value === '<div><br></div>'
 
   return (
     <div className="rich-note-wrapper">
       <div className="rich-note-toolbar">
-        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('bold')} title="Bold">B</button>
-        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('italic')} title="Italic"><em>I</em></button>
-        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('underline')} title="Underline"><u>U</u></button>
-        <span className="rich-note-sep" />
-        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list">{"\u2022"}</button>
-        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list">1.</button>
-        <span className="rich-note-sep" />
-        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting">{"\u2718"}</button>
+        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('bold')} title="Bold">B</button>
+        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('italic')} title="Italic"><i>I</i></button>
+        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('underline')} title="Underline">U</button>
+        <div className="rich-note-sep" />
+        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list">{"\u2022"}</button>
+        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list">1.</button>
+        <div className="rich-note-sep" />
+        <button
+          className={`color-picker-toggle ${showColors ? 'active' : ''}`}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setShowColors(!showColors)}
+          title="Font color"
+        >
+          A
+        </button>
+        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting">{"\u2718"}</button>
       </div>
+      {showColors && (
+        <div className="color-picker-row">
+          {FONT_COLORS.map(({ color, label }) => (
+            <button
+              key={color}
+              className="color-swatch"
+              style={{ backgroundColor: color }}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => applyColor(color)}
+              title={label}
+            />
+          ))}
+        </div>
+      )}
       <div
         ref={editorRef}
         className="rich-note-editor"
         contentEditable
-        suppressContentEditableWarning
         onInput={handleInput}
         onPaste={handlePaste}
         onClick={handleEditorClick}
-        style={{ minHeight: minHeight + 'px' }}
         data-placeholder={placeholder}
+        style={{ minHeight }}
       />
-      {isEmpty && <div className="rich-note-placeholder">{placeholder}</div>}
-
-      <div
-        className="image-modal"
-        style={{ display: expandedImg ? 'flex' : 'none' }}
-        onClick={() => setExpandedImg(null)}
-      >
-        <img src={expandedImg || ''} alt="Expanded view" />
-      </div>
+      {isEmpty && (
+        <div className="rich-note-placeholder">{placeholder}</div>
+      )}
+      {expandedImg && (
+        <div className="image-modal" style={{ display: 'flex' }} onClick={() => setExpandedImg(null)}>
+          <img src={expandedImg} alt="Expanded view" />
+        </div>
+      )}
     </div>
   )
 }
