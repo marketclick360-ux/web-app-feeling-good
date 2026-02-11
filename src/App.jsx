@@ -372,6 +372,12 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
 
       {tab === 'sunday' && (
         <div className="sunday-tab">
+                    <div className="day-nav">
+            <button onClick={prevWeek} className="day-nav-btn">{"\u25C0"}</button>
+            <span className="routine-date">{weekLabel}</span>
+            <button onClick={nextWeek} className="day-nav-btn">{"\u25B6"}</button>
+            {weekKey !== toISO(mondayOf(new Date())) && <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">This Week</button>}
+          </div>
           <section className="card">
             <h3 className="section-heading sunday-heading">{"\u26ea"} Weekend Meeting (Public Talk & Watchtower Study)</h3>
             <div className="sunday-article-box"><p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p><a href="https://www.jw.org/en/library/magazines/" target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a></div>
