@@ -846,6 +846,7 @@ export default function App() {
           { id: 'midweek', icon: '\ud83d\udcda', name: 'Midweek' },
           { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
           { id: 'todos', icon: '\ud83d\udcdd', name: 'Goals' },
+        { id: 'calendar', icon: '\ud83d\udcc5', name: 'Calendar' },
           { id: 'growth', icon: '\ud83c\udf31', name: 'Growth' }
         ].map(t => (
           <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => switchTab(t.id)}>
