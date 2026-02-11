@@ -171,7 +171,8 @@ export default function App() {
   const weekData = getWeekData(weekKey)
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
-    const prevDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() - 1); setJournalDate(toISO(d)) }
+    const [journalDate, setJournalDate] = useState(todayStr())
+  const prevDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() - 1); setJournalDate(toISO(d)) }
     const nextDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() + 1); setJournalDate(toISO(d)) }
     const goToday = () => setJournalDate(todayStr())
     const isToday = journalDate === todayStr()
@@ -187,7 +188,6 @@ export default function App() {
   const [sundayChecks, setSundayChecks] = useState({})
   const [sundayComments, setSundayComments] = useState('')
   const [sundayArticle, setSundayArticle] = useState('')
-  const [journalDate, setJournalDate] = useState(todayStr())
   const [journalText, setJournalText] = useState('')
   const [journalTasks, setJournalTasks] = useState({})
   const [journalNotes, setJournalNotes] = useState('')
