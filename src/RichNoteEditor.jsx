@@ -1,7 +1,7 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 
 /**
- * RichNoteEditor - contentEditable rich text editor
+ * RichNoteEditor — contentEditable rich text editor
  * Supports: typed text, Apple Pencil (via Scribble), pasted images (inline base64)
  * Props:
  *   value: HTML string
@@ -12,6 +12,7 @@ import { useRef, useEffect, useCallback } from 'react'
 export default function RichNoteEditor({ value, onChange, placeholder = 'Write your notes...', minHeight = 120 }) {
   const editorRef = useRef(null)
   const isInternalChange = useRef(false)
+  const [expandedImg, setExpandedImg] = useState(null)
 
   // Sync external value changes (e.g. loading from Supabase)
   useEffect(() => {
@@ -66,9 +67,12 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
               imgEl.src = dataUrl
               imgEl.className = 'rich-note-img'
               imgEl.style.maxWidth = '100%'
+              imgEl.style.maxHeight = '200px'
+              imgEl.style.objectFit = 'contain'
               imgEl.style.borderRadius = '8px'
               imgEl.style.margin = '8px 0'
               imgEl.style.display = 'block'
+              imgEl.style.cursor = 'pointer'
               range.insertNode(imgEl)
               // Move cursor after image
               range.setStartAfter(imgEl)
@@ -85,6 +89,13 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
       }
     }
   }, [handleInput])
+
+  // Handle clicking on images in the editor to expand them
+  const handleEditorClick = useCallback((e) => {
+    if (e.target.tagName === 'IMG') {
+      setExpandedImg(e.target.src)
+    }
+  }, [])
 
   const execCmd = (cmd, val = null) => {
     document.execCommand(cmd, false, val)
@@ -113,10 +124,19 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         suppressContentEditableWarning
         onInput={handleInput}
         onPaste={handlePaste}
+        onClick={handleEditorClick}
         style={{ minHeight: minHeight + 'px' }}
         data-placeholder={placeholder}
       />
       {isEmpty && <div className="rich-note-placeholder">{placeholder}</div>}
+
+      <div
+        className="image-modal"
+        style={{ display: expandedImg ? 'flex' : 'none' }}
+        onClick={() => setExpandedImg(null)}
+      >
+        <img src={expandedImg || ''} alt="Expanded view" />
+      </div>
     </div>
   )
 }
