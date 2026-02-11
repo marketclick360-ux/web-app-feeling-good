@@ -1328,6 +1328,7 @@ textarea:focus,
     font-weight: 500;
     min-width: 200px;
     text-align: center;
+  }
 
   /* -- Rich Note Editor -- */
 .rich-note-wrapper {
@@ -1381,7 +1382,7 @@ textarea:focus,
   line-height: 1.6;
   outline: none;
   overflow-y: auto;
-  max-height: 500px;
+  max-height: 240px;
   -webkit-user-modify: read-write-plaintext-only;
   -webkit-user-modify: read-write;
   word-break: break-word;
@@ -1399,8 +1400,12 @@ textarea:focus,
   max-width: 100%;
   border-radius: 8px;
   margin: 8px 0;
+    max-height: 200px;
+  object-fit: contain;
+  cursor: pointer;
   display: block;
 }
+
 .rich-note-editor ul,
 .rich-note-editor ol {
   padding-left: 24px;
@@ -1416,5 +1421,30 @@ textarea:focus,
   color: rgba(148,163,184,0.5);
   pointer-events: none;
   font-size: 0.95rem;
-}
   }
+
+/* -- Image Modal (tap-to-expand) -- */
+.image-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.image-modal img {
+  max-width: 95%;
+  max-height: 95%;
+  object-fit: contain;
+  border-radius: 20px;
+}
+}
+  
