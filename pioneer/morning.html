@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Morning Routine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Morning Routine</h1>
+    <section>
+      <label><input type="checkbox" id="prayer"> Prayer completed</label>
+    </section>
+    <section>
+      <label>Scripture reading: <input type="text" id="reading" placeholder="e.g., Psalm 23"></label>
+    </section>
+    <section>
+      <label>Reflection notes:<br>
+        <textarea id="reflection" rows="4" placeholder="Write your thoughts…"></textarea>
+      </label>
+    </section>
+    <a href="./index.html">\u2190 Back to Tracker</a>
+  </div>
+  <script>
+    const storageKey = 'morning-routine';
+    function loadData() {
+      const data = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      document.getElementById('prayer').checked = data.prayer || false;
+      document.getElementById('reading').value = data.reading || '';
+      document.getElementById('reflection').value = data.reflection || '';
+    }
+    function saveData() {
+      const data = {
+        prayer: document.getElementById('prayer').checked,
+        reading: document.getElementById('reading').value,
+        reflection: document.getElementById('reflection').value
+      };
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      document.getElementById('prayer').addEventListener('change', saveData);
+      document.getElementById('reading').addEventListener('input', saveData);
+      document.getElementById('reflection').addEventListener('input', saveData);
+    });
+  </script>
+</body>
+</html>

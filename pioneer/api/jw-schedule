@@ -1,0 +1,78 @@
+// api/jw-schedule.js
+import fetch from "node-fetch";
+import * as cheerio from "cheerio";
+
+// Example workbook (adjust per period you want) [web:40]
+const WORKBOOK_URL =
+  "https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/";
+
+export default async function handler(req, res) {
+  try {
+    const r = await fetch(WORKBOOK_URL);
+    const html = await r.text();
+    const $ = cheerio.load(html);
+
+    const weeks = [];
+
+    // TODO: open the workbook URL in your browser, Inspect Element,
+    // and set these selectors correctly for the weekly blocks. [web:40]
+    $(".some-week-wrapper-selector").each((_, el) => {
+      const weekLabel = $(el).find(".week-label-selector").text().trim();
+      const theme = $(el).find(".theme-selector").text().trim();
+      const scripture = $(el).find(".scripture-selector").text().trim();
+
+      const weekPageLink = $(el).find("a[href*='Life-and-Ministry-Meeting-Schedule']").first();
+      const workbookUrl = weekPageLink.attr("href")
+        ? new URL(weekPageLink.attr("href"), "https://www.jw.org").href
+        : WORKBOOK_URL;
+
+      const wtLink = $(el).find("a[href*='watchtower-study']").first();
+      const watchtowerUrl = wtLink.attr("href")
+        ? new URL(wtLink.attr("href"), "https://www.jw.org").href
+        : null;
+      const watchtowerTitle = wtLink.text().trim() || null;
+
+      const { startDate, endDate } = deriveDatesFromLabel(weekLabel);
+
+      weeks.push({
+        startDate,
+        endDate,
+        weekLabel,
+        theme,
+        scripture,
+        workbookUrl,
+        watchtowerUrl,
+        watchtowerTitle
+      });
+    });
+
+    res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate"); // cache 1 day
+    res.status(200).json(weeks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load schedule" });
+  }
+}
+
+// Example: "January 5-11, 2026" → "2026-01-05", "2026-01-11"
+function deriveDatesFromLabel(label) {
+  if (!label) return { startDate: "", endDate: "" };
+
+  // Very rough parser, adjust to match actual labels
+  // e.g. "January 5-11, 2026"
+  const match = label.match(/^([A-Za-z]+)\s+(\d+)-(\d+),\s*(\d{4})/);
+  if (!match) return { startDate: "", endDate: "" };
+
+  const [, monthName, startDay, endDay, yearStr] = match;
+  const year = Number(yearStr);
+  const monthIndex = [
+    "january","february","march","april","may","june",
+    "july","august","september","october","november","december"
+  ].indexOf(monthName.toLowerCase());
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const startDate = `${year}-${pad(monthIndex + 1)}-${pad(Number(startDay))}`;
+  const endDate = `${year}-${pad(monthIndex + 1)}-${pad(Number(endDay))}`;
+
+  return { startDate, endDate };
+}
