@@ -29,6 +29,20 @@ function getGreeting() {
   return 'Good Evening'
 }
 
+/* Gentle, encouraging affirm messages */
+const AFFIRM_MESSAGES = [
+  'Even opening this app is a step forward.',
+  'Jehovah sees your effort, no matter how small.',
+  'You don\'t have to be perfect. Just be present.',
+  'A little each day adds up to a lot.',
+  'You\'re here. That already matters.',
+  'Progress, not perfection.',
+  'Every small step counts.',
+  'Jehovah is pleased with your desire to draw close.',
+  'You\'re doing better than you think.',
+  'Be gentle with yourself today.'
+]
+
 const MORNING_ROUTINE = [
   { key: 'prayer_morning', label: '\ud83d\ude4f Morning prayer' },
   { key: 'daily_text', label: '\ud83d\udcc3 Read daily text' },
@@ -168,10 +182,10 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color }) {
   const strokeDashoffset = circumference - (progress / 100) * circumference
   const ringColor = color || (progress >= 80 ? '#22c55e' : progress >= 50 ? '#eab308' : '#818cf8')
   return (
-    <svg className="progress-ring" width={size} height={size}>
-      <circle stroke="rgba(255,255,255,0.08)" fill="none" strokeWidth={strokeWidth} r={radius} cx={size/2} cy={size/2} />
-      <circle className="progress-ring-circle" stroke={ringColor} fill="none" strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} r={radius} cx={size/2} cy={size/2} style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
-      <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle" fill="#e2e8f0" fontSize={size * 0.22} fontWeight="700">{Math.round(progress)}%</text>
+    <svg width={size} height={size} className="progress-ring">
+      <circle stroke="rgba(255,255,255,0.08)" fill="transparent" strokeWidth={strokeWidth} r={radius} cx={size/2} cy={size/2} />
+      <circle className="progress-ring-circle" stroke={ringColor} fill="transparent" strokeWidth={strokeWidth} strokeDasharray={`${circumference} ${circumference}`} style={{ strokeDashoffset, transform: 'rotate(-90deg)', transformOrigin: '50% 50%', strokeLinecap: 'round' }} r={radius} cx={size/2} cy={size/2} />
+      <text x="50%" y="50%" textAnchor="middle" dy=".35em" fill="#e2e8f0" fontSize="0.8rem" fontWeight="700">{Math.round(progress)}%</text>
     </svg>
   )
 }
@@ -226,7 +240,7 @@ function WeekChart({ data, type }) {
         const dayDate = new Date(d.date + 'T12:00')
         const dayLabel = days[dayDate.getDay()]
         return (
-          <div key={i} className="week-chart-bar">
+          <div className="week-chart-bar" key={i}>
             <div className="week-chart-fill" style={{ height: `${Math.max(pct, 4)}%`, background: pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : 'rgba(129,140,248,0.5)' }} />
             <span className="week-chart-label">{dayLabel}</span>
           </div>
@@ -248,38 +262,20 @@ function Confetti({ active }) {
     const particles = []
     const colors = ['#818cf8','#c084fc','#f472b6','#22c55e','#eab308','#fbbf24','#a78bfa']
     for (let i = 0; i < 80; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: -20 - Math.random() * 200,
-        w: 4 + Math.random() * 6,
-        h: 8 + Math.random() * 8,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        vx: (Math.random() - 0.5) * 3,
-        vy: 2 + Math.random() * 4,
-        rot: Math.random() * 360,
-        rotSpeed: (Math.random() - 0.5) * 10,
-        opacity: 1
-      })
+      particles.push({ x: Math.random() * canvas.width, y: -20 - Math.random() * 200, w: 4 + Math.random() * 6, h: 8 + Math.random() * 8, color: colors[Math.floor(Math.random() * colors.length)], vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 4, rot: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 10, opacity: 1 })
     }
     let frame
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       let alive = false
       particles.forEach(p => {
-        p.x += p.vx
-        p.y += p.vy
-        p.vy += 0.08
-        p.rot += p.rotSpeed
+        p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += p.rotSpeed
         if (p.y > canvas.height - 100) p.opacity -= 0.02
         if (p.opacity <= 0) return
         alive = true
-        ctx.save()
-        ctx.translate(p.x, p.y)
-        ctx.rotate(p.rot * Math.PI / 180)
-        ctx.globalAlpha = Math.max(0, p.opacity)
-        ctx.fillStyle = p.color
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h)
-        ctx.restore()
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180)
+        ctx.globalAlpha = Math.max(0, p.opacity); ctx.fillStyle = p.color
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore()
       })
       if (alive) frame = requestAnimationFrame(animate)
     }
@@ -290,540 +286,574 @@ function Confetti({ active }) {
   return <canvas ref={canvasRef} className="confetti-canvas" />
 }
 
+/* ========= MAIN APP ========= */
 export default function App() {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
-  const weekLabel = formatRange(weekStart)
-  const weekKey = toISO(weekStart)
-  const weekData = getWeekData(weekKey)
-  const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
-  const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
-
-  const [journalDate, setJournalDate] = useState(todayStr())
-  const prevDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() - 1); setJournalDate(toISO(d)) }
-  const nextDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() + 1); setJournalDate(toISO(d)) }
-  const goToday = () => setJournalDate(todayStr())
-  const isToday = journalDate === todayStr()
-  const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-
-  const [tab, setTab] = useState('morning')
-  const [tabTransition, setTabTransition] = useState(false)
-  const [checks, setChecks] = useState({})
-  const [theme, setTheme] = useState('')
-  const [bibleReading, setBibleReading] = useState('')
-  const [scriptures, setScriptures] = useState('')
-  const [comments, setComments] = useState('')
-  const [treasuresComments, setTreasuresComments] = useState('')
-  const [notes, setNotes] = useState('')
-  const [sundayChecks, setSundayChecks] = useState({})
-  const [sundayComments, setSundayComments] = useState('')
-  const [sundayArticle, setSundayArticle] = useState('')
-  const [journalText, setJournalText] = useState('')
-  const [journalTasks, setJournalTasks] = useState({})
-  const [journalNotes, setJournalNotes] = useState('')
+  const [tab, setTab] = useState('today')
   const [morningChecks, setMorningChecks] = useState({})
   const [eveningChecks, setEveningChecks] = useState({})
-  const [morningGoals, setMorningGoals] = useState('')
-  const [eveningGoals, setEveningGoals] = useState('')
-  const [dailyText, setDailyText] = useState(null)
-  const [dailyTextLoading, setDailyTextLoading] = useState(true)
+  const [midweekChecks, setMidweekChecks] = useState({})
+  const [sundayChecks, setSundayChecks] = useState({})
+  const [treasuresComments, setTreasuresComments] = useState('')
   const [todos, setTodos] = useState([])
   const [newTodo, setNewTodo] = useState('')
-  const [newTodoPriority, setNewTodoPriority] = useState('medium')
-  const [newTodoDue, setNewTodoDue] = useState('')
-  const [newTodoCategory, setNewTodoCategory] = useState('general')
+  const [todoPriority, setTodoPriority] = useState('medium')
+  const [todoDue, setTodoDue] = useState('')
   const [todoFilter, setTodoFilter] = useState('all')
-
-  /* --- Streak state (Phase 1 + Phase 2) --- */
+  const [dailyText, setDailyText] = useState(null)
   const [streak, setStreak] = useState({ morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [], weeklyAvg: 0, challengeAvg: 0 })
-  const [streakLoading, setStreakLoading] = useState(true)
-  /* --- Phase 3: Confetti state --- */
   const [showConfetti, setShowConfetti] = useState(false)
-  const prevMorningProgress = useRef(0)
-  const prevEveningProgress = useRef(0)
+  const [tabFade, setTabFade] = useState('tab-fade-in')
+  const [copied, setCopied] = useState({})
+  const [routineDate, setRoutineDate] = useState(() => todayStr())
+  const [affirmMsg] = useState(() => AFFIRM_MESSAGES[Math.floor(Math.random() * AFFIRM_MESSAGES.length)])
+  const prevTab = useRef(tab)
 
-  const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
-  const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
+  const weekKey = toISO(weekStart)
+  const week = getWeekData(weekKey)
 
-  /* Phase 3: Trigger confetti when hitting 100% */
+  /* --- Tab transition --- */
+  const switchTab = useCallback((t) => {
+    if (t === tab) return
+    setTabFade('tab-fade-out')
+    setTimeout(() => { setTab(t); setTabFade('tab-fade-in') }, 150)
+  }, [tab])
+
+  useEffect(() => { prevTab.current = tab }, [tab])
+
+  /* --- Load daily text --- */
   useEffect(() => {
-    if (morningProgress === 100 && prevMorningProgress.current < 100) {
-      setShowConfetti(true)
-      setTimeout(() => setShowConfetti(false), 3000)
+    fetch('https://daily-text-proxy.vercel.app/api/daily-text')
+      .then(r => r.json()).then(setDailyText).catch(() => {})
+  }, [])
+
+  /* --- Load data from Supabase --- */
+  const loadDay = useCallback(async (dateStr) => {
+    const { data } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('entry_date', dateStr)
+      .maybeSingle()
+    if (data) {
+      setMorningChecks(data.morning_checks || {})
+      setEveningChecks(data.evening_checks || {})
+    } else {
+      setMorningChecks({})
+      setEveningChecks({})
     }
-    prevMorningProgress.current = morningProgress
-  }, [morningProgress])
+  }, [])
 
-  useEffect(() => {
-    if (eveningProgress === 100 && prevEveningProgress.current < 100) {
-      setShowConfetti(true)
-      setTimeout(() => setShowConfetti(false), 3000)
+  useEffect(() => { loadDay(routineDate) }, [routineDate, loadDay])
+
+  const loadWeek = useCallback(async () => {
+    const key = toISO(weekStart)
+    const { data } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('entry_date', key)
+      .maybeSingle()
+    if (data) {
+      setMidweekChecks(data.midweek_checks || {})
+      setSundayChecks(data.sunday_checks || {})
+      setTreasuresComments(data.treasures_comments || '')
+    } else {
+      setMidweekChecks({})
+      setSundayChecks({})
+      setTreasuresComments('')
     }
-    prevEveningProgress.current = eveningProgress
-  }, [eveningProgress])
+  }, [weekStart])
 
-  /* Phase 3: Smooth tab switch */
-  const switchTab = (newTab) => {
-    if (newTab === tab) return
-    setTabTransition(true)
-    setTimeout(() => {
-      setTab(newTab)
-      setTabTransition(false)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }, 150)
-  }
+  useEffect(() => { loadWeek() }, [loadWeek])
 
-  /* Phase 2: Compute unlocked badges */
-  const unlockedBadges = BADGES.filter(b => b.check(streak))
-  const challengeProgress = Math.round((streak.totalDays / 120) * 100)
+  const loadTodos = useCallback(async () => {
+    const { data } = await supabase.from('todos').select('*').order('created_at', { ascending: false })
+    if (data) setTodos(data)
+  }, [])
 
+  useEffect(() => { loadTodos() }, [loadTodos])
+
+  /* --- Streak --- */
   const refreshStreak = useCallback(async () => {
-    setStreakLoading(true)
     const s = await computeStreak()
     setStreak(s)
-    setStreakLoading(false)
   }, [])
 
   useEffect(() => { refreshStreak() }, [refreshStreak])
 
-  const loadWeek = useCallback(async () => {
-    const wd = getWeekData(weekKey)
-    const { data } = await supabase.from('weeks').select('*').eq('week_start', weekKey).maybeSingle()
-    if (data) {
-      setTheme(data.theme || wd.theme || ''); setBibleReading(data.bible_reading || wd.bibleReading || '')
-      setScriptures(data.scriptures || ''); setComments(data.comments || ''); setTreasuresComments(data.treasures_comments || '')
-      setNotes(data.notes || ''); setChecks(data.checks || {}); setSundayChecks(data.sunday_checks || {})
-      setSundayComments(data.sunday_comments || ''); setSundayArticle(data.sunday_article || wd.sundayArticle || '')
-    } else {
-      setTheme(wd.theme || ''); setBibleReading(wd.bibleReading || ''); setScriptures(''); setComments('')
-      setTreasuresComments(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments('')
-      setSundayArticle(wd.sundayArticle || '')
-    }
-  }, [weekKey])
-  useEffect(() => { loadWeek() }, [loadWeek])
-
-  const saveWeek = useCallback(async () => {
-    await supabase.from('weeks').upsert({
-      week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments,
-      treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks,
-      sunday_comments: sundayComments, sunday_article: sundayArticle
-    }, { onConflict: 'week_start' })
-  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayArticle])
-  useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
-
-  const loadJournal = useCallback(async () => {
-    const { data } = await supabase.from('journal_entries').select('*').eq('entry_date', journalDate).maybeSingle()
-    if (data) {
-      setJournalText(data.journal_text || ''); setJournalTasks(data.tasks || {}); setJournalNotes(data.notes || '')
-      setMorningChecks(data.morning_checks || {}); setEveningChecks(data.evening_checks || {})
-      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '')
-    } else {
-      setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('')
-    }
-  }, [journalDate])
-  useEffect(() => { loadJournal() }, [loadJournal])
-
-  const saveJournal = useCallback(async () => {
-    await supabase.from('journal_entries').upsert({
-      entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
-    }, { onConflict: 'entry_date' })
+  /* --- Save helpers --- */
+  const saveDay = useCallback(async (mc, ec) => {
+    const payload = { entry_date: routineDate, morning_checks: mc, evening_checks: ec }
+    await supabase.from('journal_entries').upsert(payload, { onConflict: 'entry_date' })
     refreshStreak()
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, refreshStreak])
-  useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
+  }, [routineDate, refreshStreak])
 
-  const loadTodos = useCallback(async () => {
-    const { data } = await supabase.from('todo_items').select('*').order('created_at', { ascending: true })
-    if (data) setTodos(data)
-  }, [])
-  useEffect(() => { loadTodos() }, [loadTodos])
+  const saveWeek = useCallback(async (mw, su, tc) => {
+    const key = toISO(weekStart)
+    const payload = { entry_date: key, midweek_checks: mw, sunday_checks: su, treasures_comments: tc }
+    await supabase.from('journal_entries').upsert(payload, { onConflict: 'entry_date' })
+  }, [weekStart])
 
-  const addTodo = async () => {
-    if (!newTodo.trim()) return
-    const ins = { text: newTodo.trim(), priority: newTodoPriority, category: newTodoCategory }
-    if (newTodoDue) ins.due_date = newTodoDue
-    const { data } = await supabase.from('todo_items').insert(ins).select().single()
-    if (data) setTodos(prev => [...prev, data])
-    setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general')
-  }
-  const toggleTodo = async (id, done) => {
-    await supabase.from('todo_items').update({ done: !done }).eq('id', id)
-    setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t))
-  }
-  const deleteTodo = async (id) => {
-    await supabase.from('todo_items').delete().eq('id', id)
-    setTodos(prev => prev.filter(t => t.id !== id))
-  }
-  const clearCompleted = async () => {
-    const done = todos.filter(t => t.done)
-    for (const t of done) { await supabase.from('todo_items').delete().eq('id', t.id) }
-    setTodos(prev => prev.filter(t => !t.done))
+  /* --- Toggle handlers --- */
+  const toggleMorning = (key) => {
+    const next = { ...morningChecks, [key]: !morningChecks[key] }
+    setMorningChecks(next)
+    saveDay(next, eveningChecks)
+    const doneCount = Object.values(next).filter(Boolean).length
+    if (doneCount === MORNING_ROUTINE.length) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000) }
   }
 
-  const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 }
-  const sortedTodos = [...todos].sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1
-    const pa = PRIORITY_ORDER[a.priority || 'medium'] ?? 1
-    const pb = PRIORITY_ORDER[b.priority || 'medium'] ?? 1
-    return pa - pb
-  })
-  const filteredTodos = todoFilter === 'all' ? sortedTodos : todoFilter === 'active' ? sortedTodos.filter(t => !t.done) : sortedTodos.filter(t => t.done)
-  const todoDoneCount = todos.filter(t => t.done).length
+  const toggleEvening = (key) => {
+    const next = { ...eveningChecks, [key]: !eveningChecks[key] }
+    setEveningChecks(next)
+    saveDay(morningChecks, next)
+    const doneCount = Object.values(next).filter(Boolean).length
+    if (doneCount === EVENING_ROUTINE.length) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000) }
+  }
 
-  const toggleCheck = (id) => setChecks(prev => ({ ...prev, [id]: !prev[id] }))
-  const toggleSundayCheck = (key) => setSundayChecks(prev => ({ ...prev, [key]: !prev[key] }))
-  const toggleMorning = (key) => setMorningChecks(prev => ({ ...prev, [key]: !prev[key] }))
-  const toggleEvening = (key) => setEveningChecks(prev => ({ ...prev, [key]: !prev[key] }))
+  const toggleMidweek = (id) => {
+    const next = { ...midweekChecks, [id]: !midweekChecks[id] }
+    setMidweekChecks(next)
+    saveWeek(next, sundayChecks, treasuresComments)
+  }
 
-  const [copiedId, setCopiedId] = useState(null)
-  const copyToClipboard = (text, id) => {
+  const toggleSunday = (key) => {
+    const next = { ...sundayChecks, [key]: !sundayChecks[key] }
+    setSundayChecks(next)
+    saveWeek(midweekChecks, next, treasuresComments)
+  }
+
+  const handleCommentsChange = (val) => {
+    setTreasuresComments(val)
+    saveWeek(midweekChecks, sundayChecks, val)
+  }
+
+  /* --- Copy to clipboard --- */
+  const copyText = (text, id) => {
     navigator.clipboard.writeText(text).then(() => {
-      setCopiedId(id); setTimeout(() => setCopiedId(null), 1500)
+      setCopied(p => ({ ...p, [id]: true }))
+      setTimeout(() => setCopied(p => ({ ...p, [id]: false })), 1500)
     })
   }
 
-  useEffect(() => {
-    fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => {
-      setDailyText(data); setDailyTextLoading(false)
-    }).catch(() => setDailyTextLoading(false))
-  }, [])
-
-  const TABS = [
-    { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
-    { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
-    { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
-    { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
-    { id: 'todos', icon: '\u2705', name: 'To-Do' },
-    { id: 'journal', icon: '\ud83d\udcd3', name: 'Journal' }
-  ]
-
-  const getStreakMessage = (count) => {
-    if (count >= 30) return '\ud83d\udd25 Incredible! You are on fire!'
-    if (count >= 14) return '\ud83c\udf1f Amazing consistency!'
-    if (count >= 7) return '\ud83d\udcaa Great week! Keep going!'
-    if (count >= 3) return '\u2b50 Building momentum!'
-    if (count >= 1) return '\ud83c\udf31 Great start!'
-    return '\ud83c\udfaf Start your streak today!'
+  /* --- Todo handlers --- */
+  const addTodo = async () => {
+    if (!newTodo.trim()) return
+    const item = { text: newTodo.trim(), done: false, priority: todoPriority, due_date: todoDue || null }
+    const { data } = await supabase.from('todos').insert(item).select()
+    if (data) setTodos([data[0], ...todos])
+    setNewTodo(''); setTodoPriority('medium'); setTodoDue('')
   }
 
+  const toggleTodo = async (id) => {
+    const t = todos.find(x => x.id === id)
+    if (!t) return
+    await supabase.from('todos').update({ done: !t.done }).eq('id', id)
+    setTodos(todos.map(x => x.id === id ? { ...x, done: !x.done } : x))
+  }
+
+  const deleteTodo = async (id) => {
+    await supabase.from('todos').delete().eq('id', id)
+    setTodos(todos.filter(x => x.id !== id))
+  }
+
+  const clearDone = async () => {
+    const doneIds = todos.filter(t => t.done).map(t => t.id)
+    if (!doneIds.length) return
+    await supabase.from('todos').delete().in('id', doneIds)
+    setTodos(todos.filter(t => !t.done))
+  }
+
+  /* --- Computed --- */
+  const morningDone = Object.values(morningChecks).filter(Boolean).length
+  const eveningDone = Object.values(eveningChecks).filter(Boolean).length
+  const morningPct = Math.round((morningDone / MORNING_ROUTINE.length) * 100)
+  const eveningPct = Math.round((eveningDone / EVENING_ROUTINE.length) * 100)
+  const isToday = routineDate === todayStr()
+
+  /* Day navigation */
+  const prevDay = () => {
+    const d = new Date(routineDate + 'T12:00')
+    d.setDate(d.getDate() - 1)
+    setRoutineDate(toISO(d))
+  }
+  const nextDay = () => {
+    const d = new Date(routineDate + 'T12:00')
+    d.setDate(d.getDate() + 1)
+    setRoutineDate(toISO(d))
+  }
+  const goToday = () => setRoutineDate(todayStr())
+
+  /* Filtered todos */
+  const filteredTodos = todos.filter(t => {
+    if (todoFilter === 'active') return !t.done
+    if (todoFilter === 'done') return t.done
+    return true
+  })
+  const todoStats = { total: todos.length, done: todos.filter(t => t.done).length }
+
+  const displayDate = new Date(routineDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+
+  /* ========= RENDER ========= */
   return (
     <div className="app">
       <Confetti active={showConfetti} />
-      <div className="tab-row">
-        {TABS.map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => switchTab(t.id)}>
-            <span className="tab-icon">{t.icon}</span> <span className="tab-name">{t.name}</span>
-          </button>
-        ))}
-      </div>
 
-      <div className={`tab-content ${tabTransition ? 'tab-fade-out' : 'tab-fade-in'}`}>
+      {/* --- Header: Warm, identity-focused --- */}
+      <header className="header">
+        <h1>Spiritual Growth Companion</h1>
+        <div className="week-label">{formatRange(weekStart)}</div>
+        <div className="week-nav">
+          <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }}>\u2190 Prev</button>
+          <button onClick={() => setWeekStart(mondayOf(new Date()))}>This Week</button>
+          <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }}>Next \u2192</button>
+        </div>
+      </header>
 
-      {tab === 'morning' && (
-        <div className="morning-tab">
-          <section className="card">
-            <h3 className="section-heading morning-heading">{'\u2600\ufe0f'} Morning Routine</h3>
-            <div className="day-nav">
-              <button onClick={prevDay} className="day-nav-btn">{'\u25C0'}</button>
-              <span className="routine-date">{displayDate}</span>
-              <button onClick={nextDay} className="day-nav-btn">{'\u25B6'}</button>
-              {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
+      {/* --- Tab Content --- */}
+      <div className={`tab-content ${tabFade}`}>
+
+        {/* ===== TODAY TAB - Warm Welcome ===== */}
+        {tab === 'today' && (
+          <div className="today-tab">
+            {/* Warm greeting card */}
+            <div className="card greeting-card">
+              <div className="greeting-title">{getGreeting()}</div>
+              <p className="affirm-message">{affirmMsg}</p>
+              <div className="greeting-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
             </div>
-            <div className="streak-summary-card">
-              <div className="streak-progress-row">
-                <ProgressRing progress={morningProgress} size={70} strokeWidth={7} />
-                <div className="streak-info">
-                  <div className="streak-count">{'\ud83d\udd25'} {streak.morningStreak} day streak</div>
-                  <div className="streak-message">{getStreakMessage(streak.morningStreak)}</div>
-                  <div className="streak-detail">{Object.values(morningChecks).filter(Boolean).length}/{MORNING_ROUTINE.length} tasks done today</div>
-                </div>
-              </div>
-              {streak.last7.length > 0 && <WeekChart data={streak.last7} type="morning" />}
-            </div>
-            <h4 className="section-heading morning-heading">{'\ud83c\udfaf'} Today's Goals</h4>
-            <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
-            {MORNING_ROUTINE.map(item => (
-              <label key={item.key} className={`check-row ${morningChecks[item.key] ? 'check-row-done' : ''}`}>
-                <input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} />
-                <span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span>
-              </label>
-            ))}
-          </section>
 
-          {/* Phase 2: 120-Day Challenge */}
-          <section className="card">
-            <h3 className="section-heading" style={{borderLeftColor: '#22c55e'}}>{'\ud83c\udfc6'} 120-Day Challenge</h3>
-            <div className="challenge-bar-wrap">
-              <div className="challenge-bar-bg">
-                <div className="challenge-bar-fill" style={{ width: `${challengeProgress}%`, background: streak.challengeAvg >= 80 ? 'linear-gradient(90deg, #22c55e, #16a34a)' : 'linear-gradient(90deg, #eab308, #f59e0b)' }} />
-              </div>
-              <div className="challenge-bar-labels">
-                <span>Start</span>
-                <span>{challengeProgress}% complete</span>
-                <span>120 days</span>
-              </div>
-            </div>
-            <p className="challenge-goal">{streak.challengeAvg >= 80 ? '\u2705 On track! Keep your average above 80%' : '\ud83c\udfaf Goal: Maintain 80%+ average for 120 days'}</p>
-          </section>
-
-          {/* Phase 2: Weekly Summary */}
-          <section className="card">
-            <h3 className="section-heading" style={{borderLeftColor: '#a78bfa'}}>{'\ud83d\udcca'} This Week</h3>
-            <div className="weekly-summary-grid">
-              <div className="weekly-summary-item">
-                <ProgressRing progress={streak.weeklyAvg} size={56} strokeWidth={5} />
-                <span className="weekly-summary-label">Weekly Avg</span>
-              </div>
-              <div className="weekly-summary-item">
-                <div className="weekly-stat-big">{streak.bestStreak}</div>
-                <span className="weekly-summary-label">Best Streak</span>
-              </div>
-              <div className="weekly-summary-item">
-                <div className="weekly-stat-big">{streak.totalDays}</div>
-                <span className="weekly-summary-label">Total Days</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Phase 2: Badges */}
-          <section className="card">
-            <h3 className="section-heading" style={{borderLeftColor: '#f472b6'}}>{'\ud83c\udfc5'} Badges ({unlockedBadges.length}/{BADGES.length})</h3>
-            <div className="badges-grid">
-              {BADGES.map(b => {
-                const unlocked = b.check(streak)
-                return (
-                  <div key={b.id} className={`badge-item ${unlocked ? 'unlocked' : 'locked'}`}>
-                    <span className="badge-icon">{b.icon}</span>
-                    <span className="badge-label">{b.label}</span>
-                    <span className="badge-desc">{b.desc}</span>
+            {/* Gentle journey card - NOT a harsh streak */}
+            {streak.totalDays > 0 && (
+              <div className="card journey-card">
+                <h3 className="journey-title">\ud83c\udf31 Your Journey</h3>
+                <p className="journey-text">
+                  You've shown up <strong>{streak.totalDays} {streak.totalDays === 1 ? 'day' : 'days'}</strong> so far.
+                  {streak.bestStreak > 1 && ` Your longest rhythm was ${streak.bestStreak} days in a row.`}
+                  {streak.totalDays === 0 && ' Today could be day one.'}
+                </p>
+                {streak.last7.length > 0 && (
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '6px' }}>This week</div>
+                    <WeekChart data={streak.last7} type="morning" />
                   </div>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className="card daily-text-card">
-            <h3 className="section-heading morning-heading">{'\ud83d\udcc3'} Daily Text</h3>
-            {dailyTextLoading ? (
-              <p className="daily-text-loading">Loading today's daily text...</p>
-            ) : dailyText ? (
-              <div className="daily-text-content">
-                <p className="daily-text-date">{dailyText.dateLabel}</p>
-                <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
-                {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
-                {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 200 ? dailyText.comment.slice(0, 200) + '...' : dailyText.comment}</p>}
-                <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {'\u2192'}</a>
-              </div>
-            ) : (
-              <div>
-                <p>Could not load daily text.</p>
-                <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a>
+                )}
               </div>
             )}
-          </section>
 
-          <section className="card encouragement-card">
-            <h3 className="section-heading">{'\u2728'} Encouragement</h3>
-            <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
-            <p className="encouragement-ref">{'\u2014'} Proverbs 3:5</p>
-          </section>
-
-          <section className="card">
-            <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{'\ud83d\udd17'} Quick Links</h3>
-            <div className="quick-links-grid">
-              <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{'\ud83c\udf10'} JW.org</a>
-              <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{'\ud83d\udcda'} Online Library</a>
-              <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{'\ud83d\udcd3'} Meeting Workbook</a>
-              <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{'\ud83c\udfb5'} Original Songs</a>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {tab === 'evening' && (
-        <div className="evening-tab">
-          <section className="card">
-            <h3 className="section-heading evening-heading">{'\ud83c\udf19'} Evening Routine</h3>
-            <div className="day-nav">
-              <button onClick={prevDay} className="day-nav-btn">{'\u25C0'}</button>
-              <span className="routine-date">{displayDate}</span>
-              <button onClick={nextDay} className="day-nav-btn">{'\u25B6'}</button>
-              {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
-            </div>
-            <div className="streak-summary-card">
-              <div className="streak-progress-row">
-                <ProgressRing progress={eveningProgress} size={70} strokeWidth={7} />
-                <div className="streak-info">
-                  <div className="streak-count">{'\ud83c\udf19'} {streak.eveningStreak} day streak</div>
-                  <div className="streak-message">{getStreakMessage(streak.eveningStreak)}</div>
-                  <div className="streak-detail">{Object.values(eveningChecks).filter(Boolean).length}/{EVENING_ROUTINE.length} tasks done today</div>
+            {/* Daily Text */}
+            <div className="card daily-text-card">
+              <h3 className="section-heading">\ud83d\udcd6 Daily Text</h3>
+              {dailyText ? (
+                <div className="daily-text-content">
+                  <div className="daily-text-date">{dailyText.date}</div>
+                  <div className="daily-text-scripture" dangerouslySetInnerHTML={{ __html: dailyText.scripture }} />
+                  <div className="daily-text-ref">{dailyText.reference}</div>
+                  <div className="daily-text-comment" dangerouslySetInnerHTML={{ __html: dailyText.comment }} />
+                  <a className="workbook-link" href="https://wol.jw.org/en/wol/h/r1/lp-e" target="_blank" rel="noreferrer">Read on WOL \u2192</a>
                 </div>
+              ) : <p className="daily-text-loading">Loading daily text...</p>}
+            </div>
+
+            {/* Encouragement */}
+            <div className="card encouragement-card">
+              <p className="encouragement-verse">\u201cFor I well know the thoughts that I am thinking toward you,\u201d declares Jehovah, \u201cthoughts of peace, and not of calamity, to give you a future and a hope.\u201d</p>
+              <p className="encouragement-ref">\u2014 Jeremiah 29:11</p>
+            </div>
+
+            {/* Quick access links */}
+            <div className="card quick-links-card">
+              <h3 className="section-heading">Quick Access</h3>
+              <div className="quick-links-grid">
+                <a className="quick-link-btn" href={week.workbookUrl} target="_blank" rel="noreferrer">\ud83d\udcd3 Workbook</a>
+                <button className="quick-link-btn" onClick={() => switchTab('morning')}>\u2600\ufe0f Morning</button>
+                <button className="quick-link-btn" onClick={() => switchTab('evening')}>\ud83c\udf19 Evening</button>
+                <button className="quick-link-btn" onClick={() => switchTab('midweek')}>\ud83d\udcda Midweek</button>
               </div>
-              {streak.last7.length > 0 && <WeekChart data={streak.last7} type="evening" />}
             </div>
-            <h4 className="section-heading evening-heading">{'\ud83c\udfaf'} Tonight's Reflections & Goals</h4>
-            <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="What are your goals for tomorrow? Reflect on today's service..." />
-            <div className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> {'\u2014'} Psalm 9:2</div>
-            {EVENING_ROUTINE.map(item => (
-              <label key={item.key} className={`check-row ${eveningChecks[item.key] ? 'check-row-done' : ''}`}>
-                <input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} />
-                <span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span>
-              </label>
-            ))}
-          </section>
-        </div>
-      )}
+          </div>
+        )}
 
-      {tab === 'prep' && (
-        <div className="prep-tab">
-          <section className="card meeting-card">
-            <p className="meeting-subtitle">Midweek Meeting {'\u2022'} {weekData.song}</p>
-            <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{'\ud83d\udcd6'} View Meeting Workbook on JW.org</a>
-            <label>Theme<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || "This week's main theme..."} /></label>
-            <label>Bible Reading<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
-          </section>
-          {SECTION_LABELS.map(section => (
-            <section key={section.key} className="card">
-              <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
-              {weekData.sections[section.key].map(item => (
-                <div key={item.id} className="meeting-part-item">
-                  <span>{item.text}</span>
-                  <button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button>
-                </div>
-              ))}
-              {section.key === 'treasures' && (
-                <div className="treasures-comments">
-                  <h4 className="treasures-comments-title">{'\ud83d\udcdd'} My Bible Reading & Spiritual Gems Notes
-                    <button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button>
-                  </h4>
-                  <textarea rows={5} value={treasuresComments} onChange={e => setTreasuresComments(e.target.value)} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." />
+        {/* ===== MORNING TAB ===== */}
+        {tab === 'morning' && (
+          <div>
+            <div className="day-nav">
+              <button className="day-nav-btn" onClick={prevDay}>\u2190</button>
+              <span className="routine-date">{displayDate}</span>
+              <button className="day-nav-btn" onClick={nextDay}>\u2192</button>
+              {!isToday && <button className="today-btn" onClick={goToday}>Today</button>}
+            </div>
+
+            {/* Gentle encouragement instead of pressure */}
+            <div className="card">
+              <div className="routine-verse">\u201cStart your day by drawing close to Jehovah. Even a few minutes matter.\u201d</div>
+              <h3 className="section-heading morning-heading">\u2600\ufe0f Morning Routine</h3>
+
+              {/* Gentle progress - not demanding */}
+              {morningDone > 0 && (
+                <div className="streak-summary-card">
+                  <div className="streak-progress-row">
+                    <ProgressRing progress={morningPct} size={50} />
+                    <div className="streak-info">
+                      <div className="streak-message">{morningDone === MORNING_ROUTINE.length ? '\u2728 Beautiful! All done.' : `${morningDone} of ${MORNING_ROUTINE.length} \u2014 every bit counts`}</div>
+                    </div>
+                  </div>
                 </div>
               )}
-            </section>
-          ))}
-          <section className="card">
-            <h3 className="section-heading notes-heading">Key Scriptures & References
-              <button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button>
-            </h3>
-            <textarea rows={4} value={scriptures} onChange={e => setScriptures(e.target.value)} placeholder="Paste references and JW.org links here..." />
-          </section>
-          <section className="card">
-            <h3 className="section-heading notes-heading">My Comments to Prepare
-              <button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button>
-            </h3>
-            <textarea rows={5} value={comments} onChange={e => setComments(e.target.value)} placeholder="Write your prepared comments for the meeting..." />
-          </section>
-          <section className="card">
-            <h3 className="section-heading notes-heading">Personal Study Notes
-              <button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button>
-            </h3>
-            <textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)} placeholder="What stood out to you this week?" />
-          </section>
-        </div>
-      )}
 
-      {tab === 'sunday' && (
-        <div className="sunday-tab">
-          <section className="card">
-            <h3 className="section-heading sunday-heading">{'\u26ea'} Weekend Meeting (Public Talk & Watchtower Study)</h3>
-            <div className="sunday-article-box">
-              <p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p>
-              <a href="https://www.jw.org/en/library/magazines/" target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a>
-            </div>
-            {SUNDAY_CHECKLIST.map(item => (
-              <label key={item.key} className={`check-row ${sundayChecks[item.key] ? 'check-row-done' : ''}`}>
-                <input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} />
-                <span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span>
-              </label>
-            ))}
-          </section>
-          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (
-            <section className="card">
-              <h3 className="section-heading notes-heading">Key Scriptures:</h3>
-              <ul className="scripture-list">
-                {weekData.sundayScriptures.map(s => (
-                  <li key={s.ref}>
-                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a>
-                    <button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference & link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          <section className="card">
-            <h3 className="section-heading notes-heading">My Comments to Prepare
-              <button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button>
-            </h3>
-            <textarea rows={6} value={sundayComments} onChange={e => setSundayComments(e.target.value)} placeholder="Write your prepared comments for the Watchtower study here..." />
-          </section>
-          <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
-        </div>
-      )}
-
-      {tab === 'todos' && (
-        <div className="todo-tab">
-          <section className="card">
-            <h3 className="section-heading">{'\u2705'} To-Do List</h3>
-            <div className="todo-stats">
-              <span>{todoDoneCount} of {todos.length} completed</span>
-              {todoDoneCount > 0 && <button className="clear-done-btn" onClick={clearCompleted}>Clear done</button>}
-            </div>
-            <div className="todo-input-row">
-              <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Add a new task..." onKeyDown={e => e.key === 'Enter' && addTodo()} />
-              <button className="todo-add-btn" onClick={addTodo}>Add</button>
-            </div>
-            <div className="todo-options-row">
-              <select value={newTodoPriority} onChange={e => setNewTodoPriority(e.target.value)} className="todo-select">
-                <option value="high">{'\ud83d\udd34'} High</option>
-                <option value="medium">{'\ud83d\udfe1'} Medium</option>
-                <option value="low">{'\ud83d\udfe2'} Low</option>
-              </select>
-              <select value={newTodoCategory} onChange={e => setNewTodoCategory(e.target.value)} className="todo-select">
-                <option value="general">{'\ud83d\udccb'} General</option>
-                <option value="ministry">{'\ud83d\udce3'} Ministry</option>
-                <option value="study">{'\ud83d\udcd6'} Study</option>
-                <option value="meeting">{'\u26ea'} Meeting</option>
-                <option value="personal">{'\ud83c\udfaf'} Personal</option>
-              </select>
-              <input type="date" value={newTodoDue} onChange={e => setNewTodoDue(e.target.value)} className="todo-date" />
-            </div>
-            <div className="todo-filter-row">
-              <button className={`todo-filter-btn ${todoFilter === 'all' ? 'active' : ''}`} onClick={() => setTodoFilter('all')}>All ({todos.length})</button>
-              <button className={`todo-filter-btn ${todoFilter === 'active' ? 'active' : ''}`} onClick={() => setTodoFilter('active')}>Active ({todos.length - todoDoneCount})</button>
-              <button className={`todo-filter-btn ${todoFilter === 'done' ? 'active' : ''}`} onClick={() => setTodoFilter('done')}>Done ({todoDoneCount})</button>
-            </div>
-            {filteredTodos.length === 0 && <p className="todo-empty">{todoFilter === 'all' ? 'No tasks yet. Add one above!' : todoFilter === 'active' ? 'All tasks completed!' : 'No completed tasks.'}</p>}
-            {filteredTodos.map(todo => (
-              <div key={todo.id} className={`todo-item priority-${todo.priority || 'medium'}`}>
-                <label className="check-row">
-                  <input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id, todo.done)} />
-                  <span className={todo.done ? 'done' : ''}>{todo.text}</span>
-                </label>
-                <div className="todo-meta">
-                  {todo.due_date && <span className={`todo-due ${new Date(todo.due_date) < new Date() && !todo.done ? 'overdue' : ''}`}>{new Date(todo.due_date + 'T12:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>}
-                  <span className={`todo-priority-badge ${todo.priority || 'medium'}`}>{todo.priority === 'high' ? '!' : todo.priority === 'low' ? '\u25CB' : '\u25CF'}</span>
+              {MORNING_ROUTINE.map(item => (
+                <div className={`check-row ${morningChecks[item.key] ? 'check-row-done' : ''}`} key={item.key} onClick={() => toggleMorning(item.key)}>
+                  <input type="checkbox" checked={!!morningChecks[item.key]} readOnly />
+                  <span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span>
                 </div>
-                <button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>{'\u2715'}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== EVENING TAB ===== */}
+        {tab === 'evening' && (
+          <div>
+            <div className="day-nav">
+              <button className="day-nav-btn" onClick={prevDay}>\u2190</button>
+              <span className="routine-date">{displayDate}</span>
+              <button className="day-nav-btn" onClick={nextDay}>\u2192</button>
+              {!isToday && <button className="today-btn" onClick={goToday}>Today</button>}
+            </div>
+
+            <div className="card">
+              <div className="routine-verse">\u201cEnd your day in peace. Reflect on Jehovah's goodness.\u201d</div>
+              <h3 className="section-heading evening-heading">\ud83c\udf19 Evening Routine</h3>
+
+              {eveningDone > 0 && (
+                <div className="streak-summary-card">
+                  <div className="streak-progress-row">
+                    <ProgressRing progress={eveningPct} size={50} />
+                    <div className="streak-info">
+                      <div className="streak-message">{eveningDone === EVENING_ROUTINE.length ? '\u2728 Wonderful evening!' : `${eveningDone} of ${EVENING_ROUTINE.length} \u2014 well done`}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {EVENING_ROUTINE.map(item => (
+                <div className={`check-row ${eveningChecks[item.key] ? 'check-row-done' : ''}`} key={item.key} onClick={() => toggleEvening(item.key)}>
+                  <input type="checkbox" checked={!!eveningChecks[item.key]} readOnly />
+                  <span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== MIDWEEK TAB ===== */}
+        {tab === 'midweek' && (
+          <div>
+            <div className="card meeting-card">
+              <a href={week.workbookUrl} target="_blank" rel="noreferrer" className="meeting-title-link">
+                <h2>{week.theme || 'Midweek Meeting'}</h2>
+              </a>
+              <p className="meeting-subtitle">{week.bibleReading && `Bible Reading: ${week.bibleReading}`} {week.song && `\u2022 ${week.song}`}</p>
+              <a href={week.workbookUrl} target="_blank" rel="noreferrer" className="workbook-btn">Open Meeting Workbook</a>
+            </div>
+
+            {SECTION_LABELS.map(sec => (
+              <div key={sec.key}>
+                <h3 className="section-heading" style={{ borderLeftColor: sec.color }}>{sec.label}
+                  <button className={`copy-btn ${copied['sec_'+sec.key] ? 'copied' : ''}`} onClick={() => copyText(week.sections[sec.key].map(p => p.text).join('\n'), 'sec_'+sec.key)}>{copied['sec_'+sec.key] ? '\u2713' : '\ud83d\udccb'}</button>
+                </h3>
+                {week.sections[sec.key].map(part => (
+                  <div className="meeting-part-item" key={part.id}>
+                    <label className="check-row" onClick={() => toggleMidweek(part.id)}>
+                      <input type="checkbox" checked={!!midweekChecks[part.id]} readOnly />
+                      <span className={midweekChecks[part.id] ? 'done' : ''}>{part.text}</span>
+                    </label>
+                    <button className={`copy-btn ${copied[part.id] ? 'copied' : ''}`} onClick={() => copyText(part.text, part.id)}>{copied[part.id] ? '\u2713' : '\ud83d\udccb'}</button>
+                  </div>
+                ))}
               </div>
             ))}
-          </section>
-        </div>
-      )}
 
-      {tab === 'journal' && (
-        <div className="journal-tab">
-          <section className="card">
-            <h3 className="section-heading notes-heading">{'\ud83d\udcd3'} Daily Journal</h3>
-            <label>Date<input type="date" value={journalDate} onChange={e => setJournalDate(e.target.value)} /></label>
-            <textarea rows={6} value={journalText} onChange={e => setJournalText(e.target.value)} placeholder="Write your thoughts, spiritual experiences, and reflections for the day..." />
-            <h4 className="section-heading notes-heading">Extra Notes</h4>
-            <textarea rows={3} value={journalNotes} onChange={e => setJournalNotes(e.target.value)} placeholder="Any additional notes..." />
-          </section>
-        </div>
-      )}
+            {/* Treasures comments */}
+            <div className="card">
+              <div className="treasures-comments">
+                <div className="treasures-comments-title">\ud83d\udcdd My Notes
+                  <button className={`copy-btn ${copied['tc'] ? 'copied' : ''}`} onClick={() => copyText(treasuresComments, 'tc')}>{copied['tc'] ? '\u2713' : '\ud83d\udccb'}</button>
+                </div>
+                <textarea rows={4} value={treasuresComments} onChange={e => handleCommentsChange(e.target.value)} placeholder="Jot down thoughts, comments, or applications..." />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== SUNDAY TAB ===== */}
+        {tab === 'sunday' && (
+          <div>
+            <div className="card meeting-card">
+              <h2>\ud83d\udcd6 Sunday Meeting Prep</h2>
+              {week.sundayArticle && (
+                <div className="sunday-article-box">
+                  <p><strong>Study Article:</strong> {week.sundayArticle}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sunday scriptures */}
+            {week.sundayScriptures && week.sundayScriptures.length > 0 && (
+              <div className="card">
+                <h3 className="section-heading sunday-heading">Key Scriptures</h3>
+                <ul className="scripture-list">
+                  {week.sundayScriptures.map((s, i) => (
+                    <li key={i}>
+                      <a href={s.url} target="_blank" rel="noreferrer" className="scripture-link">{s.ref}</a>
+                      <button className={`copy-btn ${copied['ss'+i] ? 'copied' : ''}`} onClick={() => copyText(s.ref, 'ss'+i)}>{copied['ss'+i] ? '\u2713' : '\ud83d\udccb'}</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Sunday checklist */}
+            <div className="card">
+              <h3 className="section-heading sunday-heading">\u2705 Preparation Checklist</h3>
+              {SUNDAY_CHECKLIST.map(item => (
+                <div className={`check-row ${sundayChecks[item.key] ? 'check-row-done' : ''}`} key={item.key} onClick={() => toggleSunday(item.key)}>
+                  <input type="checkbox" checked={!!sundayChecks[item.key]} readOnly />
+                  <span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <button className="print-btn" onClick={() => window.print()}>\ud83d\udda8\ufe0f Print Sunday Notes</button>
+          </div>
+        )}
+
+        {/* ===== TODO TAB ===== */}
+        {tab === 'todos' && (
+          <div>
+            <div className="card">
+              <h3 className="section-heading notes-heading">\ud83d\udcdd Spiritual Goals</h3>
+              <div className="todo-input-row">
+                <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Add a goal or task..." onKeyDown={e => e.key === 'Enter' && addTodo()} />
+                <button className="todo-add-btn" onClick={addTodo}>Add</button>
+              </div>
+              <div className="todo-options-row">
+                <select className="todo-select" value={todoPriority} onChange={e => setTodoPriority(e.target.value)}>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+                <input type="date" className="todo-date" value={todoDue} onChange={e => setTodoDue(e.target.value)} />
+              </div>
+
+              {todoStats.total > 0 && (
+                <div className="todo-stats">
+                  <span>{todoStats.done} of {todoStats.total} done</span>
+                  {todoStats.done > 0 && <button className="clear-done-btn" onClick={clearDone}>Clear done</button>}
+                </div>
+              )}
+
+              <div className="todo-filter-row">
+                {['all','active','done'].map(f => (
+                  <button key={f} className={`todo-filter-btn ${todoFilter === f ? 'active' : ''}`} onClick={() => setTodoFilter(f)}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
+                ))}
+              </div>
+
+              {filteredTodos.length === 0 && <p className="todo-empty">No goals yet. Start small!</p>}
+              {filteredTodos.map(t => (
+                <div className={`todo-item priority-${t.priority || 'medium'}`} key={t.id}>
+                  <div className="check-row" onClick={() => toggleTodo(t.id)}>
+                    <input type="checkbox" checked={!!t.done} readOnly />
+                    <span className={t.done ? 'done' : ''}>{t.text}</span>
+                  </div>
+                  <div className="todo-meta">
+                    {t.priority && <span className={`todo-priority-badge ${t.priority}`}>{t.priority.toUpperCase()}</span>}
+                    {t.due_date && <span className={`todo-due ${new Date(t.due_date) < new Date() && !t.done ? 'overdue' : ''}`}>{t.due_date}</span>}
+                  </div>
+                  <button className="todo-delete-btn" onClick={() => deleteTodo(t.id)}>\u00d7</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== GROWTH TAB - Identity-focused ===== */}
+        {tab === 'growth' && (
+          <div>
+            {/* Weekly summary - gentle, not competitive */}
+            <div className="card">
+              <h3 className="section-heading">\ud83c\udf3f This Week</h3>
+              <div className="weekly-summary-grid">
+                <div className="weekly-summary-item">
+                  <span className="weekly-stat-big">{streak.totalDays}</span>
+                  <span className="weekly-summary-label">Days Active</span>
+                </div>
+                <div className="weekly-summary-item">
+                  <span className="weekly-stat-big">{streak.bestStreak}</span>
+                  <span className="weekly-summary-label">Best Rhythm</span>
+                </div>
+                <div className="weekly-summary-item">
+                  <span className="weekly-stat-big">{streak.weeklyAvg}%</span>
+                  <span className="weekly-summary-label">This Week</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 21-day challenge - reframed as gentle rhythm builder */}
+            <div className="card">
+              <h3 className="section-heading">\ud83c\udf31 21-Day Rhythm Builder</h3>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '12px' }}>Building a new habit takes time. You're {Math.min(streak.totalDays, 21)} days into your rhythm.</p>
+              <div className="challenge-bar-wrap">
+                <div className="challenge-bar-bg">
+                  <div className="challenge-bar-fill" style={{ width: `${Math.min((streak.totalDays / 21) * 100, 100)}%`, background: streak.totalDays >= 21 ? 'linear-gradient(90deg, #22c55e, #16a34a)' : 'linear-gradient(90deg, #818cf8, #c084fc)' }} />
+                </div>
+                <div className="challenge-bar-labels">
+                  <span>Day 1</span><span>Day 7</span><span>Day 14</span><span>Day 21</span>
+                </div>
+              </div>
+              {streak.totalDays >= 21 && <p className="challenge-goal">\u2728 You've built a rhythm! Keep going.</p>}
+            </div>
+
+            {/* Badges */}
+            <div className="card">
+              <h3 className="section-heading">\ud83c\udfc5 Milestones</h3>
+              <div className="badges-grid">
+                {BADGES.map(b => {
+                  const unlocked = b.check(streak)
+                  return (
+                    <div className={`badge-item ${unlocked ? 'unlocked' : 'locked'}`} key={b.id}>
+                      <span className="badge-icon">{b.icon}</span>
+                      <span className="badge-label">{b.label}</span>
+                      <span className="badge-desc">{b.desc}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>{/* end tab-content */}
 
-      <footer className="footer"><p>Eat Pray Study {'\u00a9'} 2026</p></footer>
+      {/* --- Footer --- */}
+      <div className="footer">Spiritual Growth Companion</div>
+
+      {/* --- Tab Bar --- */}
+      <nav className="tab-row">
+        {[
+          { id: 'today', icon: '\ud83c\udfe0', name: 'Today' },
+          { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
+          { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
+          { id: 'midweek', icon: '\ud83d\udcda', name: 'Midweek' },
+          { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
+          { id: 'todos', icon: '\ud83d\udcdd', name: 'Goals' },
+          { id: 'growth', icon: '\ud83c\udf31', name: 'Growth' }
+        ].map(t => (
+          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => switchTab(t.id)}>
+            <span className="tab-icon">{t.icon}</span>
+            <span className="tab-name">{t.name}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }
