@@ -119,8 +119,8 @@ body {
 }
 .tab-row::-webkit-scrollbar { height: 0; }
 .tab {
-  flex: 0 0 auto;
-  padding: 10px 16px;
+  flex: 1 1 0;
+  padding: 10px 6px;
   border: none;
   background: transparent;
   border-radius: 10px;
@@ -129,7 +129,7 @@ body {
   color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
+  white-space: nowrap;   text-align: center;
   font-family: inherit;
 }
 .tab:hover { color: #a5b4fc; background: rgba(99,102,241,0.1); }
@@ -578,7 +578,7 @@ textarea:focus {
     gap: 4px;
   }
   .tab {
-    padding: 9px 14px;
+    padding: 9px 4px;
     font-size: 0.78rem;
   }
     .check-row {
@@ -613,7 +613,7 @@ textarea:focus {
     font-size: 1.05rem;
   }
   .tab {
-    padding: 8px 10px;
+    padding: 8px 2px;
     font-size: 0.72rem;
   }
   .greeting-title {
