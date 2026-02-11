@@ -171,6 +171,11 @@ export default function App() {
   const weekData = getWeekData(weekKey)
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
+    const prevDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() - 1); setJournalDate(toISO(d)) }
+    const nextDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() + 1); setJournalDate(toISO(d)) }
+    const goToday = () => setJournalDate(todayStr())
+    const isToday = journalDate === todayStr()
+    const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   const [tab, setTab] = useState('morning')
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
@@ -278,7 +283,12 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
         <div className="morning-tab">
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
-            <p className="routine-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      <div className="day-nav">
+                                    <button onClick={prevDay} className="day-nav-btn">{"\u25C0"}</button>
+                                    <span className="routine-date">{displayDate}</span>
+                                    <button onClick={nextDay} className="day-nav-btn">{"\u25B6"}</button>
+                                    {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
+                                  </div>
             
                       <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
           <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
@@ -324,7 +334,12 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
         <div className="evening-tab">
           <section className="card">
             <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
-            <p className="routine-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      <div className="day-nav">
+                                    <button onClick={prevDay} className="day-nav-btn">{"\u25C0"}</button>
+                                    <span className="routine-date">{displayDate}</span>
+                                    <button onClick={nextDay} className="day-nav-btn">{"\u25B6"}</button>
+                                    {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
+                                  </div>
                       <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Tonight's Reflections & Goals</h4>
           <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="What are your goals for tomorrow? Reflect on today's service..." />
             <div className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> {"\u2014"} Psalm 9:2</div>
