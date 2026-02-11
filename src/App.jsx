@@ -59,6 +59,18 @@ const SECTION_LABELS = [
   { key: 'living', label: '\ud83d\udc9a LIVING AS CHRISTIANS', color: '#b5463c' }
 ]
 
+/* --------- Phase 2: Badges --------- */
+const BADGES = [
+  { id: 'first_day', icon: '\ud83c\udf31', label: 'First Day', desc: 'Complete your first day', check: s => s.totalDays >= 1 },
+  { id: 'week_warrior', icon: '\ud83d\udcaa', label: 'Week Warrior', desc: '7-day streak', check: s => s.bestStreak >= 7 },
+  { id: 'two_weeks', icon: '\ud83c\udf1f', label: 'Fortnight', desc: '14-day streak', check: s => s.bestStreak >= 14 },
+  { id: 'month_master', icon: '\ud83d\udd25', label: 'Month Master', desc: '30-day streak', check: s => s.bestStreak >= 30 },
+  { id: 'double_duty', icon: '\u2728', label: 'Double Duty', desc: 'Both routines in one day', check: s => s.morningStreak >= 1 && s.eveningStreak >= 1 },
+  { id: 'perfect_week', icon: '\ud83c\udfc6', label: 'Perfect Week', desc: '90%+ weekly average', check: s => s.weeklyAvg >= 90 },
+  { id: 'dedicated', icon: '\ud83d\udc8e', label: 'Dedicated', desc: '60 total days', check: s => s.totalDays >= 60 },
+  { id: 'centurion', icon: '\ud83c\udf96\ufe0f', label: 'Centurion', desc: '100 total days', check: s => s.totalDays >= 100 }
+]
+
 const WEEKLY_MEETINGS = {
   '2026-02-09': {
     theme: 'He Is the Stability of Your Times',
@@ -156,15 +168,15 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color }) {
   const strokeDashoffset = circumference - (progress / 100) * circumference
   const ringColor = color || (progress >= 80 ? '#22c55e' : progress >= 50 ? '#eab308' : '#818cf8')
   return (
-    <svg className="progress-ring" width={size} height={size}>
+    <svg width={size} height={size} className="progress-ring">
       <circle stroke="rgba(255,255,255,0.1)" fill="transparent" strokeWidth={strokeWidth} r={radius} cx={size/2} cy={size/2} />
-      <circle stroke={ringColor} fill="transparent" strokeWidth={strokeWidth} strokeLinecap="round" r={radius} cx={size/2} cy={size/2} style={{ strokeDasharray: circumference, strokeDashoffset, transition: 'stroke-dashoffset 0.6s ease', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
-      <text x="50%" y="50%" textAnchor="middle" dy=".35em" fill="#e2e8f0" fontSize={size * 0.22} fontWeight="700">{Math.round(progress)}%</text>
+      <circle stroke={ringColor} fill="transparent" strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" r={radius} cx={size/2} cy={size/2} style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 0.6s ease' }} />
+      <text x="50%" y="50%" textAnchor="middle" dy=".3em" fill="#e2e8f0" fontSize={size * 0.22} fontWeight="700">{Math.round(progress)}%</text>
     </svg>
   )
 }
 
-/* --------- Streak helpers --------- */
+/* --------- Streak helpers (enhanced for Phase 2) --------- */
 async function computeStreak() {
   const today = new Date()
   const dates = []
@@ -178,7 +190,7 @@ async function computeStreak() {
     .select('entry_date, morning_checks, evening_checks')
     .in('entry_date', dates)
     .order('entry_date', { ascending: false })
-  if (!data) return { morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [] }
+  if (!data) return { morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [], weeklyAvg: 0, challengeAvg: 0 }
   const byDate = {}
   data.forEach(row => { byDate[row.entry_date] = row })
   let morningStreak = 0
@@ -187,6 +199,9 @@ async function computeStreak() {
   let eCounting = true
   let totalDays = 0
   const last7 = []
+  let weeklyTotal = 0
+  let challengeTotal = 0
+  let challengeDays = 0
   for (let i = 0; i < dates.length; i++) {
     const dateKey = dates[i]
     const row = byDate[dateKey]
@@ -194,7 +209,15 @@ async function computeStreak() {
     const eChecks = row && row.evening_checks ? Object.values(row.evening_checks).filter(Boolean).length : 0
     const mPct = Math.round((mChecks / 6) * 100)
     const ePct = Math.round((eChecks / 6) * 100)
-    if (i < 7) last7.push({ date: dateKey, morningPct: mPct, eveningPct: ePct })
+    const dayAvg = Math.round((mPct + ePct) / 2)
+    if (i < 7) {
+      last7.push({ date: dateKey, morningPct: mPct, eveningPct: ePct })
+      weeklyTotal += dayAvg
+    }
+    if (mPct > 0 || ePct > 0) {
+      challengeTotal += dayAvg
+      challengeDays++
+    }
     if (mPct >= 80 && mCounting) morningStreak++
     else mCounting = false
     if (ePct >= 80 && eCounting) eveningStreak++
@@ -202,7 +225,9 @@ async function computeStreak() {
     if (mPct > 0 || ePct > 0) totalDays++
   }
   const bestStreak = Math.max(morningStreak, eveningStreak)
-  return { morningStreak, eveningStreak, bestStreak, totalDays, last7 }
+  const weeklyAvg = last7.length > 0 ? Math.round(weeklyTotal / last7.length) : 0
+  const challengeAvg = challengeDays > 0 ? Math.round(challengeTotal / challengeDays) : 0
+  return { morningStreak, eveningStreak, bestStreak, totalDays, last7, weeklyAvg, challengeAvg }
 }
 
 /* --------- Mini Week Chart --------- */
@@ -215,8 +240,10 @@ function WeekChart({ data, type }) {
         const dayDate = new Date(d.date + 'T12:00')
         const dayLabel = days[dayDate.getDay()]
         return (
-          <div key={d.date} className="week-chart-bar">
-            <div className="week-chart-fill" style={{ height: `${Math.max(pct, 4)}%`, background: pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : 'rgba(129,140,248,0.5)' }} />
+          <div key={i} className="week-chart-day">
+            <div className="week-chart-bar-bg">
+              <div className="week-chart-bar" style={{ height: `${pct}%`, background: pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : 'rgba(129,140,248,0.5)' }} />
+            </div>
             <span className="week-chart-label">{dayLabel}</span>
           </div>
         )
@@ -267,21 +294,23 @@ export default function App() {
   const [newTodoCategory, setNewTodoCategory] = useState('general')
   const [todoFilter, setTodoFilter] = useState('all')
 
-  /* --- Phase 1: Streak state --- */
-  const [streak, setStreak] = useState({ morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [] })
+  /* --- Streak state (Phase 1 + Phase 2) --- */
+  const [streak, setStreak] = useState({ morningStreak: 0, eveningStreak: 0, bestStreak: 0, totalDays: 0, last7: [], weeklyAvg: 0, challengeAvg: 0 })
   const [streakLoading, setStreakLoading] = useState(true)
 
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
 
-  /* --- Phase 1: Load streak on mount and after saves --- */
+  /* Phase 2: Compute unlocked badges */
+  const unlockedBadges = BADGES.filter(b => b.check(streak))
+  const challengeProgress = Math.round((streak.totalDays / 120) * 100)
+
   const refreshStreak = useCallback(async () => {
     setStreakLoading(true)
     const s = await computeStreak()
     setStreak(s)
     setStreakLoading(false)
   }, [])
-
   useEffect(() => { refreshStreak() }, [refreshStreak])
 
   const loadWeek = useCallback(async () => {
@@ -298,17 +327,15 @@ export default function App() {
       setSundayArticle(wd.sundayArticle || '')
     }
   }, [weekKey])
-
   useEffect(() => { loadWeek() }, [loadWeek])
 
   const saveWeek = useCallback(async () => {
     await supabase.from('weeks').upsert({
       week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments,
-      treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks,
-      sunday_comments: sundayComments, sunday_article: sundayArticle
+      treasures_comments: treasuresComments, notes, checks,
+      sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_article: sundayArticle
     }, { onConflict: 'week_start' })
   }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayArticle])
-
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 
   const loadJournal = useCallback(async () => {
@@ -321,24 +348,22 @@ export default function App() {
       setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('')
     }
   }, [journalDate])
-
   useEffect(() => { loadJournal() }, [loadJournal])
 
   const saveJournal = useCallback(async () => {
     await supabase.from('journal_entries').upsert({
       entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
+      morning_checks: morningChecks, evening_checks: eveningChecks,
+      morning_goals: morningGoals, evening_goals: eveningGoals
     }, { onConflict: 'entry_date' })
     refreshStreak()
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, refreshStreak])
-
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
 
   const loadTodos = useCallback(async () => {
     const { data } = await supabase.from('todo_items').select('*').order('created_at', { ascending: true })
     if (data) setTodos(data)
   }, [])
-
   useEffect(() => { loadTodos() }, [loadTodos])
 
   const addTodo = async () => {
@@ -349,17 +374,14 @@ export default function App() {
     if (data) setTodos(prev => [...prev, data])
     setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general')
   }
-
   const toggleTodo = async (id, done) => {
     await supabase.from('todo_items').update({ done: !done }).eq('id', id)
     setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t))
   }
-
   const deleteTodo = async (id) => {
     await supabase.from('todo_items').delete().eq('id', id)
     setTodos(prev => prev.filter(t => t.id !== id))
   }
-
   const clearCompleted = async () => {
     const done = todos.filter(t => t.done)
     for (const t of done) { await supabase.from('todo_items').delete().eq('id', t.id) }
@@ -382,13 +404,9 @@ export default function App() {
   const toggleEvening = (key) => setEveningChecks(prev => ({ ...prev, [key]: !prev[key] }))
 
   const [copiedId, setCopiedId] = useState(null)
-  const copyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text).then(() => { setCopiedId(id); setTimeout(() => setCopiedId(null), 1500) })
-  }
+  const copyToClipboard = (text, id) => { navigator.clipboard.writeText(text).then(() => { setCopiedId(id); setTimeout(() => setCopiedId(null), 1500) }) }
 
-  useEffect(() => {
-    fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false))
-  }, [])
+  useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
 
   const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
@@ -399,7 +417,6 @@ export default function App() {
     { id: 'journal', icon: '\ud83d\udcd3', name: 'Journal' }
   ]
 
-  /* --- Phase 1: Streak message helper --- */
   const getStreakMessage = (count) => {
     if (count >= 30) return '\ud83d\udd25 Incredible! You are on fire!'
     if (count >= 14) return '\ud83c\udf1f Amazing consistency!'
@@ -410,11 +427,12 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <nav className="tab-row">
+    <div className="app-container">
+      <nav className="tab-bar">
         {TABS.map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.icon} {t.name}
+          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            <span className="tab-icon">{t.icon}</span>
+            <span className="tab-label">{t.name}</span>
           </button>
         ))}
       </nav>
@@ -455,6 +473,58 @@ export default function App() {
                 <span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span>
               </label>
             ))}
+          </section>
+
+          {/* Phase 2: 120-Day Challenge */}
+          <section className="card">
+            <h3 className="section-heading" style={{borderLeftColor: '#22c55e'}}>{'\ud83c\udfc6'} 120-Day Challenge</h3>
+            <div className="challenge-bar-wrap">
+              <div className="challenge-bar-bg">
+                <div className="challenge-bar-fill" style={{ width: `${challengeProgress}%`, background: streak.challengeAvg >= 80 ? 'linear-gradient(90deg, #22c55e, #16a34a)' : 'linear-gradient(90deg, #eab308, #f59e0b)' }} />
+              </div>
+              <div className="challenge-bar-labels">
+                <span>Start</span>
+                <span>{challengeProgress}% complete</span>
+                <span>120 days</span>
+              </div>
+            </div>
+            <p className="challenge-goal">{streak.challengeAvg >= 80 ? '\u2705 On track! Keep your average above 80%' : '\ud83c\udfaf Goal: Maintain 80%+ average for 120 days'}</p>
+          </section>
+
+          {/* Phase 2: Weekly Summary */}
+          <section className="card">
+            <h3 className="section-heading" style={{borderLeftColor: '#a78bfa'}}>{'\ud83d\udcca'} This Week</h3>
+            <div className="weekly-summary-grid">
+              <div className="weekly-summary-item">
+                <ProgressRing progress={streak.weeklyAvg} size={56} strokeWidth={5} />
+                <span className="weekly-summary-label">Weekly Avg</span>
+              </div>
+              <div className="weekly-summary-item">
+                <div className="weekly-stat-big">{streak.bestStreak}</div>
+                <span className="weekly-summary-label">Best Streak</span>
+              </div>
+              <div className="weekly-summary-item">
+                <div className="weekly-stat-big">{streak.totalDays}</div>
+                <span className="weekly-summary-label">Total Days</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Phase 2: Badges */}
+          <section className="card">
+            <h3 className="section-heading" style={{borderLeftColor: '#f472b6'}}>{'\ud83c\udfc5'} Badges ({unlockedBadges.length}/{BADGES.length})</h3>
+            <div className="badges-grid">
+              {BADGES.map(b => {
+                const unlocked = b.check(streak)
+                return (
+                  <div key={b.id} className={`badge-item ${unlocked ? 'unlocked' : 'locked'}`}>
+                    <span className="badge-icon">{b.icon}</span>
+                    <span className="badge-label">{b.label}</span>
+                    <span className="badge-desc">{b.desc}</span>
+                  </div>
+                )
+              })}
+            </div>
           </section>
 
           <section className="card daily-text-card">
@@ -505,7 +575,6 @@ export default function App() {
               <button onClick={nextDay} className="day-nav-btn">{'\u25B6'}</button>
               {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
             </div>
-
             {/* Phase 1: Evening Progress & Streak */}
             <div className="streak-summary-card">
               <div className="streak-progress-row">
@@ -522,7 +591,6 @@ export default function App() {
               </div>
               {streak.last7.length > 0 && <WeekChart data={streak.last7} type="evening" />}
             </div>
-
             <h4 className="section-heading evening-heading">{'\ud83c\udfaf'} Tonight's Reflections & Goals</h4>
             <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="What are your goals for tomorrow? Reflect on today's service..." />
             <div className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> {'\u2014'} Psalm 9:2</div>
