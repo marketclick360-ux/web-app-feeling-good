@@ -1017,3 +1017,265 @@ html, body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ===== LIQUID GLASS OVERRIDES (iOS 26 Style) ===== */
+
+/* -- Glass Card Effect -- */
+.card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 4px 30px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+.card:hover {
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+
+/* -- Glass Tab Bar -- */
+.tab-row {
+  background: rgba(15,23,42,0.6);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+}
+.tab {
+  border-radius: 20px;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.tab:hover {
+  background: rgba(255,255,255,0.08);
+  color: #c4b5fd;
+}
+.tab.active {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: white;
+  box-shadow:
+    0 2px 12px rgba(99,102,241,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* -- Glass Header -- */
+.today-header {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 1.5rem 1rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* -- Glass Inputs -- */
+input[type="text"],
+input[type="date"],
+textarea,
+.todo-select,
+.todo-date {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s ease;
+}
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+.todo-select:focus,
+.todo-date:focus {
+  border-color: rgba(129,140,248,0.5);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
+}
+
+/* -- Glass Buttons -- */
+.todo-add-btn,
+.workbook-btn {
+  background: rgba(99,102,241,0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow:
+    0 4px 16px rgba(99,102,241,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.todo-add-btn:hover,
+.workbook-btn:hover {
+  background: rgba(99,102,241,0.35);
+  box-shadow:
+    0 6px 24px rgba(99,102,241,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+}
+
+/* -- Glass Filter Buttons -- */
+.todo-filter-btn {
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+.todo-filter-btn:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+}
+.todo-filter-btn.active {
+  background: rgba(99,102,241,0.15);
+  border-color: rgba(129,140,248,0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* -- Glass Quick Links -- */
+.quick-link-btn,
+.today-link-btn,
+.home-action-btn {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.quick-link-btn:hover,
+.today-link-btn:hover,
+.home-action-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+
+/* -- Glass Meeting Card -- */
+.meeting-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow:
+    0 4px 30px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* -- Glass Daily Text Card -- */
+.daily-text-card {
+  background: rgba(99,102,241,0.08);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(129,140,248,0.15);
+  box-shadow:
+    0 4px 30px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* -- Glass Encouragement Card -- */
+.encouragement-card {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* -- Glass Sunday Article Box -- */
+.sunday-article-box {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* -- Glass Todo Stats -- */
+.todo-stats {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* -- Glass Meeting Part Items -- */
+.meeting-part-item {
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid rgba(129,140,248,0.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* -- Glass Scripture List Items -- */
+.scripture-list li {
+  background: rgba(255,255,255,0.05);
+  border-left-color: rgba(108,99,255,0.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* -- Glass Routine Verse -- */
+.routine-verse {
+  background: rgba(99,102,241,0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-left: 3px solid rgba(129,140,248,0.5);
+}
+
+/* -- Glass Todo Items -- */
+.todo-item {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: all 0.2s ease;
+}
+.todo-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* -- Glass Print Button -- */
+.print-btn {
+  background: rgba(74,124,89,0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.print-btn:hover {
+  background: rgba(74,124,89,0.4);
+  opacity: 1;
+}
+
+/* -- Glass Clear Done Button -- */
+.clear-done-btn {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* -- Glass Check Row Hover -- */
+.check-row:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+/* -- Glass Footer -- */
+.footer {
+  color: rgba(255,255,255,0.15);
+}
+
+/* -- Subtle shimmer animation for active tab -- */
+@keyframes glass-shimmer {
+  0% { box-shadow: 0 2px 12px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+  50% { box-shadow: 0 2px 16px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.3); }
+  100% { box-shadow: 0 2px 12px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+}
+.tab.active {
+  animation: glass-shimmer 3s ease-in-out infinite;
+}
