@@ -274,13 +274,6 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
 
-              <div className="today-header">
-                          <h2 className="today-title">Eat · Pray · Study</h2>
-                          <p className="today-greeting">{getGreeting()} Friend</p>
-                          <p className="today-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                        </div>
-
-
                     {tab === 'morning' && (
         <div className="morning-tab">
           <section className="card">
