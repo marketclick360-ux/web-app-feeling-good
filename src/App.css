@@ -1444,6 +1444,28 @@ textarea:focus,
   max-width: 95%;
   max-height: 95%;
   object-fit: contain;
-  border-radius: 20px;
+    border-radius: 20px;
 }
-  
+
+  /* -- Print Styles -- */
+@media print {
+  .rich-note-editor {
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .rich-note-editor img {
+    max-height: none !important;
+    page-break-inside: avoid;
+  }
+  .rich-note-toolbar {
+    display: none !important;
+  }
+  .image-modal {
+    display: none !important;
+  }
+  .tab-row {
+    display: none !important;
+  }
+
+  }
