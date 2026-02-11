@@ -260,19 +260,18 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
                 })
         }
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
-  const TABS = [        
-  { id: 'morning', label: '\u2600\ufe0f Morning' },
-    { id: 'evening', label: '\ud83c\udf19 Evening' },
-    { id: 'prep', label: '\ud83d\udcdd Midweek' },
-    { id: 'sunday', label: '\ud83d\udcd6 Sunday' },
-    { id: 'todos', label: '\u2705 To-Do' },
-    { id: 'journal', label: '\ud83d\udcd3 Journal' }
+  const TABS = [
+    { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
+    { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
+    { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
+    { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
+    { id: 'todos', icon: '\u2705', name: 'To-Do' },
+    { id: 'journal', icon: '\ud83d\udcd3', name: 'Journal' }
   ]
-
   return (
     <div className="app">
       <nav className="tab-row">
-        {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>))}
+        {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
 
               <div className="today-header">
