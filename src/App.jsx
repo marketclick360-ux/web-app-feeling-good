@@ -152,7 +152,7 @@ export default function App() {
   const goToday = () => setJournalDate(todayStr())
   const isToday = journalDate === todayStr()
   const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-  const [tab, setTab] = useState('morning')
+  const [tab, setTab] = useState('morning')   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') !== 'false')
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -259,10 +259,10 @@ const [encouragement, setEncouragement] = useState(null)
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
   ]
   return (
-    <div className="app">
+    <div className={`app ${!darkMode ? 'light-theme' : ''}`}>
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
-      </nav>
+      </nav>       <button className="theme-toggle" onClick={() => { const newMode = !darkMode; setDarkMode(newMode); localStorage.setItem('darkMode', newMode); }} title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>{darkMode ? '☀️' : '🌙'}</button>
       {tab === 'morning' && (
         <div className="morning-tab">
           <section className="card">
