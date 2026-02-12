@@ -260,7 +260,7 @@ const [encouragement, setEncouragement] = useState(null)
   <h3 className="section-heading">{"\u2728"} Encouragement</h3>
   {encouragement ? (
     <>
-      <p className="encouragement-verse"><em>"{encouragement.text}"</em></p>
+      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
       <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
       <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
     </>
