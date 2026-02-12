@@ -1,37 +1,39 @@
 import https from 'https'
 
-function fetchPage(url) {
+function fetchPage(url, timeout = 8000) {
   return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), timeout)
+    const parsed = new URL(url)
     const options = {
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (compatible; MeetingBot/1.0)',
+        'Accept': 'text/html',
         'Accept-Language': 'en-US,en;q=0.5'
       }
     }
-    https.get(url, options, (resp) => {
+    https.get(options, (resp) => {
       if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.location) {
-        fetchPage(resp.headers.location).then(resolve).catch(reject)
+        clearTimeout(timer)
+        fetchPage(resp.headers.location, timeout).then(resolve).catch(reject)
         return
       }
       let data = ''
       resp.on('data', chunk => data += chunk)
-      resp.on('end', () => resolve({ ok: resp.statusCode >= 200 && resp.statusCode < 300, status: resp.statusCode, text: data }))
-      resp.on('error', reject)
-    }).on('error', reject)
+      resp.on('end', () => { clearTimeout(timer); resolve({ ok: resp.statusCode >= 200 && resp.statusCode < 300, status: resp.statusCode, text: data }) })
+      resp.on('error', e => { clearTimeout(timer); reject(e) })
+    }).on('error', e => { clearTimeout(timer); reject(e) })
   })
 }
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
   try {
     const { week } = req.query
-    if (!week) {
-      return res.status(400).json({ error: 'Missing ?week=YYYY-MM-DD parameter' })
-    }
+    if (!week) return res.status(400).json({ error: 'Missing ?week=YYYY-MM-DD' })
     const mon = new Date(week + 'T12:00:00Z')
-    if (isNaN(mon.getTime())) {
-      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD (Monday).' })
-    }
+    if (isNaN(mon.getTime())) return res.status(400).json({ error: 'Invalid date' })
     const sun = new Date(mon)
     sun.setDate(sun.getDate() + 6)
     const months = ['january','february','march','april','may','june','july','august','september','october','november','december']
@@ -58,13 +60,9 @@ export default async function handler(req, res) {
     }
     const workbookUrl = `https://www.jw.org/en/library/jw-meeting-workbook/${mwbSlug}/${scheduleSlug}/`
     const fallback = {
-      weekKey: week,
-      theme: '',
-      bibleReading: '',
-      song: 'Song and Prayer',
+      weekKey: week, theme: '', bibleReading: '', song: 'Song and Prayer',
       workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/',
-      sundayArticle: '',
-      sundayScriptures: [],
+      sundayArticle: '', sundayScriptures: [],
       sections: {
         treasures: [
           { id: 'talk', text: '\ud83c\udfa4 Talk (10 min.)' },
@@ -91,42 +89,36 @@ export default async function handler(req, res) {
       return res.status(200).json(fallback)
     }
     const html = pageResult.text
-    const bibleRef = html.match(/<a[^>]*>([A-Z][A-Z\s]+\d+[\-\d]*)<\/a>/i)
-    let bibleReadingText = ''
-    if (bibleRef) {
-      bibleReadingText = bibleRef[1].replace(/<[^>]+>/g, '').trim()
-    }
     let song = 'Song and Prayer'
     const songMatch = html.match(/Song\s+(\d+)/i)
-    if (songMatch) {
-      song = `Song ${songMatch[1]} and Prayer`
-    }
+    if (songMatch) song = `Song ${songMatch[1]} and Prayer`
     let theme = ''
     const themeMatch = html.match(/\u201c([\s\S]*?)\u201d/)
-    if (themeMatch) {
-      theme = themeMatch[1].replace(/<[^>]+>/g, '').trim()
-    }
+    if (themeMatch) theme = themeMatch[1].replace(/<[^>]+>/g, '').trim()
+    let bibleReadingText = ''
+    const brMatch = html.match(/ISAIAH\s+([\d\-,\s]+)/i) || html.match(/Bible Reading[\s\S]*?\u2014\s*([^<(]+)/i)
+    if (brMatch) bibleReadingText = brMatch[0].replace(/<[^>]+>/g, '').trim()
     const treasures = []
     const talkMatch = html.match(/<h\d[^>]*>\s*1\.\s*([\s\S]*?)<\/h\d>/i)
     if (talkMatch) {
-      let talkText = talkMatch[1].replace(/<[^>]+>/g, '').trim()
-      treasures.push({ id: 'talk', text: '\ud83c\udfa4 Talk: \u201c' + (theme || talkText) + '\u201d (10 min.)' })
+      let t = talkMatch[1].replace(/<[^>]+>/g, '').trim()
+      treasures.push({ id: 'talk', text: '\ud83c\udfa4 Talk: \u201c' + (theme || t) + '\u201d (10 min.)' })
     } else {
       treasures.push({ id: 'talk', text: '\ud83c\udfa4 Talk (10 min.)' })
     }
     const gemsMatch = html.match(/<h\d[^>]*>\s*2\.\s*Spiritual\s+Gems[\s\S]*?<\/h\d>/i)
     if (gemsMatch) {
-      let gemsText = gemsMatch[0].replace(/<[^>]+>/g, '').trim()
-      const idx = gemsText.indexOf('Spiritual')
-      treasures.push({ id: 'gems', text: '\ud83d\udd0d ' + (idx >= 0 ? gemsText.substring(idx) : 'Spiritual Gems (10 min.)') })
+      let g = gemsMatch[0].replace(/<[^>]+>/g, '').trim()
+      const idx = g.indexOf('Spiritual')
+      treasures.push({ id: 'gems', text: '\ud83d\udd0d ' + (idx >= 0 ? g.substring(idx) : 'Spiritual Gems (10 min.)') })
     } else {
       treasures.push({ id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.)' })
     }
     const readingMatch = html.match(/<h\d[^>]*>\s*3\.\s*Bible\s+Reading[\s\S]*?<\/h\d>/i)
     if (readingMatch) {
-      let readText = readingMatch[0].replace(/<[^>]+>/g, '').trim()
-      const idx = readText.indexOf('Bible Reading')
-      treasures.push({ id: 'reading', text: '\ud83d\udcd6 ' + (idx >= 0 ? readText.substring(idx) : 'Bible Reading (4 min.)') })
+      let r = readingMatch[0].replace(/<[^>]+>/g, '').trim()
+      const idx = r.indexOf('Bible Reading')
+      treasures.push({ id: 'reading', text: '\ud83d\udcd6 ' + (idx >= 0 ? r.substring(idx) : 'Bible Reading (4 min.)') })
     } else {
       treasures.push({ id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.)' })
     }
@@ -139,20 +131,15 @@ export default async function handler(req, res) {
     }
     const cbsMatch = html.match(/Congregation\s+Bible\s+Study[\s\S]*?\((\d+)\s*min\.\)[\s\S]*?<em>([\s\S]*?)<\/em>/i)
     if (cbsMatch) {
-      let cbsRef = cbsMatch[2].replace(/<[^>]+>/g, '').trim()
-      living.push({ id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (' + cbsMatch[1] + ' min.) \u2014 ' + cbsRef })
+      let ref = cbsMatch[2].replace(/<[^>]+>/g, '').trim()
+      living.push({ id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (' + cbsMatch[1] + ' min.) \u2014 ' + ref })
     } else {
       living.push({ id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.)' })
     }
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600')
     return res.status(200).json({
-      weekKey: week,
-      theme,
-      bibleReading: bibleReadingText,
-      song,
-      workbookUrl,
-      sundayArticle: '',
-      sundayScriptures: [],
+      weekKey: week, theme, bibleReading: bibleReadingText, song,
+      workbookUrl, sundayArticle: '', sundayScriptures: [],
       sections: { treasures, living },
       source: 'scraped'
     })
