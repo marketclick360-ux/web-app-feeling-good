@@ -218,10 +218,8 @@ const [encouragement, setEncouragement] = useState(null)
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
     { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
-    { id: 'journal', icon: '\ud83d\udcd3', name: 'Journal' }
   ]
   return (
-    <div className="app">
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
@@ -342,7 +340,7 @@ const [encouragement, setEncouragement] = useState(null)
         </div>
       )}
       {tab === 'todos' && (
-        <div className="todo-tab">
+        <div className="todo-tab"><div className="day-nav"><button onClick={prevDay} className="day-nav-btn">{"\u25C0"}</button><span className="routine-date">{displayDate}</span><button onClick={nextDay} className="day-nav-btn">{"\u25B6"}</button>{!isToday && <button onClick={goToday} className="today-btn">Today</button>}</div>
           <section className="card">
             <h3 className="section-heading">{"\u2705"} To-Do List</h3>
             <div className="todo-input-row">
