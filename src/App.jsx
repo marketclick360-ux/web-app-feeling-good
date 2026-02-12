@@ -17,7 +17,7 @@ function formatRange(mon) {
   const y = mon.getFullYear()
   return `${mon.toLocaleDateString('en-US', opts)} \u2013 ${sun.toLocaleDateString('en-US', opts)}, ${y}`
 }
-function toISO(d) { return d.toISOString().slice(0, 10) }
+function toISO(d) { var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+dd }
 function todayStr() { return toISO(new Date()) }
 function getGreeting() {
   const hour = new Date().getHours()
