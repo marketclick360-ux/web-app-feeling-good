@@ -808,7 +808,64 @@ textarea:focus {
   min-width: 200px;
   text-align: center;
 }
--width: 100%;
+/* -- Rich Note Editor -- */
+.rich-note-editor-wrapper {
+  margin-top: 12px;
+}
+.rich-note-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px 14px 0 0;
+  border-bottom: none;
+}
+.rich-note-toolbar button {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: #94a3b8;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.rich-note-toolbar button:hover {
+  background: rgba(255,255,255,0.12);
+  color: #e2e8f0;
+}
+.rich-note-toolbar button.active {
+  background: rgba(99,102,241,0.2);
+  color: #a5b4fc;
+  border-color: rgba(129,140,248,0.3);
+}
+.rich-note-editor {
+  min-height: 150px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 14px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0 0 14px 14px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  outline: none;
+  position: relative;
+}
+.rich-note-editor:focus {
+  border-color: rgba(129,140,248,0.4);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+.rich-note-editor img {
+  max-width: 100%;
   border-radius: 8px;
   margin: 8px 0;
   max-height: 200px;
@@ -816,6 +873,7 @@ textarea:focus {
   cursor: pointer;
   display: block;
 }
+
 .rich-note-editor ul, .rich-note-editor ol { padding-left: 24px; margin: 6px 0; }
 .rich-note-editor li { margin-bottom: 2px; }
 .rich-note-placeholder {
