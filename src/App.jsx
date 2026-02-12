@@ -141,7 +141,8 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' 
 export default function App() {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const weekLabel = formatRange(weekStart)
-useState('morning');  const [apiWeekData, setApiWeekData] = useState(null)
+  const weekKey = toISO(weekStart)
+  const [apiWeekData, setApiWeekData] = useState(null)
   const weekData = apiWeekData || WEEKLY_MEETINGS[weekKey] || DEFAULT_WEEK
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
@@ -151,7 +152,7 @@ useState('morning');  const [apiWeekData, setApiWeekData] = useState(null)
   const goToday = () => setJournalDate(todayStr())
   const isToday = journalDate === todayStr()
   const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-  const [tab, setTab] = useState('morning')   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') !== 'false')
+  const [tab, setTab] = useState('morning')
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -258,10 +259,10 @@ const [encouragement, setEncouragement] = useState(null)
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
   ]
   return (
-    <div className={`app ${!darkMode ? 'light-theme' : ''}`}>
+    <div className="app">
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
-      </nav>       <button className="theme-toggle" onClick={() => { const newMode = !darkMode; setDarkMode(newMode); localStorage.setItem('darkMode', newMode); }} title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>{darkMode ? '☀️' : '🌙'}</button>
+      </nav>
       {tab === 'morning' && (
         <div className="morning-tab">
           <section className="card">
