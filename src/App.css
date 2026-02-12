@@ -554,7 +554,9 @@ textarea:focus {
 .todo-priority-badge.medium { color: #eab308; }
 .todo-priority-badge.low { color: #22c55e; }
 
-74,124,89,0.25);
+/* -- Print Button -- */
+.print-btn {
+  background: rgba(74,124,89,0.25);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #fff;
