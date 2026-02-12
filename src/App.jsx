@@ -250,7 +250,7 @@ const [encouragement, setEncouragement] = useState(null)
   }
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
   useEffect(() => { fetch('/api/encouragement').then(r => r.ok ? r.json() : null).then(data => { setEncouragement(data) }) }, [])
-  const TABS = [
+  useEffect(() => {     const handleExternalLinks = (e) => {       const anchor = e.target.closest('a[href]')       if (!anchor) return       const href = anchor.getAttribute('href')       if (href && (href.startsWith('http://') || href.startsWith('https://')) && !href.includes(window.location.hostname)) {         e.preventDefault()         window.open(href, '_blank', 'noopener,noreferrer')       }     }     document.addEventListener('click', handleExternalLinks)     return () => document.removeEventListener('click', handleExternalLinks)   }, [])   const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
     { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
