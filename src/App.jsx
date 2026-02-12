@@ -174,7 +174,7 @@ export default function App() {
 const [encouragement, setEncouragement] = useState(null)  
  const [dailyTextLoading, setDailyTextLoading] = useState(true)
   const [todos, setTodos] = useState([])
-    const [colorMode, setColorMode] = useState('dark')
+    const [colorMode, setColorMode] = useState('')
   const [newTodo, setNewTodo] = useState('')
   const [newTodoPriority, setNewTodoPriority] = useState('medium')
   const [newTodoDue, setNewTodoDue] = useState('')
@@ -264,7 +264,7 @@ const [encouragement, setEncouragement] = useState(null)
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
-            <button className="theme-toggle" onClick={() => setColorMode(colorMode === 'dark' ? 'light' : 'dark')} title="Toggle light/dark mode">{colorMode === 'dark' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
+            <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
       {tab === 'morning' && (
         <div className="morning-tab">
           <section className="card">
