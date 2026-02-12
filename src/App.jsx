@@ -264,7 +264,7 @@ const [encouragement, setEncouragement] = useState(null)
       <nav className="tab-row">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
-            <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
+        <label className="theme-switch" title="Toggle light/dark mode"><input type="checkbox" checked={colorMode === 'light-theme'} onChange={() => setColorMode(colorMode === '' ? 'light-theme' : '')} /><span className="slider"></span></label>
       {tab === 'morning' && (
         <div className="morning-tab">
           <section className="card">
