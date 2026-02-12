@@ -141,8 +141,7 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' 
 export default function App() {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const weekLabel = formatRange(weekStart)
-  const weekKey = toISO(weekStart)
-  const [apiWeekData, setApiWeekData] = useState(null)
+useState('morning');  const [apiWeekData, setApiWeekData] = useState(null)
   const weekData = apiWeekData || WEEKLY_MEETINGS[weekKey] || DEFAULT_WEEK
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
