@@ -134,6 +134,7 @@ export default function App() {
   const [eveningGoals, setEveningGoals] = useState('')
   const [dailyText, setDailyText] = useState(null)
   const [dailyTextLoading, setDailyTextLoading] = useState(true)
+  const [encouragement, setEncouragement] = useState(null)
   const [todos, setTodos] = useState([])
   const [newTodo, setNewTodo] = useState('')
   const [newTodoPriority, setNewTodoPriority] = useState('medium')
@@ -208,6 +209,7 @@ export default function App() {
     })
   }
   useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
+  useEffect(() => { fetch('/api/encouragement').then(r => r.ok ? r.json() : null).then(data => { if (data) setEncouragement(data) }).catch(() => {}) }, [])  const [encouragement, setEncouragement] = useState(null)
   const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
     { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
@@ -254,10 +256,16 @@ export default function App() {
             )}
           </section>
           <section className="card encouragement-card">
-            <h3 className="section-heading">{"\u2728"} Encouragement</h3>
-            <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
-            <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
-          </section>
+          <h3 className="section-heading">{"\u2728"} Encouragement</h3>
+          {encouragement ? (
+            <>
+              <p className="encouragement-ref">{encouragement.reference}</p>
+              <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
+            </>
+          ) : (
+            <p className="encouragement-verse"><em>Loading...</em></p>
+          )}
+        </section>
           <section className="card">
             <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83d\udd17"} Quick Links</h3>
             <div className="quick-links-grid">
