@@ -218,7 +218,6 @@ const [encouragement, setEncouragement] = useState(null)
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
     { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
-    { id: 'journal', icon: '\ud83d\udcd3', name: 'Journal' }
   ]
   return (
     <div className="app">
@@ -371,17 +370,6 @@ const [encouragement, setEncouragement] = useState(null)
             </div>
             {filteredTodos.length === 0 && <p className="todo-empty">{todoFilter === 'all' ? 'No tasks yet. Add one above!' : todoFilter === 'active' ? 'All tasks completed!' : 'No completed tasks.'}</p>}
             {filteredTodos.map(todo => (<div key={todo.id} className={`todo-item priority-${todo.priority || 'medium'}`}><label className="check-row"><input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id, todo.done)} /><span className={todo.done ? 'done' : ''}>{todo.text}</span></label><div className="todo-meta">{todo.due_date && <span className={`todo-due ${new Date(todo.due_date) < new Date() && !todo.done ? 'overdue' : ''}`}>{new Date(todo.due_date + 'T12:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>}<span className={`todo-priority-badge ${todo.priority || 'medium'}`}>{todo.priority === 'high' ? '!' : todo.priority === 'low' ? '\u25CB' : '\u25CF'}</span></div><button className="todo-edit-btn" onClick={() => { const newText = prompt('Edit task:', todo.text); if (newText !== null) editTodo(todo.id, newText) }}>{"\u270F"}</button><button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>{"\u2715"}</button></div>))}
-          </section>
-        </div>
-      )}
-      {tab === 'journal' && (
-        <div className="journal-tab">
-          <section className="card">
-            <h3 className="section-heading notes-heading">{"\ud83d\udcd3"} Daily Journal</h3>
-            <label>Date<input type="date" value={journalDate} onChange={e => setJournalDate(e.target.value)} /></label>
-            <textarea rows={6} value={journalText} onChange={e => setJournalText(e.target.value)} placeholder="Write your thoughts, spiritual experiences, and reflections for the day..." />
-            <h4 className="section-heading notes-heading">Extra Notes</h4>
-            <textarea rows={3} value={journalNotes} onChange={e => setJournalNotes(e.target.value)} placeholder="Any additional notes..." />
           </section>
         </div>
       )}
