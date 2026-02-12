@@ -187,7 +187,7 @@ export default function App() {
   const [treasuresComments, setTreasuresComments] = useState('')
   const [notes, setNotes] = useState('')
   const [sundayChecks, setSundayChecks] = useState({})
-  const [sundayComments, setSundayComments] = useState('')
+  const [sundayComments, setSundayComments] = useState(''); const [sundayComments2, setSundayComments2] = useState(''); const [sundayComments3, setSundayComments3] = useState('')
   const [sundayArticle, setSundayArticle] = useState('')
   const [journalText, setJournalText] = useState('')
   const [journalTasks, setJournalTasks] = useState({})
@@ -213,17 +213,17 @@ export default function App() {
       setTheme(data.theme || wd.theme || ''); setBibleReading(data.bible_reading || wd.bibleReading || '')
       setScriptures(data.scriptures || ''); setComments(data.comments || ''); setTreasuresComments(data.treasures_comments || '')
       setNotes(data.notes || ''); setChecks(data.checks || {}); setSundayChecks(data.sunday_checks || {})
-      setSundayComments(data.sunday_comments || ''); setSundayArticle(data.sunday_article || wd.sundayArticle || '')
+      setSundayComments(data.sunday_comments || ''); setSundayComments2(data.sunday_comments_2 || ''); setSundayComments3(data.sunday_comments_3 || ''); setSundayArticle(data.sunday_article || wd.sundayArticle || '')
     } else {
       setTheme(wd.theme || ''); setBibleReading(wd.bibleReading || ''); setScriptures(''); setComments('')
-      setTreasuresComments(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments('')
+      setTreasuresComments(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments(''); setSundayComments2(''); setSundayComments3('')
       setSundayArticle(wd.sundayArticle || '')
     }
   }, [weekKey])
   useEffect(() => { loadWeek() }, [loadWeek])
   const saveWeek = useCallback(async () => {
-    await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_article: sundayArticle }, { onConflict: 'week_start' })
-  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayArticle])
+    await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start' })
+  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
   const loadJournal = useCallback(async () => {
     const { data } = await supabase.from('journal_entries').select('*').eq('entry_date', journalDate).maybeSingle()
@@ -384,7 +384,7 @@ morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: mor
             {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
           {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference & link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder="Write your prepared comments for the Watchtower study here..." minHeight={180} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder="Write your prepared comments for the Watchtower study here..." minHeight={180} /></section><section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (2)<button className={`copy-btn ${copiedId === 'sundayComments2' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments2, 'sundayComments2')} title="Copy comments">{copiedId === 'sundayComments2' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments2} onChange={setSundayComments2} placeholder="Write more prepared comments here..." minHeight={180} /></section><section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (3)<button className={`copy-btn ${copiedId === 'sundayComments3' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments3, 'sundayComments3')} title="Copy comments">{copiedId === 'sundayComments3' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments3} onChange={setSundayComments3} placeholder="Write additional prepared comments here..." minHeight={180} /></section>
           <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
         </div>
       )}
