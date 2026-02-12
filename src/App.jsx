@@ -76,7 +76,47 @@ const WEEKLY_MEETINGS = {
         { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 60-61' }
       ]
     }
+  },
+  '2026-02-16': {
+    theme: 'Do Not Be Afraid Because of the Words That You Heard',
+    bibleReading: 'Isaiah 36-37',
+    song: 'Song 150 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid Because of the Words That You Heard\u201d (10 min.) \u2014 Isa 36:1, 2; 37:6, 7' },
+        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) \u2014 Isa 37:29' },
+        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) \u2014 Isaiah 37:14-23' }
+      ],
+      living: [
+        { id: 'local_needs', text: '\ud83d\udccc \u201cWhat Is the Basis for Your Confidence?\u201d (15 min.)' },
+        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 62-63' }
+      ]
+    }
+  },
+  '2026-02-23': {
+    theme: 'Like a Shepherd He Will Care For His Flock',
+    bibleReading: 'Isaiah 38-40',
+    song: 'Song 4 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cLike a Shepherd He Will Care For His Flock\u201d (10 min.) \u2014 Isa 40:8, 11, 26-29' },
+        { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.) \u2014 Isa 40:3' },
+        { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) \u2014 Isaiah 40:21-31' }
+      ],
+      living: [
+        { id: 'local_needs', text: '\ud83d\udccc Annual Service Report (15 min.)' },
+        { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 64-65' }
+      ]
+    }
   }
+}
+
 }
 const DEFAULT_WEEK = {
   theme: '', bibleReading: '', song: 'Song and Prayer',
