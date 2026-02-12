@@ -345,10 +345,6 @@ const [encouragement, setEncouragement] = useState(null)
         <div className="todo-tab">
           <section className="card">
             <h3 className="section-heading">{"\u2705"} To-Do List</h3>
-            <div className="todo-stats">
-              <span>{todoDoneCount} of {todos.length} completed</span>
-              {todoDoneCount > 0 && <button className="clear-done-btn" onClick={clearCompleted}>Clear done</button>}
-            </div>
             <div className="todo-input-row">
               <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Add a new task..." onKeyDown={e => e.key === 'Enter' && addTodo()} />
               <button className="todo-add-btn" onClick={addTodo}>Add</button>
