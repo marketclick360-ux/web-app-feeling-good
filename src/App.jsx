@@ -295,6 +295,10 @@ const [encouragement, setEncouragement] = useState(null)
               </div>
             )}
           </section>
+                  <section className="card">
+          <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
+          <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
+        </section>
           
 <section className="card encouragement-card">
   <h3 className="section-heading">{"\u2728"} Encouragement</h3>
