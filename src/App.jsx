@@ -72,6 +72,7 @@ const WEEKLY_MEETINGS = {
         { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.) \u2014 Isaiah 35:1-10' }
       ],
       living: [
+        
         { id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' },
         { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.) \u2014 lfb lessons 60-61' }
       ]
@@ -158,7 +159,9 @@ export default function App() {
   const [bibleReading, setBibleReading] = useState('')
   const [scriptures, setScriptures] = useState('')
   const [comments, setComments] = useState('')
-  const [treasuresComments, setTreasuresComments] = useState('')
+  const [treasuresComments, setTreasuresComments] = useState('');
+const [treasuresComments2, setTreasuresComments2] = useState('');
+
   const [notes, setNotes] = useState('')
   const [sundayChecks, setSundayChecks] = useState({})
   const [sundayComments, setSundayComments] = useState(''); const [sundayComments2, setSundayComments2] = useState(''); const [sundayComments3, setSundayComments3] = useState('')
@@ -358,6 +361,48 @@ const [encouragement, setEncouragement] = useState(null)
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
               {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
               {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
+            {section.key === 'treasures' && (
+  <div className="treasures-comments">
+    <h4 className="treasures-comments-title">
+      {"📝"} My Bible Reading & Spiritual Gems Notes (2)
+      <button
+        className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`}
+        onClick={() => copyToClipboard(treasuresComments2, 'treasures2')}
+        title="Copy notes"
+      >
+        {copiedId === 'treasures2' ? '✅' : '📋'}
+      </button>
+    </h4>
+    <RichNoteEditor
+      value={treasuresComments2}
+      onChange={setTreasuresComments2}
+      placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..."
+      minHeight={150}
+    />
+  </div>
+)}
+
+              {section.key === 'treasures' && (
+  <div className="treasures-comments">
+    <h4 className="treasures-comments-title">
+      {"📝"} My Bible Reading & Spiritual Gems Notes (2)
+      <button
+        className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`}
+        onClick={() => copyToClipboard(treasuresComments2, 'treasures2')}
+        title="Copy notes"
+      >
+        {copiedId === 'treasures2' ? '✅' : '📋'}
+      </button>
+    </h4>
+    <RichNoteEditor
+      value={treasuresComments2}
+      onChange={setTreasuresComments2}
+      placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..."
+      minHeight={150}
+    />
+  </div>
+)}
+
             </section>
           ))}
           <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></section>
