@@ -143,7 +143,7 @@ export default function App() {
   const weekLabel = formatRange(weekStart)
   const weekKey = toISO(weekStart)
   const [apiWeekData, setApiWeekData] = useState(null)
-  const weekData = apiWeekData || WEEKLY_MEETINGS[weekKey] || DEFAULT_WEEK
+  const _raw = apiWeekData || WEEKLY_MEETINGS[weekKey] || DEFAULT_WEEK; const weekData = { ...DEFAULT_WEEK, ..._raw, sections: { treasures: (_raw.sections?.treasures ?? DEFAULT_WEEK.sections.treasures), living: (_raw.sections?.living ?? DEFAULT_WEEK.sections.living) } }
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
   const [journalDate, setJournalDate] = useState(todayStr())
@@ -356,7 +356,7 @@ const [encouragement, setEncouragement] = useState(null)
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
-              {weekData.sections[section.key].map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
+              {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
               {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
             </section>
           ))}
