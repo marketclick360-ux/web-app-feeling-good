@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 import RichNoteEditor from './RichNoteEditor'
 /* --------- helpers --------- */
@@ -180,7 +180,7 @@ const [encouragement, setEncouragement] = useState(null)
   const [newTodoDue, setNewTodoDue] = useState('')
   const [newTodoCategory, setNewTodoCategory] = useState('general')
   const [todoFilter, setTodoFilter] = useState('all')
-    const [editingTodoId, setEditingTodoId] = useState(null)
+    const [editingTodoId, setEditingTodoId] = useState(null); const journalLoaded = useRef(false); const weekLoaded = useRef(false)
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
   useEffect(() => {
@@ -203,9 +203,9 @@ const [encouragement, setEncouragement] = useState(null)
       setTreasuresComments(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments(''); setSundayComments2(''); setSundayComments3('')
       setSundayArticle(wd.sundayArticle || '')
     }
-  }, [weekKey, apiWeekData])
-  useEffect(() => { loadWeek() }, [loadWeek])
-  const saveWeek = useCallback(async () => {
+  weekLoaded.current = true; }, [weekKey, apiWeekData])
+  useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
+  const saveWeek = useCallback(async () => { if (!weekLoaded.current) return;
     await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start' })
   }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
@@ -217,9 +217,9 @@ const [encouragement, setEncouragement] = useState(null)
       setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '') 
     } else {
       setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('') }
-  }, [journalDate])
-  useEffect(() => { loadJournal() }, [loadJournal])
-  const saveJournal = useCallback(async () => {
+  journalLoaded.current = true; }, [journalDate])
+  useEffect(() => { journalLoaded.current = false; loadJournal() }, [loadJournal])
+  const saveJournal = useCallback(async () => { if (!journalLoaded.current) return;
     await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, 
       morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }, { onConflict: 'entry_date' })
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals])
