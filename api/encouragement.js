@@ -62,6 +62,23 @@ const SCRIPTURES = [
   { ref: 'Psalm 18:2', text: 'Jehovah is your crag, your stronghold, and your rescuer.', book: 19, chapter: 18, verse: 2 },
   { ref: 'Colossians 3:15', text: 'Let the peace of the Christ rule in your hearts.', book: 51, chapter: 3, verse: 15 },
 ];
+function translateToSpanish(reference) {
+  const translations = {
+    'Isaiah 41:10': 'No tengas miedo. Jehová te fortalece y te ayuda.',
+    'Psalm 23:1–4': 'Jehová es tu Pastor. Nada te faltará.',
+    'Philippians 4:6, 7': 'No se inquieten por nada. La paz de Dios guardará su corazón.',
+    'Proverbs 3:5, 6': 'Confía en Jehová con todo tu corazón.',
+    'Matthew 6:33, 34': 'Sigue buscando primero el Reino. No te preocupes por el mañana.',
+  };
+
+  return translations[reference] || 'Jehová te fortalece cada día.';
+}
+
+const SCRIPTURES_ES = SCRIPTURES.map(s => ({
+  ...s,
+  text: translateToSpanish(s.ref),
+}));
+
 export default async function handler(req, res) {
   try {
     const now = new Date();
@@ -86,9 +103,14 @@ const oneDay = 1000 * 60 * 60 * 24;
 const dayOfYear = Math.floor((texasDate - startOfYear) / oneDay);
 
 
-    // Rotate using modulo (no array mutation)
-    const index = (dayOfYear - 1) % SCRIPTURES.length;
-    const scripture = SCRIPTURES[index];
+// Choose language: default en, or es via ?lang=es
+const lang = req.query.lang === 'es' ? 'es' : 'en';
+const scripturePool = lang === 'es' ? SCRIPTURES_ES : SCRIPTURES;
+
+// Rotate using modulo (no array mutation)
+const index = (dayOfYear - 1) % scripturePool.length;
+const scripture = scripturePool[index];
+   
 
     if (!scripture) {
       return res.status(500).json({ error: "Scripture not found" });
@@ -105,12 +127,16 @@ const dayOfYear = Math.floor((texasDate - startOfYear) / oneDay);
 
     const wolUrl = `https://wol.jw.org/en/wol/b/r1/lp-e/nwtsty/${scripture.book}/${scripture.chapter}#${verseAnchor}`;
 
-    const dateLabel = now.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    const locale = lang === 'es' ? 'es-MX' : 'en-US';
+
+const dateLabel = new Intl.DateTimeFormat(locale, {
+  timeZone: 'America/Chicago',
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric'
+}).format(now);
+
 
     // Cache for 24 hours (changes only once per day)
     res.setHeader(
