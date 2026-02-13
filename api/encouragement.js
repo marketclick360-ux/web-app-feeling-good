@@ -66,21 +66,34 @@ export default async function handler(req, res) {
   try {
     const now = new Date();
 
-    // Calculate day of year (1-365)
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor(diff / oneDay);
+    // UTC-safe day-of-year calculation
+    const start = Date.UTC(now.getUTCFullYear(), 0, 0);
+    const today = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate()
+    );
 
-    // Pick today's scripture (0-indexed)
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor((today - start) / oneDay);
+
+    // Rotate using modulo (no array mutation)
     const index = (dayOfYear - 1) % SCRIPTURES.length;
     const scripture = SCRIPTURES[index];
 
-    // Build WOL link for this scripture
-    const bookPadded = scripture.book.toString();
-    const chapterPadded = scripture.chapter.toString();
-    const versePadded = scripture.verse.toString().padStart(3, '0');
-    const verseAnchor = `v${bookPadded.padStart(2, '0')}${chapterPadded.padStart(3, '0')}${versePadded}`;
+    if (!scripture) {
+      return res.status(500).json({ error: "Scripture not found" });
+    }
+
+    // Build WOL verse anchor
+    const verseAnchor = `v${scripture.book
+      .toString()
+      .padStart(2, '0')}${scripture.chapter
+      .toString()
+      .padStart(3, '0')}${scripture.verse
+      .toString()
+      .padStart(3, '0')}`;
+
     const wolUrl = `https://wol.jw.org/en/wol/b/r1/lp-e/nwtsty/${scripture.book}/${scripture.chapter}#${verseAnchor}`;
 
     const dateLabel = now.toLocaleDateString('en-US', {
@@ -90,13 +103,19 @@ export default async function handler(req, res) {
       year: 'numeric',
     });
 
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
+    // Cache for 24 hours (changes only once per day)
+    res.setHeader(
+      'Cache-Control',
+      's-maxage=86400, stale-while-revalidate=43200'
+    );
+
     return res.status(200).json({
       reference: scripture.ref,
       text: scripture.text,
       wolUrl,
       dateLabel,
     });
+
   } catch (err) {
     console.error('Encouragement error:', err);
     return res.status(500).json({ error: err.message });
