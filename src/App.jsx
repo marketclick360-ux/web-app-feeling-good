@@ -351,7 +351,7 @@ const [encouragement, setEncouragement] = useState(null)
           <section className="card meeting-card"> <p className="meeting-subtitle">Midweek Meeting {"\u2022"} {weekData.song}</p>
             <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} View Meeting Workbook on JW.org</a>
             <label>Theme<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || "This week's main theme..."} /></label>
-            <label>Bible Reading<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
+            <label>Bible Reading {bibleReading && <a href={`https://wol.jw.org/en/wol/l/r1/lp-e?q=${encodeURIComponent(bibleReading)}`} target="_blank" rel="noopener noreferrer" className="bible-link">📖</a>}<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
           </section>
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
