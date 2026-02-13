@@ -812,6 +812,7 @@ textarea:focus {
 .rich-note-editor-wrapper {
   margin-top: 12px;
 }
+
 .rich-note-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -824,6 +825,7 @@ textarea:focus {
   border-radius: 14px 14px 0 0;
   border-bottom: none;
 }
+
 .rich-note-toolbar button {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
@@ -835,15 +837,19 @@ textarea:focus {
   transition: all 0.2s;
   font-family: inherit;
 }
+
 .rich-note-toolbar button:hover {
   background: rgba(255,255,255,0.12);
   color: #e2e8f0;
 }
+
 .rich-note-toolbar button.active {
   background: rgba(99,102,241,0.2);
   color: #a5b4fc;
   border-color: rgba(129,140,248,0.3);
 }
+
+/* IMPORTANT: Keep editor normal block layout */
 .rich-note-editor {
   min-height: 150px;
   max-height: 400px;
@@ -859,32 +865,43 @@ textarea:focus {
   line-height: 1.6;
   outline: none;
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-start;
+  display: block; /* CRITICAL FIX */
 }
-.rich-note-editor:focus {
-  border-color: rgba(129,140,248,0.4);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+
+/* Make only image paragraphs inline */
+.rich-note-editor p:has(img) {
+  display: inline-block;
+  margin: 6px;
+  vertical-align: top;
 }
+
+/* Image styling */
 .rich-note-editor img {
-  max-width: 100%;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
   border-radius: 8px;
-  margin: 8px 0;
   max-height: 200px;
   object-fit: contain;
   cursor: pointer;
-  flex: 1 1 220px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.rich-note-editor p {
-  display: contents;
+.rich-note-editor img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
 }
 
-.rich-note-editor ul, .rich-note-editor ol { padding-left: 24px; margin: 6px 0; }
-.rich-note-editor li { margin-bottom: 2px; }
+.rich-note-editor ul,
+.rich-note-editor ol {
+  padding-left: 24px;
+  margin: 6px 0;
+}
+
+.rich-note-editor li {
+  margin-bottom: 2px;
+}
+
 .rich-note-placeholder {
   position: absolute;
   bottom: 14px;
