@@ -66,16 +66,25 @@ export default async function handler(req, res) {
   try {
     const now = new Date();
 
-    // UTC-safe day-of-year calculation
-    const start = Date.UTC(now.getUTCFullYear(), 0, 0);
-    const today = Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate()
-    );
+// Texas (America/Chicago) local date calculation
+const texasFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Chicago',
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric'
+});
 
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor((today - start) / oneDay);
+const parts = texasFormatter.formatToParts(now);
+const year = Number(parts.find(p => p.type === 'year').value);
+const month = Number(parts.find(p => p.type === 'month').value);
+const day = Number(parts.find(p => p.type === 'day').value);
+
+const texasDate = new Date(year, month - 1, day);
+
+const startOfYear = new Date(year, 0, 0);
+const oneDay = 1000 * 60 * 60 * 24;
+const dayOfYear = Math.floor((texasDate - startOfYear) / oneDay);
+
 
     // Rotate using modulo (no array mutation)
     const index = (dayOfYear - 1) % SCRIPTURES.length;
