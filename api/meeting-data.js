@@ -8,6 +8,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 3 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/',
     sundayArticle: 'The Book of Job Can Help You When You Give Counsel',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/The-Book-of-Job-Can-Help-You-When-You-Give-Counsel/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -27,6 +28,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 150 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
     sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/Imitate-Jehovahs-Humility/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -46,6 +48,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 4 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/',
     sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/How-to-Plan-a-Wedding-That-Brings-Honor-to-Jehovah/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -65,6 +68,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 8 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-2-8-2026/',
     sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/Continue-to-Satisfy-Your-Spiritual-Need/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -84,6 +88,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 63 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-9-15-2026/',
     sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/You-Can-Successfully-Fight-Negative-Feelings/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -103,6 +108,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 2 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-16-22-2026/',
     sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/Why-We-Need-the-Ransom/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -122,6 +128,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 89 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-23-29-2026/',
     sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/How-Will-You-Respond-to-the-Ransom/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -140,7 +147,8 @@ const WEEKLY_MEETINGS = {
     theme: 'Listen to the One Whom God Taught',
     bibleReading: 'Isaiah 50-51',
     song: 'Song 88 and Prayer',
-    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-6-12-2026/',
+    workbookUrl: 'ht
+          sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/How-to-Help-Our-Unbelieving-Relatives/',tps://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-6-12-2026/',
     sundayArticle: '',
     sundayScriptures: [],
     sections: {
@@ -164,6 +172,7 @@ const WEEKLY_MEETINGS = {
     sundayScriptures: [],
     sections: {
       treasures: [
+            sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Understanding-the-Meaning-of-Baptism/',
         { id: 'talk', text: '🎤 Talk: "What Love Jesus Showed!" (10 min.) — Isa 53:3' },
         { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 52:11' },
         { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 53:3-12' }
@@ -183,7 +192,8 @@ const WEEKLY_MEETINGS = {
     sundayScriptures: [],
     sections: {
       treasures: [
-        { id: 'talk', text: '🎤 Talk: "How Much Are You Willing to Pay?" (10 min.) — Isa 54:13' },
+        { id: 'talk', 
+             sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Keep-Working-Toward-Baptism/',text: '🎤 Talk: "How Much Are You Willing to Pay?" (10 min.) — Isa 54:13' },
         { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 54:17' },
         { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 54:1-10' }
       ],
@@ -202,6 +212,7 @@ const WEEKLY_MEETINGS = {
     sundayScriptures: [],
     sections: {
       treasures: [
+            sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Are-You-Prepared-for-Challenges-After-Baptism/',
         { id: 'talk', text: '🎤 Talk: "We Are Happy to Have Jehovah as Our God" (10 min.) — Isa 57:13' },
         { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 56:6, 7' },
         { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 56:4-12' }
@@ -308,3 +319,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+145
