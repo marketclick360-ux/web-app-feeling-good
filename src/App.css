@@ -7,7 +7,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #0a0a1a;
   color: #e2e8f0;
-  min-height: 100vh;
+  min-height: 100svh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -36,9 +36,19 @@ body::after {
 .app {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px 16px 120px;
+  padding: 0 16px;
   position: relative;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
 }
+.app-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 90px;
+}
+
 /* -- Header -- */
 .header {
   text-align: center;
@@ -137,7 +147,7 @@ body::after {
   position: fixed;
   bottom: 16px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
   display: flex;
   gap: 4px;
   padding: 6px;
@@ -150,11 +160,12 @@ body::after {
   justify-content: center;
   max-width: calc(100% - 32px);
   width: auto;
-  box-shadow:
-    0 8px 32px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
   right: auto;
+  will-change: transform;
 }
+
+  
 .tab-row::-webkit-scrollbar { height: 0; }
 
 .tab {
@@ -992,13 +1003,23 @@ textarea, textarea *, input[type="text"], input[type="date"] { color: #e2e8f0 !i
 
 /* iOS safe areas */
 @supports (padding: env(safe-area-inset-bottom)) {
-  .app { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
-  .tab-row { bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .app-scroll { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .tab-row { bottom: calc(16px + env(safe-area-inset-bottom)); }
 }
 
-/* Prevent horizontal scroll */
-html, body { overflow-x: hidden; max-width: 100vw; }
 
+/* Prevent horizontal scroll */
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100svh;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 /* Touch-friendly */
 @media (hover: none) and (pointer: coarse) {
   .check-row { min-height: 44px; }
