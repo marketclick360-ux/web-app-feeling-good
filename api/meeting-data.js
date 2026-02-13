@@ -58,6 +58,82 @@ const WEEKLY_MEETINGS = {
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 64-65' }
       ]
     }
+  },
+  '2026-03-02': {
+    theme: 'Do Not Be Afraid',
+    bibleReading: 'Isaiah 41-42',
+    song: 'Song 8 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-2-8-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Do Not Be Afraid" (10 min.) — Isa 41:10, 13' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 41:8' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 42:1-13' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Memorial Campaign (5 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 66-67' }
+      ]
+    }
+  },
+  '2026-03-09': {
+    theme: 'A Prophecy Written Two Centuries in Advance',
+    bibleReading: 'Isaiah 43-44',
+    song: 'Song 63 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-9-15-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "A Prophecy Written Two Centuries in Advance" (10 min.) — Isa 44:27, 28' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 44:28' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 44:9-20' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 68-69' }
+      ]
+    },
+  '2026-03-16': {
+    theme: 'I Am God, and There Is No One Like Me',
+    bibleReading: 'Isaiah 45-47',
+    song: 'Song 2 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-16-22-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "I Am God, and There Is No One Like Me" (10 min.) — Isa 46:9-11' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 46:10' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 45:1-11' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Our Only Reliable Source of Help (7 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 70-71' }
+      ]
+    },
+  '2026-03-23': {
+    theme: 'Benefit From Paying Attention to Jehovah',
+    bibleReading: 'Isaiah 48-49',
+    song: 'Song 89 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-23-29-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Benefit From Paying Attention to Jehovah" (10 min.) — Isa 48:17, 18' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 49:8' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 48:9-20' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Benefit From the Most Important Day of the Year (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 72-73' }
+      ]
+    }
+  }
+  }
   }
 }
 
