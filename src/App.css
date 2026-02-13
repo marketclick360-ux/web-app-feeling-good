@@ -890,6 +890,7 @@ textarea:focus {
 .rich-note-editor img:hover {
   transform: scale(1.02);
   box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
 
   /* === Rich Note Image Layout Fix === */
 .rich-note-img {
@@ -903,7 +904,6 @@ textarea:focus {
   margin: 6px 1%;
   vertical-align: top;
   cursor: pointer;
-}
 }
 
 .rich-note-editor ul,
