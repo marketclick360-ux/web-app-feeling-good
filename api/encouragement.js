@@ -74,6 +74,18 @@ function translateToSpanish(reference) {
   return translations[reference] || 'Jehová te fortalece cada día.';
 }
 
+function translateToSpanish(reference) {
+  const translations = {
+    'Isaiah 41:10': 'No tengas miedo. Jehová te fortalece y te ayuda.',
+    'Psalm 23:1–4': 'Jehová es tu Pastor. Nada te faltará.',
+    'Philippians 4:6, 7': 'No se inquieten por nada. La paz de Dios guardará su corazón.',
+    'Proverbs 3:5, 6': 'Confía en Jehová con todo tu corazón.',
+    'Matthew 6:33, 34': 'Sigue buscando primero el Reino. No te preocupes por el mañana.',
+  };
+
+  return translations[reference] || 'Jehová te fortalece cada día.';
+}
+
 const SCRIPTURES_ES = SCRIPTURES.map(s => ({
   ...s,
   text: translateToSpanish(s.ref),
