@@ -95,7 +95,8 @@ const WEEKLY_MEETINGS = {
         { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 68-69' }
       ]
-    },
+    }
+  },
   '2026-03-16': {
     theme: 'I Am God, and There Is No One Like Me',
     bibleReading: 'Isaiah 45-47',
@@ -113,7 +114,8 @@ const WEEKLY_MEETINGS = {
         { id: 'local_needs', text: '📌 Our Only Reliable Source of Help (7 min.)' },
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 70-71' }
       ]
-    },
+        }
+  },
   '2026-03-23': {
     theme: 'Benefit From Paying Attention to Jehovah',
     bibleReading: 'Isaiah 48-49',
@@ -132,9 +134,7 @@ const WEEKLY_MEETINGS = {
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 72-73' }
       ]
     }
-  }
-  }
-  }
+  
 }
 
 const DEFAULT_WEEK = {
