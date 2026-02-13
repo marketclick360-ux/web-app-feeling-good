@@ -76,7 +76,13 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
               const imgEl = document.createElement('img')
               imgEl.src = dataUrl
               imgEl.className = 'rich-note-img'
-              imgEl.className = 'rich-note-img'
+              imgEl.style.maxWidth = '100%'
+              imgEl.style.maxHeight = '200px'
+              imgEl.style.objectFit = 'contain'
+              imgEl.style.borderRadius = '8px'
+              imgEl.style.margin = '8px 0'
+              imgEl.style.display = 'block'
+              imgEl.style.cursor = 'pointer'
               range.insertNode(imgEl)
               // Move cursor after image
               range.setStartAfter(imgEl)
