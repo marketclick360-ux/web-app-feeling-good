@@ -199,18 +199,19 @@ const [encouragement, setEncouragement] = useState(null)
     if (data) {
       setTheme(data.theme || wd.theme || ''); setBibleReading(data.bible_reading || wd.bibleReading || '')
       setScriptures(data.scriptures || ''); setComments(data.comments || ''); setTreasuresComments(data.treasures_comments || '')
+      setTreasuresComments2(data.treasures_comments_2 || '')
       setNotes(data.notes || ''); setChecks(data.checks || {}); setSundayChecks(data.sunday_checks || {})
       setSundayComments(data.sunday_comments || ''); setSundayComments2(data.sunday_comments_2 || ''); setSundayComments3(data.sunday_comments_3 || ''); setSundayArticle(data.sunday_article || wd.sundayArticle || '')
     } else {
       setTheme(wd.theme || ''); setBibleReading(wd.bibleReading || ''); setScriptures(''); setComments('')
-      setTreasuresComments(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments(''); setSundayComments2(''); setSundayComments3('')
+     setTreasuresComments(''); setTreasuresComments2(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments(''); setSundayComments2(''); setSundayComments3('')
       setSundayArticle(wd.sundayArticle || '')
     }
   weekLoaded.current = true; }, [weekKey, apiWeekData])
   useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
   const saveWeek = useCallback(async () => { if (!weekLoaded.current) return;
-    await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start' })
-  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle])
+  await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start' })  
+ }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
   const loadJournal = useCallback(async () => {
     const { data } = await supabase.from('journal_entries').select('*').eq('entry_date', journalDate).maybeSingle()
