@@ -135,7 +135,83 @@ const WEEKLY_MEETINGS = {
       ]
     }
   
-}
+},
+  '2026-04-06': {
+    theme: 'Listen to the One Whom God Taught',
+    bibleReading: 'Isaiah 50-51',
+    song: 'Song 88 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-6-12-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Listen to the One Whom God Taught" (10 min.) — Isa 50:4' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 51:1' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 50:1-11' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 74-75' }
+      ]
+    }
+  },
+  '2026-04-13': {
+    theme: 'What Love Jesus Showed!',
+    bibleReading: 'Isaiah 52-53',
+    song: 'Song 18 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-13-19-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "What Love Jesus Showed!" (10 min.) — Isa 53:3' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 52:11' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 53:3-12' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Become Jehovah’s Friend—The Greatest Act of Love (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 76-77' }
+      ]
+    }
+  },
+  '2026-04-20': {
+    theme: 'How Much Are You Willing to Pay?',
+    bibleReading: 'Isaiah 54-55',
+    song: 'Song 86 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-20-26-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "How Much Are You Willing to Pay?" (10 min.) — Isa 54:13' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 54:17' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 54:1-10' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Overcoming Obstacles to Personal Study (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 78-79' }
+      ]
+    }
+  },
+  '2026-04-27': {
+    theme: 'We Are Happy to Have Jehovah as Our God',
+    bibleReading: 'Isaiah 56-57',
+    song: 'Song 12 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-27-May-3-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "We Are Happy to Have Jehovah as Our God" (10 min.) — Isa 57:13' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 56:6, 7' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 56:4-12' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Never Stop Talking About Jehovah (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 80-81' }
+      ]
+    }
+  }
     }
 
 const DEFAULT_WEEK = {
