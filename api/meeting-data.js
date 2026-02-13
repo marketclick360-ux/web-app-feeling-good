@@ -136,6 +136,7 @@ const WEEKLY_MEETINGS = {
     }
   
 }
+    }
 
 const DEFAULT_WEEK = {
   theme: '', bibleReading: '', song: 'Song and Prayer',
