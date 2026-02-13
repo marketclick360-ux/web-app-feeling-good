@@ -62,10 +62,6 @@ const SCRIPTURES = [
   { ref: 'Psalm 18:2', text: 'Jehovah is your crag, your stronghold, and your rescuer.', book: 19, chapter: 18, verse: 2 },
   { ref: 'Colossians 3:15', text: 'Let the peace of the Christ rule in your hearts.', book: 51, chapter: 3, verse: 15 },
 ];
-// Extend to 365 by cycling through the base list multiple times
-while (SCRIPTURES.length < 365) {
-  SCRIPTURES.push(...SCRIPTURES.slice(0, 365 - SCRIPTURES.length));
-}
 export default async function handler(req, res) {
   try {
     const now = new Date();
