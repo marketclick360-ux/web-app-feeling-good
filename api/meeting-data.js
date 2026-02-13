@@ -1,5 +1,83 @@
 import https from 'https'
 
+// Server-side cached meeting data (updated periodically)
+const WEEKLY_MEETINGS = {
+  '2026-02-09': {
+    theme: 'He Is the Stability of Your Times',
+    bibleReading: 'Isaiah 33-35',
+    song: 'Song 3 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-9-15-2026/',
+    sundayArticle: 'The Book of Job Can Help You When You Give Counsel',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "He Is the Stability of Your Times" (10 min.) — Isa 33:6' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 35:8' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 35:1-10' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 60-61' }
+      ]
+    }
+  },
+  '2026-02-16': {
+    theme: 'Do Not Be Afraid Because of the Words That You Heard',
+    bibleReading: 'Isaiah 36-37',
+    song: 'Song 150 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Do Not Be Afraid Because of the Words That You Heard" (10 min.) — Isa 36:1, 2; 37:6, 7' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 37:29' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 37:14-23' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 "What Is the Basis for Your Confidence?" (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 62-63' }
+      ]
+    }
+  },
+  '2026-02-23': {
+    theme: 'Like a Shepherd He Will Care For His Flock',
+    bibleReading: 'Isaiah 38-40',
+    song: 'Song 4 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/',
+    sundayArticle: '',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Like a Shepherd He Will Care For His Flock" (10 min.) — Isa 40:8, 11, 26-29' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 40:3' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 40:21-31' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Annual Service Report (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 64-65' }
+      ]
+    }
+  }
+}
+
+const DEFAULT_WEEK = {
+  theme: '', bibleReading: '', song: 'Song and Prayer',
+  workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/',
+  sundayArticle: '', sundayScriptures: [],
+  sections: {
+    treasures: [
+      { id: 'talk', text: '🎤 Talk (10 min.)' },
+      { id: 'gems', text: '🔍 Spiritual Gems (10 min.)' },
+      { id: 'reading', text: '📖 Bible Reading (4 min.)' }
+    ],
+    living: [
+      { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+      { id: 'cbs', text: '📕 Congregation Bible Study (30 min.)' }
+    ]
+  }
+}
+
 function fetchPage(url, timeout = 8000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('timeout')), timeout)
@@ -34,6 +112,14 @@ export default async function handler(req, res) {
     if (!week) return res.status(400).json({ error: 'Missing ?week=YYYY-MM-DD' })
     const mon = new Date(week + 'T12:00:00Z')
     if (isNaN(mon.getTime())) return res.status(400).json({ error: 'Invalid date' })
+    
+    // Check server-side cache first
+    if (WEEKLY_MEETINGS[week]) {
+      res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600')
+      return res.status(200).json({ ...WEEKLY_MEETINGS[week], weekKey: week, source: 'cached' })
+    }
+    
+    // Build workbook URL for scraping
     const sun = new Date(mon)
     sun.setDate(sun.getDate() + 6)
     const months = ['january','february','march','april','may','june','july','august','september','october','november','december']
@@ -59,90 +145,11 @@ export default async function handler(req, res) {
       scheduleSlug = `Life-and-Ministry-Meeting-Schedule-for-${capMon}-${monDay}-${capSun}-${sunDay}-${sunYear}`
     }
     const workbookUrl = `https://www.jw.org/en/library/jw-meeting-workbook/${mwbSlug}/${scheduleSlug}/`
-    const fallback = {
-      weekKey: week, theme: '', bibleReading: '', song: 'Song and Prayer',
-      workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/',
-      sundayArticle: '', sundayScriptures: [],
-      sections: {
-        treasures: [
-          { id: 'talk', text: '\ud83c\udfa4 Talk (10 min.)' },
-          { id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.)' },
-          { id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.)' }
-        ],
-        living: [
-          { id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' },
-          { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.)' }
-        ]
-      },
-      source: 'fallback'
-    }
-    let pageResult
-    try {
-      pageResult = await fetchPage(workbookUrl)
-    } catch (fetchErr) {
-      console.error('Fetch error:', fetchErr.message)
-      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600')
-      return res.status(200).json(fallback)
-    }
-    if (!pageResult.ok) {
-      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600')
-      return res.status(200).json(fallback)
-    }
-    const html = pageResult.text
-    let song = 'Song and Prayer'
-    const songMatch = html.match(/Song\s+(\d+)/i)
-    if (songMatch) song = `Song ${songMatch[1]} and Prayer`
-    let theme = ''
-    const themeMatch = html.match(/\u201c([\s\S]*?)\u201d/)
-    if (themeMatch) theme = themeMatch[1].replace(/<[^>]+>/g, '').trim()
-    let bibleReadingText = ''
-    const brMatch = html.match(/ISAIAH\s+([\d\-,\s]+)/i) || html.match(/Bible Reading[\s\S]*?\u2014\s*([^<(]+)/i)
-    if (brMatch) bibleReadingText = brMatch[0].replace(/<[^>]+>/g, '').trim()
-    const treasures = []
-    const talkMatch = html.match(/<h\d[^>]*>\s*1\.\s*([\s\S]*?)<\/h\d>/i)
-    if (talkMatch) {
-      let t = talkMatch[1].replace(/<[^>]+>/g, '').trim()
-      treasures.push({ id: 'talk', text: '\ud83c\udfa4 Talk: \u201c' + (theme || t) + '\u201d (10 min.)' })
-    } else {
-      treasures.push({ id: 'talk', text: '\ud83c\udfa4 Talk (10 min.)' })
-    }
-    const gemsMatch = html.match(/<h\d[^>]*>\s*2\.\s*Spiritual\s+Gems[\s\S]*?<\/h\d>/i)
-    if (gemsMatch) {
-      let g = gemsMatch[0].replace(/<[^>]+>/g, '').trim()
-      const idx = g.indexOf('Spiritual')
-      treasures.push({ id: 'gems', text: '\ud83d\udd0d ' + (idx >= 0 ? g.substring(idx) : 'Spiritual Gems (10 min.)') })
-    } else {
-      treasures.push({ id: 'gems', text: '\ud83d\udd0d Spiritual Gems (10 min.)' })
-    }
-    const readingMatch = html.match(/<h\d[^>]*>\s*3\.\s*Bible\s+Reading[\s\S]*?<\/h\d>/i)
-    if (readingMatch) {
-      let r = readingMatch[0].replace(/<[^>]+>/g, '').trim()
-      const idx = r.indexOf('Bible Reading')
-      treasures.push({ id: 'reading', text: '\ud83d\udcd6 ' + (idx >= 0 ? r.substring(idx) : 'Bible Reading (4 min.)') })
-    } else {
-      treasures.push({ id: 'reading', text: '\ud83d\udcd6 Bible Reading (4 min.)' })
-    }
-    const living = []
-    const localMatch = html.match(/Local\s+Needs[\s\S]*?\((\d+)\s*min\.\)/i)
-    if (localMatch) {
-      living.push({ id: 'local_needs', text: '\ud83d\udccc Local Needs (' + localMatch[1] + ' min.)' })
-    } else {
-      living.push({ id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' })
-    }
-    const cbsMatch = html.match(/Congregation\s+Bible\s+Study[\s\S]*?\((\d+)\s*min\.\)[\s\S]*?<em>([\s\S]*?)<\/em>/i)
-    if (cbsMatch) {
-      let ref = cbsMatch[2].replace(/<[^>]+>/g, '').trim()
-      living.push({ id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (' + cbsMatch[1] + ' min.) \u2014 ' + ref })
-    } else {
-      living.push({ id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.)' })
-    }
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600')
-    return res.status(200).json({
-      weekKey: week, theme, bibleReading: bibleReadingText, song,
-      workbookUrl, sundayArticle: '', sundayScriptures: [],
-      sections: { treasures, living },
-      source: 'scraped'
-    })
+    
+    // Return default with correct workbook URL when not cached
+    const result = { ...DEFAULT_WEEK, weekKey: week, workbookUrl, source: 'fallback' }
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600')
+    return res.status(200).json(result)
   } catch (err) {
     console.error('Meeting data error:', err)
     return res.status(500).json({ error: err.message })
