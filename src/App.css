@@ -859,6 +859,10 @@ textarea:focus {
   line-height: 1.6;
   outline: none;
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
 }
 .rich-note-editor:focus {
   border-color: rgba(129,140,248,0.4);
@@ -871,7 +875,12 @@ textarea:focus {
   max-height: 200px;
   object-fit: contain;
   cursor: pointer;
-  display: block;
+  flex: 1 1 220px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rich-note-editor p {
+  display: contents;
 }
 
 .rich-note-editor ul, .rich-note-editor ol { padding-left: 24px; margin: 6px 0; }
