@@ -143,7 +143,7 @@ export default function App() {
   const weekLabel = formatRange(weekStart)
   const weekKey = toISO(weekStart)
   const [apiWeekData, setApiWeekData] = useState(null)
-  const _raw = apiWeekData || WEEKLY_MEETINGS[weekKey] || DEFAULT_WEEK; const weekData = { ...DEFAULT_WEEK, ..._raw, sections: { treasures: (_raw.sections?.treasures ?? DEFAULT_WEEK.sections.treasures), living: (_raw.sections?.living ?? DEFAULT_WEEK.sections.living) } }
+  const _raw = apiWeekData || DEFAULT_WEEK; const weekData = { ...DEFAULT_WEEK, ..._raw, sections: { treasures: (_raw.sections?.treasures ?? DEFAULT_WEEK.sections.treasures), living: (_raw.sections?.living ?? DEFAULT_WEEK.sections.living) } }
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
   const [journalDate, setJournalDate] = useState(todayStr())
@@ -187,11 +187,11 @@ const [encouragement, setEncouragement] = useState(null)
     setApiWeekData(null)
     fetch(`/api/meeting-data?week=${weekKey}`)
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data && data.source === 'scraped') setApiWeekData(data) })
+      .then(data => { if (data) setApiWeekData(data) })
       .catch(() => {})
   }, [weekKey])
   const loadWeek = useCallback(async () => {
-    const wd = apiWeekData || WEEKLY_MEETINGS[weekKey] || DEFAULT_WEEK
+    const wd = apiWeekData || DEFAULT_WEEK
     const { data } = await supabase.from('weeks').select('*').eq('week_start', weekKey).maybeSingle()
     if (data) {
       setTheme(data.theme || wd.theme || ''); setBibleReading(data.bible_reading || wd.bibleReading || '')
