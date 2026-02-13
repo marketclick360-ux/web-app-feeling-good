@@ -81,7 +81,8 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
               imgEl.style.objectFit = 'contain'
               imgEl.style.borderRadius = '8px'
               imgEl.style.margin = '8px 0'
-              imgEl.style.display = 'block'
+              imgEl.style.display = 'inline-block'
+                            imgEl.style.verticalAlign = 'top'
               imgEl.style.cursor = 'pointer'
               range.insertNode(imgEl)
               // Move cursor after image
