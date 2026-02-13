@@ -871,7 +871,7 @@ textarea:focus {
   max-height: 200px;
   object-fit: contain;
   cursor: pointer;
-  display: block;
+  display: inline-block;
 }
 
 .rich-note-editor ul, .rich-note-editor ol { padding-left: 24px; margin: 6px 0; }
