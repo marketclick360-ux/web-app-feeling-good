@@ -1,5 +1,4 @@
 import https from 'https'
-
 // Server-side cached meeting data (updated periodically)
 const WEEKLY_MEETINGS = {
   '2026-02-09': {
@@ -48,7 +47,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 4 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/',
     sundayArticle: '',
-        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/How-to-Plan-a-Wedding-That-Brings-Honor-to-Jehovah/',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/How-to-Plan-a-Wedding-That-Brings-Honor-to-Jehovah/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -68,7 +67,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 8 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-2-8-2026/',
     sundayArticle: '',
-        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/Continue-to-Satisfy-Your-Spiritual-Need/',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/Continue-to-Satisfy-Your-Spiritual-Need/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -88,7 +87,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 63 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-9-15-2026/',
     sundayArticle: '',
-        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/You-Can-Successfully-Fight-Negative-Feelings/',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/You-Can-Successfully-Fight-Negative-Feelings/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -108,7 +107,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 2 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-16-22-2026/',
     sundayArticle: '',
-        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/Why-We-Need-the-Ransom/',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/Why-We-Need-the-Ransom/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -120,7 +119,7 @@ const WEEKLY_MEETINGS = {
         { id: 'local_needs', text: '📌 Our Only Reliable Source of Help (7 min.)' },
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 70-71' }
       ]
-        }
+    }
   },
   '2026-03-23': {
     theme: 'Benefit From Paying Attention to Jehovah',
@@ -128,7 +127,7 @@ const WEEKLY_MEETINGS = {
     song: 'Song 89 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-March-23-29-2026/',
     sundayArticle: '',
-        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/How-Will-You-Respond-to-the-Ransom/',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-january-2026/How-Will-You-Respond-to-the-Ransom/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -141,15 +140,14 @@ const WEEKLY_MEETINGS = {
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 72-73' }
       ]
     }
-  
-},
+  },
   '2026-04-06': {
     theme: 'Listen to the One Whom God Taught',
     bibleReading: 'Isaiah 50-51',
     song: 'Song 88 and Prayer',
-    workbookUrl: 'ht
-          sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/How-to-Help-Our-Unbelieving-Relatives/',tps://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-6-12-2026/',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-6-12-2026/',
     sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/How-to-Help-Our-Unbelieving-Relatives/',
     sundayScriptures: [],
     sections: {
       treasures: [
@@ -167,18 +165,22 @@ const WEEKLY_MEETINGS = {
     theme: 'What Love Jesus Showed!',
     bibleReading: 'Isaiah 52-53',
     song: 'Song 18 and Prayer',
+  '2026-04-13': {
+    theme: 'What Love Jesus Showed!',
+    bibleReading: 'Isaiah 52-53',
+    song: 'Song 18 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-13-19-2026/',
     sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Understanding-the-Meaning-of-Baptism/',
     sundayScriptures: [],
     sections: {
       treasures: [
-            sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Understanding-the-Meaning-of-Baptism/',
         { id: 'talk', text: '🎤 Talk: "What Love Jesus Showed!" (10 min.) — Isa 53:3' },
         { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 52:11' },
         { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 53:3-12' }
       ],
       living: [
-        { id: 'local_needs', text: '📌 Become Jehovah’s Friend—The Greatest Act of Love (15 min.)' },
+        { id: 'local_needs', text: '📌 Become Jehovah\'s Friend—The Greatest Act of Love (15 min.)' },
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 76-77' }
       ]
     }
@@ -189,11 +191,11 @@ const WEEKLY_MEETINGS = {
     song: 'Song 86 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-20-26-2026/',
     sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Keep-Working-Toward-Baptism/',
     sundayScriptures: [],
     sections: {
       treasures: [
-        { id: 'talk', 
-             sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Keep-Working-Toward-Baptism/',text: '🎤 Talk: "How Much Are You Willing to Pay?" (10 min.) — Isa 54:13' },
+        { id: 'talk', text: '🎤 Talk: "How Much Are You Willing to Pay?" (10 min.) — Isa 54:13' },
         { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 54:17' },
         { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 54:1-10' }
       ],
@@ -209,10 +211,10 @@ const WEEKLY_MEETINGS = {
     song: 'Song 12 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/march-april-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-April-27-May-3-2026/',
     sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Are-You-Prepared-for-Challenges-After-Baptism/',
     sundayScriptures: [],
     sections: {
       treasures: [
-            sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-february-2026/Are-You-Prepared-for-Challenges-After-Baptism/',
         { id: 'talk', text: '🎤 Talk: "We Are Happy to Have Jehovah as Our God" (10 min.) — Isa 57:13' },
         { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 56:6, 7' },
         { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 56:4-12' }
@@ -223,12 +225,12 @@ const WEEKLY_MEETINGS = {
       ]
     }
   }
-    }
+}
 
 const DEFAULT_WEEK = {
   theme: '', bibleReading: '', song: 'Song and Prayer',
   workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/',
-  sundayArticle: '', sundayScriptures: [],
+  sundayArticle: '', sundayArticleUrl: '', sundayScriptures: [],
   sections: {
     treasures: [
       { id: 'talk', text: '🎤 Talk (10 min.)' },
@@ -309,9 +311,16 @@ export default async function handler(req, res) {
       scheduleSlug = `Life-and-Ministry-Meeting-Schedule-for-${capMon}-${monDay}-${capSun}-${sunDay}-${sunYear}`
     }
     const workbookUrl = `https://www.jw.org/en/library/jw-meeting-workbook/${mwbSlug}/${scheduleSlug}/`
+
+    // Build dynamic Watchtower Study Edition URL (issue is ~2 months before study week)
+    const wtDate = new Date(mon)
+    wtDate.setMonth(wtDate.getMonth() - 2)
+    const wtMonth = months[wtDate.getMonth()]
+    const wtYear = wtDate.getFullYear()
+    const sundayArticleUrl = `https://www.jw.org/en/library/magazines/watchtower-study-${wtMonth}-${wtYear}/`
     
-    // Return default with correct workbook URL when not cached
-    const result = { ...DEFAULT_WEEK, weekKey: week, workbookUrl, source: 'fallback' }
+    // Return default with correct workbook URL and WT edition URL when not cached
+    const result = { ...DEFAULT_WEEK, weekKey: week, workbookUrl, sundayArticleUrl, source: 'fallback' }
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600')
     return res.status(200).json(result)
   } catch (err) {
@@ -319,4 +328,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
-145
