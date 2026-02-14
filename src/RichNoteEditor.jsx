@@ -23,8 +23,6 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const isInternalChange = useRef(false)
   const [expandedImg, setExpandedImg] = useState(null)
   const [showColors, setShowColors] = useState(false)
-  const savedSelection = useRef(null)
-
 
   // Sync external value changes (e.g. loading from Supabase)
   useEffect(() => {
@@ -61,7 +59,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
           const img = new Image()
           img.onload = () => {
             // Resize if too large (max 800px wide)
-            const MAX_W = 1200
+            const MAX_W = 800
             let w = img.width, h = img.height
             if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W }
             const canvas = document.createElement('canvas')
@@ -79,7 +77,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
               imgEl.src = dataUrl
               imgEl.className = 'rich-note-img'
               imgEl.style.maxWidth = '100%'
-              imgEl.style.maxHeight = 'none'
+              imgEl.style.maxHeight = '200px'
               imgEl.style.objectFit = 'contain'
               imgEl.style.borderRadius = '8px'
               imgEl.style.margin = '8px 0'
@@ -103,12 +101,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
     }
 
     // For text paste: strip dark colors that would be invisible
-       let html = ''
-    try {
-      html = e.clipboardData.getData('text/html')
-    } catch (err) {
-      // iOS Safari can throw on getData('text/html')
-    }
+    const html = e.clipboardData.getData('text/html')
     if (html) {
       e.preventDefault()
       const cleaned = html
@@ -118,7 +111,6 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
       handleInput()
       return
     }
-
   }, [handleInput])
 
   // Handle clicking on images in the editor to expand them
@@ -134,39 +126,12 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
     handleInput()
   }
 
- const saveSelection = () => {
-  const sel = window.getSelection()
-  if (sel.rangeCount > 0) {
-    savedSelection.current = sel.getRangeAt(0).cloneRange()
+  const applyColor = (color) => {
+    execCmd('foreColor', color)
+    setShowColors(false)
   }
-}
 
-const restoreSelection = () => {
-  const sel = window.getSelection()
-  if (savedSelection.current) {
-    sel.removeAllRanges()
-    sel.addRange(savedSelection.current)
-  }
-}
-
-const applyColor = (color) => {
-  restoreSelection()
-  document.execCommand('foreColor', false, color)
-  editorRef.current?.focus()
-  handleInput()
-  setShowColors(false)
-}
-
-const handleColorToggle = () => {
-  if (!showColors) {
-    saveSelection()
-  }
-  setShowColors(!showColors)
-}
- 
-const isEmpty = !value || !value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim()
-
-
+  const isEmpty = !value || value === '<br>' || value === '<div><br></div>'
 
   return (
     <div className="rich-note-wrapper">
@@ -181,7 +146,7 @@ const isEmpty = !value || !value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').
         <button
           className={`color-picker-toggle ${showColors ? 'active' : ''}`}
           onMouseDown={e => e.preventDefault()}
-          onClick={handleColorToggle}
+          onClick={() => setShowColors(!showColors)}
           title="Font color"
         >
           A
