@@ -4,9 +4,13 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  /* overflow-x: hidden;  REMOVED — was blocking pinch zoom on iOS */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0a0a1a;
+  color: #e2e8f0;
+  min-height: 100svh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
-
 
 /* Gradient mesh blobs behind glass */
 body::before,
@@ -34,11 +38,12 @@ body::after {
   margin: 0 auto;
   padding: 0 16px;
   position: relative;
-  min-height: 100svh;
+  height: 100svh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
-
 
 .app-scroll {
   flex: 1;
@@ -871,10 +876,9 @@ textarea:focus {
 }
 
 /* Fix for pasted text color in dark mode */
-.rich-note-editor *:not(font):not(span[style*="color"]) {
+.rich-note-editor * {
   color: inherit !important;
 }
-
 .rich-note-editor:focus {
   border-color: rgba(129,140,248,0.4);
   box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
@@ -883,8 +887,7 @@ textarea:focus {
   max-width: 100%;
   border-radius: 8px;
   margin: 8px 0;
-max-height: none;
-
+  max-height: 200px;
   object-fit: contain;
   cursor: pointer;
   display: inline-block;
@@ -912,20 +915,14 @@ max-height: none;
   align-items: center;
   z-index: 9999;
   animation: fadeIn 0.2s ease;
-    overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pinch-zoom pan-x pan-y;
-
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .image-modal img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 95%;
+  max-height: 95%;
   object-fit: contain;
-  border-radius: 0;
-  touch-action: manipulation;
+  border-radius: 20px;
 }
-
 
 /* -- Color Picker -- */
 .color-picker-toggle { position: relative; }
@@ -963,7 +960,7 @@ textarea, textarea *, input[type="text"], input[type="date"] { color: #e2e8f0 !i
 .rich-note-editor, .rich-note-editor p, .rich-note-editor span,
 .rich-note-editor div, .rich-note-editor b, .rich-note-editor i,
 .rich-note-editor u, .rich-note-editor li, .rich-note-editor a { color: #e2e8f0; }
-
+.rich-note-editor *[style*="color"] { color: inherit; }
 
 /* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 480px) {
@@ -1019,10 +1016,11 @@ html {
   height: 100%;
 }
 body {
-  min-height: 100svh;
+  height: 100svh;
   margin: 0;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
-
 
 /* Touch-friendly */
 @media (hover: none) and (pointer: coarse) {
@@ -1132,14 +1130,6 @@ body {
   .quick-links-grid {
     grid-template-columns: 1fr;
   }
-}
-/* Allow pinch-to-zoom on text inputs and editors */
-textarea,
-input[type="text"],
-input[type="date"],
-.rich-note-editor,
-[contenteditable="true"] {
-  touch-action: auto;
 }
 
 /* ===== LIGHT THEME ===== */
@@ -1528,7 +1518,6 @@ input[type="date"],
 .theme-switch input:checked + .slider:before {
   transform: translateX(24px);
 }
-
 
 
 
