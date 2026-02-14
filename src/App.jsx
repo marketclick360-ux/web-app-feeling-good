@@ -195,7 +195,16 @@ const [encouragement, setEncouragement] = useState(null)
   }, [weekKey])
   const loadWeek = useCallback(async () => {
     const wd = apiWeekData || DEFAULT_WEEK
-    const { data } = await supabase.from('weeks').select('*').eq('week_start', weekKey).maybeSingle()
+const { data, error } = await supabase
+  .from('weeks')
+  .select('*')
+  .eq('week_start', weekKey)
+  .maybeSingle()
+
+if (error) {
+  console.error('Error loading week:', error)
+  return
+}
     if (data) {
       setTheme(data.theme || wd.theme || ''); setBibleReading(data.bible_reading || wd.bibleReading || '')
       setScriptures(data.scriptures || ''); setComments(data.comments || ''); setTreasuresComments(data.treasures_comments || '')
@@ -203,25 +212,63 @@ const [encouragement, setEncouragement] = useState(null)
       setNotes(data.notes || ''); setChecks(data.checks || {}); setSundayChecks(data.sunday_checks || {})
       setSundayComments(data.sunday_comments || ''); setSundayComments2(data.sunday_comments_2 || ''); setSundayComments3(data.sunday_comments_3 || ''); setSundayArticle(data.sunday_article || wd.sundayArticle || '')
     } else {
-      setTheme(wd.theme || ''); setBibleReading(wd.bibleReading || ''); setScriptures(''); setComments('')
-     setTreasuresComments(''); setTreasuresComments2(''); setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments(''); setSundayComments2(''); setSundayComments3('')
-      setSundayArticle(wd.sundayArticle || '')
-    }
+  // Only initialize defaults on first load to prevent overwriting saved data
+  if (!weekLoaded.current) {
+    setTheme(wd.theme || '');
+    setBibleReading(wd.bibleReading || '');
+    setScriptures('');
+    setComments('');
+    setTreasuresComments('');
+    setTreasuresComments2('');
+    setNotes('');
+    setChecks({});
+    setSundayChecks({});
+    setSundayComments('');
+    setSundayComments2('');
+    setSundayComments3('');
+    setSundayArticle(wd.sundayArticle || '');
+  }
+}
   weekLoaded.current = true; }, [weekKey, apiWeekData])
   useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
   const saveWeek = useCallback(async () => { if (!weekLoaded.current) return;
   await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start' })  
  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
-  const loadJournal = useCallback(async () => {
-    const { data } = await supabase.from('journal_entries').select('*').eq('entry_date', journalDate).maybeSingle()
-    if (data) {
-      setJournalText(data.journal_text || ''); setJournalTasks(data.tasks || {}); setJournalNotes(data.notes || '')
-      setMorningChecks(data.morning_checks || {}); setEveningChecks(data.evening_checks || {})
-      setMorningGoals(data.morning_goals || ''); setEveningGoals(data.evening_goals || '') 
-    } else {
-      setJournalText(''); setJournalTasks({}); setJournalNotes(''); setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('') }
-  journalLoaded.current = true; }, [journalDate])
+const loadJournal = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .select('*')
+    .eq('entry_date', journalDate)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Journal load error:', error)
+    return
+  }
+
+  if (data) {
+    setJournalText(data.journal_text || '')
+    setJournalTasks(data.tasks || {})
+    setJournalNotes(data.notes || '')
+    setMorningChecks(data.morning_checks || {})
+    setEveningChecks(data.evening_checks || {})
+    setMorningGoals(data.morning_goals || '')
+    setEveningGoals(data.evening_goals || '')
+  } else {
+    if (!journalLoaded.current) {
+      setJournalText('')
+      setJournalTasks({})
+      setJournalNotes('')
+      setMorningChecks({})
+      setEveningChecks({})
+      setMorningGoals('')
+      setEveningGoals('')
+    }
+  }
+
+  journalLoaded.current = true
+}, [journalDate])
   useEffect(() => { journalLoaded.current = false; loadJournal() }, [loadJournal])
   const saveJournal = useCallback(async () => { if (!journalLoaded.current) return;
     await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, 
