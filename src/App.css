@@ -41,7 +41,10 @@ body::after {
   height: 100svh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
+
 .app-scroll {
   flex: 1;
   overflow-y: auto;
@@ -1008,18 +1011,17 @@ textarea, textarea *, input[type="text"], input[type="date"] { color: #e2e8f0 !i
 }
 
 
-/* Prevent horizontal scroll */
+/*  horizontal scroll */
 html {
   height: 100%;
-  overflow: hidden;
 }
-
 body {
   height: 100svh;
   margin: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
+
 /* Touch-friendly */
 @media (hover: none) and (pointer: coarse) {
   .check-row { min-height: 44px; }
