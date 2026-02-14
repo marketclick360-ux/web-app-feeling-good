@@ -23,6 +23,8 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const isInternalChange = useRef(false)
   const [expandedImg, setExpandedImg] = useState(null)
   const [showColors, setShowColors] = useState(false)
+  const savedSelection = useRef(null)
+
 
   // Sync external value changes (e.g. loading from Supabase)
   useEffect(() => {
@@ -126,10 +128,36 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
     handleInput()
   }
 
-  const applyColor = (color) => {
-    execCmd('foreColor', color)
-    setShowColors(false)
+ const saveSelection = () => {
+  const sel = window.getSelection()
+  if (sel.rangeCount > 0) {
+    savedSelection.current = sel.getRangeAt(0).cloneRange()
   }
+}
+
+const restoreSelection = () => {
+  const sel = window.getSelection()
+  if (savedSelection.current) {
+    sel.removeAllRanges()
+    sel.addRange(savedSelection.current)
+  }
+}
+
+const applyColor = (color) => {
+  restoreSelection()
+  document.execCommand('foreColor', false, color)
+  editorRef.current?.focus()
+  handleInput()
+  setShowColors(false)
+}
+
+const handleColorToggle = () => {
+  if (!showColors) {
+    saveSelection()
+  }
+  setShowColors(!showColors)
+}
+ 
 
   const isEmpty = !value || value === '<br>' || value === '<div><br></div>'
 
@@ -146,7 +174,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         <button
           className={`color-picker-toggle ${showColors ? 'active' : ''}`}
           onMouseDown={e => e.preventDefault()}
-          onClick={() => setShowColors(!showColors)}
+          onClick={handleColorToggle}
           title="Font color"
         >
           A
