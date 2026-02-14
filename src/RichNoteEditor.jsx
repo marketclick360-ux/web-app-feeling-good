@@ -61,7 +61,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
           const img = new Image()
           img.onload = () => {
             // Resize if too large (max 800px wide)
-            const MAX_W = 800
+            const MAX_W = 1200
             let w = img.width, h = img.height
             if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W }
             const canvas = document.createElement('canvas')
@@ -79,7 +79,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
               imgEl.src = dataUrl
               imgEl.className = 'rich-note-img'
               imgEl.style.maxWidth = '100%'
-              imgEl.style.maxHeight = '200px'
+              imgEl.style.maxHeight = 'none'
               imgEl.style.objectFit = 'contain'
               imgEl.style.borderRadius = '8px'
               imgEl.style.margin = '8px 0'
