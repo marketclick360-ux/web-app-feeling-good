@@ -876,9 +876,10 @@ textarea:focus {
 }
 
 /* Fix for pasted text color in dark mode */
-.rich-note-editor * {
+.rich-note-editor *:not(font):not(span[style*="color"]) {
   color: inherit !important;
 }
+
 .rich-note-editor:focus {
   border-color: rgba(129,140,248,0.4);
   box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
@@ -960,7 +961,7 @@ textarea, textarea *, input[type="text"], input[type="date"] { color: #e2e8f0 !i
 .rich-note-editor, .rich-note-editor p, .rich-note-editor span,
 .rich-note-editor div, .rich-note-editor b, .rich-note-editor i,
 .rich-note-editor u, .rich-note-editor li, .rich-note-editor a { color: #e2e8f0; }
-.rich-note-editor *[style*="color"] { color: inherit; }
+
 
 /* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 480px) {
