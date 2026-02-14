@@ -154,7 +154,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting">{"\u2718"}</button>
       </div>
       {showColors && (
-        <div className="color-picker-row">
+        <div className="color-picker-row" style={{position:'relative',top:'auto',left:'auto'}}>
           {FONT_COLORS.map(({ color, label }) => (
             <button
               key={color}
