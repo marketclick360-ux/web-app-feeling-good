@@ -142,7 +142,30 @@ if (html) {
   }
 
   const applyColor = (color) => {
-    execCmd('foreColor', color)
+    // Save selection before any DOM changes
+    const sel = window.getSelection()
+    if (!sel.rangeCount) { setShowColors(false); return }
+    const range = sel.getRangeAt(0)
+    const selectedText = range.toString()
+    if (!selectedText) {
+      // No selection: just use foreColor for cursor-forward typing
+      execCmd('foreColor', color)
+      setShowColors(false)
+      return
+    }
+    // Wrap selected text in a span with inline style (beats CSS specificity)
+    range.deleteContents()
+    const span = document.createElement('span')
+    span.style.color = color
+    span.textContent = selectedText
+    range.insertNode(span)
+    // Move cursor after the span
+    range.setStartAfter(span)
+    range.collapse(true)
+    sel.removeAllRanges()
+    sel.addRange(range)
+    editorRef.current?.focus()
+    handleInput()
     setShowColors(false)
   }
 
