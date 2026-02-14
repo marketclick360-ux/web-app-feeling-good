@@ -161,10 +161,7 @@ const WEEKLY_MEETINGS = {
       ]
     }
   },
-  '2026-04-13': {
-    theme: 'What Love Jesus Showed!',
-    bibleReading: 'Isaiah 52-53',
-    song: 'Song 18 and Prayer',
+  
   '2026-04-13': {
     theme: 'What Love Jesus Showed!',
     bibleReading: 'Isaiah 52-53',
