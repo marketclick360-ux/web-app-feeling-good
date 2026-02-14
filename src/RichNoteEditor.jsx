@@ -103,7 +103,12 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
     }
 
     // For text paste: strip dark colors that would be invisible
-    const html = e.clipboardData.getData('text/html')
+       let html = ''
+    try {
+      html = e.clipboardData.getData('text/html')
+    } catch (err) {
+      // iOS Safari can throw on getData('text/html')
+    }
     if (html) {
       e.preventDefault()
       const cleaned = html
@@ -113,6 +118,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
       handleInput()
       return
     }
+
   }, [handleInput])
 
   // Handle clicking on images in the editor to expand them
