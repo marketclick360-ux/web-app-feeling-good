@@ -35,12 +35,11 @@ body::after {
   margin: 0 auto;
   padding: 0 16px;
   position: relative;
-  height: 100svh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
+
 
 .app-scroll {
   flex: 1;
