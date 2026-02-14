@@ -100,17 +100,32 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
       }
     }
 
-    // For text paste: strip dark colors that would be invisible
-    const html = e.clipboardData.getData('text/html')
-    if (html) {
-      e.preventDefault()
-      const cleaned = html
-        .replace(/color\s*:\s*(#0{3,6}|#000|black|rgb\(0,\s*0,\s*0\))/gi, 'color: #e2e8f0')
-        .replace(/color\s*:\s*(#1[0-9a-f]{5}|#2[0-9a-f]{5}|#0[0-9a-f]{5})/gi, 'color: #e2e8f0')
-      document.execCommand('insertHTML', false, cleaned)
-      handleInput()
-      return
+// Smart clean paste (keep formatting, remove bad styles)
+const html = e.clipboardData.getData('text/html')
+if (html) {
+  e.preventDefault()
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+
+  // Remove background colors and font overrides
+  doc.querySelectorAll('*').forEach(el => {
+    el.style.background = ''
+    el.style.backgroundColor = ''
+    el.style.fontFamily = ''
+    el.style.fontSize = ''
+    
+    // Remove inline color but allow default
+    if (el.style.color) {
+      el.style.color = ''
     }
+  })
+
+  document.execCommand('insertHTML', false, doc.body.innerHTML)
+  handleInput()
+  return
+}
+
   }, [handleInput])
 
   // Handle clicking on images in the editor to expand them
