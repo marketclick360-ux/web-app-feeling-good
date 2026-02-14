@@ -236,7 +236,9 @@ const [encouragement, setEncouragement] = useState(null)
   const addTodo = async () => { if (!newTodo.trim()) return; const ins = { text: newTodo.trim(), priority: newTodoPriority, category: newTodoCategory }; if (newTodoDue) ins.due_date = newTodoDue; const { data } = await supabase.from('todo_items').insert(ins).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general') }
   const toggleTodo = async (id, done) => { await supabase.from('todo_items').update({ done: !done }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t)) }
   const deleteTodo = async (id) => { await supabase.from('todo_items').delete().eq('id', id); setTodos(prev => prev.filter(t => t.id !== id)) }
-  const clearCompleted = async () => { const done = todos.filter(t => t.done); for (const t of done) { await supabase.from('todo_items').delete().eq('id', t.id) }; setTodos(prev => prev.filter(t => !t.done)) }
+  const clearCompleted = async () => { const done = todos.filter(t => t.done); await supabase.from('todo_items')
+   .delete()
+  .in('id', done.map(t => t.id)); setTodos(prev => prev.filter(t => !t.done)) }
   const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 }
     const editTodo = async (id, newText) => { if (!newText.trim()) return; await supabase.from('todo_items').update({ text: newText.trim() }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, text: newText.trim() } : t)); setEditingTodoId(null) }
   const sortedTodos = [...todos].sort((a, b) => { if (a.done !== b.done) return a.done ? 1 : -1; const pa = PRIORITY_ORDER[a.priority || 'medium'] ?? 1; const pb = PRIORITY_ORDER[b.priority || 'medium'] ?? 1; return pa - pb })
@@ -382,28 +384,6 @@ const [encouragement, setEncouragement] = useState(null)
     />
   </div>
 )}
-
-              {section.key === 'treasures' && (
-  <div className="treasures-comments">
-    <h4 className="treasures-comments-title">
-      {"📝"} My Bible Reading & Spiritual Gems Notes (2)
-      <button
-        className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`}
-        onClick={() => copyToClipboard(treasuresComments2, 'treasures2')}
-        title="Copy notes"
-      >
-        {copiedId === 'treasures2' ? '✅' : '📋'}
-      </button>
-    </h4>
-    <RichNoteEditor
-      value={treasuresComments2}
-      onChange={setTreasuresComments2}
-      placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..."
-      minHeight={150}
-    />
-  </div>
-)}
-
             </section>
           ))}
           <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></section>
@@ -431,41 +411,175 @@ const [encouragement, setEncouragement] = useState(null)
           <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
         </div>
       )}
-      {tab === 'todos' && (
-        <div className="todo-tab">
-          <section className="card">
-            <h3 className="section-heading">{"\u2705"} To-Do List</h3>
-            <div className="todo-input-row">
-              <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Add a new task..." onKeyDown={e => e.key === 'Enter' && addTodo()} />
-              <button className="todo-add-btn" onClick={addTodo}>Add</button>
-            </div>
-            <div className="todo-options-row">
-              <select value={newTodoPriority} onChange={e => setNewTodoPriority(e.target.value)} className="todo-select">
-                <option value="high">{"\ud83d\udd34"} High</option>
-                <option value="medium">{"\ud83d\udfe1"} Medium</option>
-                <option value="low">{"\ud83d\udfe2"} Low</option>
-              </select>
-              <select value={newTodoCategory} onChange={e => setNewTodoCategory(e.target.value)} className="todo-select">
-                <option value="general">{"\ud83d\udccb"} General</option>
-                <option value="ministry">{"\ud83d\udce3"} Ministry</option>
-                <option value="study">{"\ud83d\udcd6"} Study</option>
-                <option value="meeting">{"\u26ea"} Meeting</option>
-                <option value="personal">{"\ud83c\udfaf"} Personal</option>
-              </select>
-              <input type="date" value={newTodoDue} onChange={e => setNewTodoDue(e.target.value)} className="todo-date" />
-            </div>
-            <div className="todo-filter-row">
-              <button className={`todo-filter-btn ${todoFilter === 'all' ? 'active' : ''}`} onClick={() => setTodoFilter('all')}>All ({todos.length})</button>
-              <button className={`todo-filter-btn ${todoFilter === 'active' ? 'active' : ''}`} onClick={() => setTodoFilter('active')}>Active ({todos.length - todoDoneCount})</button>
-              <button className={`todo-filter-btn ${todoFilter === 'done' ? 'active' : ''}`} onClick={() => setTodoFilter('done')}>Done ({todoDoneCount})</button>
-            </div>
-            {filteredTodos.length === 0 && <p className="todo-empty">{todoFilter === 'all' ? 'No tasks yet. Add one above!' : todoFilter === 'active' ? 'All tasks completed!' : 'No completed tasks.'}</p>}
-            {filteredTodos.map(todo => (<div key={todo.id} className={`todo-item priority-${todo.priority || 'medium'}`}><label className="check-row"><input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id, todo.done)} /><span className={todo.done ? 'done' : ''}>{todo.text}</span></label><div className="todo-meta">{todo.due_date && <span className={`todo-due ${new Date(todo.due_date) < new Date() && !todo.done ? 'overdue' : ''}`}>{new Date(todo.due_date + 'T12:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>}<span className={`todo-priority-badge ${todo.priority || 'medium'}`}>{todo.priority === 'high' ? '!' : todo.priority === 'low' ? '\u25CB' : '\u25CF'}</span></div><button className="todo-edit-btn" onClick={() => { const newText = prompt('Edit task:', todo.text); if (newText !== null) editTodo(todo.id, newText) }}>{"\u270F"}</button><button className="todo-delete-btn" onClick={() => deleteTodo(todo.id)}>{"\u2715"}</button></div>))}
-          </section>
-          <section className="card"><h3 className="section-heading notes-heading">{"✍️"} Journal<button className={`copy-btn ${copiedId === 'todoJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'todoJournal')} title="Copy journal">{copiedId === 'todoJournal' ? '✅' : '📋'}</button></h3><RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and experiences..." minHeight={200} /></section>
-        </div>
+            {tab === 'todos' && (
+  <div className="todo-tab">
+    <section className="card">
+      <h3 className="section-heading">{"\u2705"} To-Do List</h3>
+
+      <div className="todo-input-row">
+        <input
+          type="text"
+          value={newTodo}
+          onChange={e => setNewTodo(e.target.value)}
+          placeholder="Add a new task..."
+          onKeyDown={e => e.key === 'Enter' && addTodo()}
+        />
+        <button className="todo-add-btn" onClick={addTodo}>
+          Add
+        </button>
+      </div>
+
+      <div className="todo-options-row">
+        <select
+          value={newTodoPriority}
+          onChange={e => setNewTodoPriority(e.target.value)}
+          className="todo-select"
+        >
+          <option value="high">🔴 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+
+        <select
+          value={newTodoCategory}
+          onChange={e => setNewTodoCategory(e.target.value)}
+          className="todo-select"
+        >
+          <option value="general">📋 General</option>
+          <option value="ministry">📣 Ministry</option>
+          <option value="study">📖 Study</option>
+          <option value="meeting">⛪ Meeting</option>
+          <option value="personal">🎯 Personal</option>
+        </select>
+
+        <input
+          type="date"
+          value={newTodoDue}
+          onChange={e => setNewTodoDue(e.target.value)}
+          className="todo-date"
+        />
+      </div>
+
+      <div className="todo-filter-row">
+        <button
+          className={`todo-filter-btn ${todoFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setTodoFilter('all')}
+        >
+          All ({todos.length})
+        </button>
+        <button
+          className={`todo-filter-btn ${todoFilter === 'active' ? 'active' : ''}`}
+          onClick={() => setTodoFilter('active')}
+        >
+          Active ({todos.length - todoDoneCount})
+        </button>
+        <button
+          className={`todo-filter-btn ${todoFilter === 'done' ? 'active' : ''}`}
+          onClick={() => setTodoFilter('done')}
+        >
+          Done ({todoDoneCount})
+        </button>
+      </div>
+
+      {filteredTodos.length === 0 && (
+        <p className="todo-empty">
+          {todoFilter === 'all'
+            ? 'No tasks yet. Add one above!'
+            : todoFilter === 'active'
+            ? 'All tasks completed!'
+            : 'No completed tasks.'}
+        </p>
       )}
-      <footer className="footer"><p>Eat Pray Study {"\u00a9"} 2026</p></footer>
+
+      {filteredTodos.map(todo => (
+        <div
+          key={todo.id}
+          className={`todo-item priority-${todo.priority || 'medium'}`}
+        >
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={todo.done}
+              onChange={() => toggleTodo(todo.id, todo.done)}
+            />
+            <span className={todo.done ? 'done' : ''}>
+              {todo.text}
+            </span>
+          </label>
+
+          <div className="todo-meta">
+            {todo.due_date && (
+              <span
+                className={`todo-due ${
+                  new Date(todo.due_date) < new Date() && !todo.done
+                    ? 'overdue'
+                    : ''
+                }`}
+              >
+                {new Date(todo.due_date + 'T12:00').toLocaleDateString(
+                  'en-US',
+                  { month: 'short', day: 'numeric' }
+                )}
+              </span>
+            )}
+
+            <span
+              className={`todo-priority-badge ${
+                todo.priority || 'medium'
+              }`}
+            >
+              {todo.priority === 'high'
+                ? '!'
+                : todo.priority === 'low'
+                ? '○'
+                : '●'}
+            </span>
+          </div>
+
+          <button
+            className="todo-edit-btn"
+            onClick={() => {
+              const newText = prompt('Edit task:', todo.text)
+              if (newText !== null) editTodo(todo.id, newText)
+            }}
+          >
+            ✏
+          </button>
+
+          <button
+            className="todo-delete-btn"
+            onClick={() => deleteTodo(todo.id)}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </section>
+
+    <section className="card">
+      <h3 className="section-heading notes-heading">
+        ✍️ Journal
+        <button
+          className={`copy-btn ${
+            copiedId === 'todoJournal' ? 'copied' : ''
+          }`}
+          onClick={() => copyToClipboard(journalText, 'todoJournal')}
+          title="Copy journal"
+        >
+          {copiedId === 'todoJournal' ? '✅' : '📋'}
+        </button>
+      </h3>
+      <RichNoteEditor
+        value={journalText}
+        onChange={setJournalText}
+        placeholder="Write your thoughts, reflections, and experiences..."
+        minHeight={200}
+      />
+    </section>
+  </div>
+)}
+      <footer className="footer"><p>Eat Pray Study {"\u00a9"} 2026</p>
+      </footer>
     </div>
   )
 }
