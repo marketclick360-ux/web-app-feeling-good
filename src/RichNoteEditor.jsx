@@ -164,8 +164,9 @@ const handleColorToggle = () => {
   setShowColors(!showColors)
 }
  
+const isEmpty = !value || !value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim()
 
-  const isEmpty = !value || value === '<br>' || value === '<div><br></div>'
+
 
   return (
     <div className="rich-note-wrapper">
