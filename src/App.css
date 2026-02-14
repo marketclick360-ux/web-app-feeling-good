@@ -884,7 +884,8 @@ textarea:focus {
   max-width: 100%;
   border-radius: 8px;
   margin: 8px 0;
-  max-height: 200px;
+max-height: none;
+
   object-fit: contain;
   cursor: pointer;
   display: inline-block;
@@ -1013,11 +1014,10 @@ html {
   height: 100%;
 }
 body {
-  height: 100svh;
+  min-height: 100svh;
   margin: 0;
-  overflow-x: hidden;
-  overscroll-behavior-x: none;
 }
+
 
 /* Touch-friendly */
 @media (hover: none) and (pointer: coarse) {
