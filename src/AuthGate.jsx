@@ -7,6 +7,8 @@ export default function AuthGate({ children }) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [guestMode, setGuestMode] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -15,6 +17,10 @@ export default function AuthGate({ children }) {
     })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session) {
+        setGuestMode(false)
+        setShowLogin(false)
+      }
     })
     return () => listener.subscription.unsubscribe()
   }, [])
@@ -43,6 +49,7 @@ export default function AuthGate({ children }) {
     </div>
   )
 
+  // Signed in user
   if (session) return (
     <>
       <button className="sign-out-btn" onClick={handleSignOut}>Sign Out</button>
@@ -50,6 +57,15 @@ export default function AuthGate({ children }) {
     </>
   )
 
+  // Guest mode - show app with sign-in option
+  if (guestMode && !showLogin) return (
+    <>
+      <button className="sign-in-btn" onClick={() => setShowLogin(true)}>Sign In</button>
+      {React.Children.map(children, child => React.cloneElement(child, { userId: null }))}
+    </>
+  )
+
+  // Login screen (initial or triggered from guest mode)
   return (
     <div className="auth-gate">
       <div className="auth-card">
@@ -63,6 +79,7 @@ export default function AuthGate({ children }) {
           <button type="submit" className="auth-btn">Send Magic Link</button>
         </form>
         <p className="auth-hint">We'll email you a link to sign in — no password needed.</p>
+        <button className="guest-btn" onClick={() => { setGuestMode(true); setShowLogin(false) }}>Continue as Guest</button>
       </div>
     </div>
   )
