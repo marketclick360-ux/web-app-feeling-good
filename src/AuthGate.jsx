@@ -23,7 +23,10 @@ export default function AuthGate({ children }) {
     e.preventDefault()
     setError('')
     setMessage('')
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin }
+    })
     if (error) setError(error.message)
     else setMessage('Check your email for a login link!')
   }
