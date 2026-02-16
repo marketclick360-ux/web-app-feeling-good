@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 
 export default function AuthGate({ children }) {
@@ -42,7 +42,7 @@ export default function AuthGate({ children }) {
     </div>
   )
 
-  if (session) return children
+  if (session) return React.Children.map(children, child => React.cloneElement(child, { userId: session.user.id }))
 
   return (
     <div className="auth-gate">
