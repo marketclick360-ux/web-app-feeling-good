@@ -280,7 +280,7 @@ const loadJournal = useCallback(async () => {
   const loadTodos = useCallback(async () => {
     const { data } = await supabase.from('todo_items').select('*').eq('user_id', userId).order('created_at', { ascending: true })
     if (data) setTodos(data)
-  }, userId[])
+  }, [userId])
   useEffect(() => { loadTodos() }, [loadTodos])
   const addTodo = async () => { if (!newTodo.trim()) return; const ins = { text: newTodo.trim(), user_id: userId, priority: newTodoPriority, category: newTodoCategory }; if (newTodoDue) ins.due_date = newTodoDue; const { data } = await supabase.from('todo_items').insert(ins).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general') }
   const toggleTodo = async (id, done) => { await supabase.from('todo_items').update({ done: !done }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t)) }
