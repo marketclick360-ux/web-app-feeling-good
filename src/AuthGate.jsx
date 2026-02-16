@@ -5,8 +5,6 @@ export default function AuthGate({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
@@ -25,14 +23,9 @@ export default function AuthGate({ children }) {
     e.preventDefault()
     setError('')
     setMessage('')
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setError(error.message)
-      else setMessage('Check your email for a confirmation link!')
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
-    }
+    const { error } = await supabase.auth.signInWithOtp({ email })
+    if (error) setError(error.message)
+    else setMessage('Check your email for a login link!')
   }
 
   const handleSignOut = async () => {
@@ -59,17 +52,14 @@ export default function AuthGate({ children }) {
       <div className="auth-card">
         <h1>Eat Pray Study</h1>
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
-        <h2>{isSignUp ? 'Create Account' : 'Sign In'}</h2>
+        <h2>Sign In</h2>
         <form onSubmit={handleSubmit}>
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="auth-input" />
           {error && <p className="auth-error">{error}</p>}
           {message && <p className="auth-message">{message}</p>}
-          <button type="submit" className="auth-btn">{isSignUp ? 'Sign Up' : 'Sign In'}</button>
+          <button type="submit" className="auth-btn">Send Magic Link</button>
         </form>
-        <button className="auth-toggle" onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }}>
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-        </button>
+        <p className="auth-hint">We'll email you a link to sign in — no password needed.</p>
       </div>
     </div>
   )
