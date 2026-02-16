@@ -1928,3 +1928,10 @@ textarea,
     padding: 6px 10px;
   }
 }
+.auth-hint {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 16px;
+  line-height: 1.4;
+}
+
