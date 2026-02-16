@@ -1935,3 +1935,88 @@ textarea,
   line-height: 1.4;
 }
 
+/* -- Guest & Sign-In Buttons -- */
+.guest-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.25s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.guest-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.25);
+  color: #e2e8f0;
+}
+.guest-btn:active {
+  opacity: 0.8;
+}
+.sign-in-btn {
+  position: fixed;
+  top: 16px;
+  right: 70px;
+  background: rgba(99,102,241,0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(129,140,248,0.3);
+  border-radius: 12px;
+  color: #a5b4fc;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  z-index: 200;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.sign-in-btn:hover {
+  background: rgba(99,102,241,0.35);
+  border-color: rgba(129,140,248,0.5);
+  color: #fff;
+}
+.auth-divider {
+  color: #475569;
+  font-size: 0.8rem;
+  margin: 16px 0 8px;
+}
+/* Light theme overrides for auth */
+.light-theme .guest-btn {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.12);
+  color: #64748b;
+}
+.light-theme .guest-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: #334155;
+}
+.light-theme .sign-in-btn {
+  background: rgba(99,102,241,0.1);
+  border-color: rgba(99,102,241,0.3);
+  color: #6366f1;
+}
+.light-theme .sign-in-btn:hover {
+  background: rgba(99,102,241,0.2);
+  color: #4f46e5;
+}
+/* Auth mobile responsive for new buttons */
+@media (max-width: 480px) {
+  .sign-in-btn {
+    top: 12px;
+    right: 60px;
+    font-size: 0.72rem;
+    padding: 6px 10px;
+  }
+}
+
