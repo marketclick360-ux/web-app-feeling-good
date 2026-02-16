@@ -139,7 +139,7 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' 
     </svg>
   )
 }
-export default function App() {
+export default function App({ userId }) {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const weekLabel = formatRange(weekStart)
   const weekKey = toISO(weekStart)
@@ -199,6 +199,7 @@ const { data, error } = await supabase
   .from('weeks')
   .select('*')
   .eq('week_start', weekKey)
+        .eq('user_id', userId)
   .maybeSingle()
 
 if (error) {
@@ -229,17 +230,18 @@ if (error) {
     setSundayArticle(wd.sundayArticle || '');
   }
 }
-  weekLoaded.current = true; }, [weekKey, apiWeekData])
+  weekLoaded.current = true; }, [weekKey, apiWeekData, userId])
   useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
   const saveWeek = useCallback(async () => { if (!weekLoaded.current) return;
-  await supabase.from('weeks').upsert({ week_start: weekKey, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start' })  
- }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle])
+  await supabase.from('weeks').upsert({ week_start: weekKey, user_id: userId, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start,user_id' })  
+ }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 const loadJournal = useCallback(async () => {
   const { data, error } = await supabase
     .from('journal_entries')
     .select('*')
     .eq('entry_date', journalDate)
+          .eq('user_id', userId)
     .maybeSingle()
 
   if (error) {
@@ -268,19 +270,19 @@ const loadJournal = useCallback(async () => {
   }
 
   journalLoaded.current = true
-}, [journalDate])
+}, [journalDate, userId])
   useEffect(() => { journalLoaded.current = false; loadJournal() }, [loadJournal])
   const saveJournal = useCallback(async () => { if (!journalLoaded.current) return;
-    await supabase.from('journal_entries').upsert({ entry_date: journalDate, journal_text: journalText, tasks: journalTasks, notes: journalNotes, 
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }, { onConflict: 'entry_date' })
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals])
+    await supabase.from('journal_entries').upsert({ entry_date: journalDate, user_id: userId, journal_text: journalText, tasks: journalTasks, notes: journalNotes, 
+      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }, { onConflict: 'entry_date,user_id' })
+  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
-    const { data } = await supabase.from('todo_items').select('*').order('created_at', { ascending: true })
+    const { data } = await supabase.from('todo_items').select('*').eq('user_id', userId).order('created_at', { ascending: true })
     if (data) setTodos(data)
-  }, [])
+  }, userId[])
   useEffect(() => { loadTodos() }, [loadTodos])
-  const addTodo = async () => { if (!newTodo.trim()) return; const ins = { text: newTodo.trim(), priority: newTodoPriority, category: newTodoCategory }; if (newTodoDue) ins.due_date = newTodoDue; const { data } = await supabase.from('todo_items').insert(ins).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general') }
+  const addTodo = async () => { if (!newTodo.trim()) return; const ins = { text: newTodo.trim(), user_id: userId, priority: newTodoPriority, category: newTodoCategory }; if (newTodoDue) ins.due_date = newTodoDue; const { data } = await supabase.from('todo_items').insert(ins).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general') }
   const toggleTodo = async (id, done) => { await supabase.from('todo_items').update({ done: !done }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t)) }
   const deleteTodo = async (id) => { await supabase.from('todo_items').delete().eq('id', id); setTodos(prev => prev.filter(t => t.id !== id)) }
   const clearCompleted = async () => { const done = todos.filter(t => t.done); await supabase.from('todo_items')
