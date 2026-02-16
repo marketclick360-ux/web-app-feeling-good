@@ -2020,3 +2020,22 @@ textarea,
   }
 }
 
+/* -- Auth description & disabled state -- */
+.auth-desc {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.auth-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.auth-input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.light-theme .auth-desc {
+  color: #64748b;
+}
+
