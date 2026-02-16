@@ -34,11 +34,11 @@ export default function AuthGate({ children }) {
     init()
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('auth event:', _event, 'session:', !!session)
+      // console.log('auth event:', _event, 'session:', !!session)
       setSession(session)
       if (session) {
         setGuestMode(false)
-        setShowLogin(false)
+        // setShowLogin(false)
       }
     })
     return () => {
