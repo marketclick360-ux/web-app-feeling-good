@@ -35,6 +35,11 @@ export default function AuthGate({ children }) {
     }
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setSession(null)
+  }
+
   if (loading) return (
     <div className="auth-loading">
       <div className="auth-spinner"></div>
@@ -42,44 +47,29 @@ export default function AuthGate({ children }) {
     </div>
   )
 
-  if (session) return React.Children.map(children, child => React.cloneElement(child, { userId: session.user.id }))
+  if (session) return (
+    <>
+      <button className="sign-out-btn" onClick={handleSignOut}>Sign Out</button>
+      {React.Children.map(children, child => React.cloneElement(child, { userId: session.user.id }))}
+    </>
+  )
 
   return (
     <div className="auth-gate">
       <div className="auth-card">
-        <h1 className="auth-title">Eat Pray Study</h1>
+        <h1>Eat Pray Study</h1>
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
-        <h2 className="auth-heading">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
-        <form onSubmit={handleSubmit} className="auth-form">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className="auth-input"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="auth-input"
-          />
+        <h2>{isSignUp ? 'Create Account' : 'Sign In'}</h2>
+        <form onSubmit={handleSubmit}>
+          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
+          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="auth-input" />
           {error && <p className="auth-error">{error}</p>}
           {message && <p className="auth-message">{message}</p>}
-          <button type="submit" className="auth-btn">
-            {isSignUp ? 'Sign Up' : 'Sign In'}
-          </button>
+          <button type="submit" className="auth-btn">{isSignUp ? 'Sign Up' : 'Sign In'}</button>
         </form>
-        <p
-          className="auth-toggle"
-          onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }}
-        >
+        <button className="auth-toggle" onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }}>
           {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-        </p>
+        </button>
       </div>
     </div>
   )
