@@ -583,7 +583,7 @@ const loadJournal = useCallback(async () => {
           <section className="card daily-text-card">
             <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3> {dailyTextLoading ? (
               <p className="daily-text-loading">Loading today's daily text...</p>
-            ) : dailyText && (dailyText.scripture || dailyText.comment || dailyText.note) ? (
+            ) : dailyText && (dailyText.dateLabel || dailyText.wolUrl || dailyText.scripture || dailyText.comment || dailyText.note) ? (
               <div className="daily-text-content">
                 <p className="daily-text-date">{dailyText.dateLabel}</p>
                 <p className="daily-text-scripture"><em>{dailyText.scripture || dailyText.note}</em></p>
