@@ -2251,3 +2251,98 @@ textarea:focus,
     0 2px 8px rgba(0,0,0,0.15),
     inset 0 1px 0 rgba(255,255,255,0.12);
 }
+
+
+/* ========================================
+   iPad/iOS Safari Glass Effect Fixes
+   ======================================== */
+
+/* Force GPU acceleration for smooth glass on iOS */
+.card,
+.header,
+.week-nav button,
+.rich-note-toolbar,
+.todo-input-container,
+.task-item,
+.journal-card {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, backdrop-filter;
+}
+
+/* Fallback for devices without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .card,
+  .header,
+  .week-nav button,
+  .rich-note-toolbar,
+  .todo-input-container,
+  .task-item {
+    background: rgba(30, 30, 50, 0.95) !important;
+  }
+  
+  [data-theme="light"] .card,
+  [data-theme="light"] .header,
+  [data-theme="light"] .week-nav button,
+  [data-theme="light"] .rich-note-toolbar,
+  [data-theme="light"] .todo-input-container,
+  [data-theme="light"] .task-item {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+}
+
+/* iPad-specific touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .card,
+  .header,
+  .week-nav button,
+  .rich-note-toolbar {
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+    backdrop-filter: blur(25px) saturate(150%);
+  }
+  
+  /* Larger touch targets on iPad */
+  .week-nav button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Smoother scrolling on iOS */
+  .app-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* iPad landscape mode adjustments */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .app {
+    max-width: 900px;
+  }
+  
+  .card {
+    padding: 24px;
+  }
+}
+
+/* iPad portrait mode adjustments */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .app {
+    max-width: 700px;
+    padding: 0 24px;
+  }
+}
+
+/* Fix for iOS Safari rendering issues with backdrop-filter */
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  .card::before,
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+  }
+}
