@@ -2479,3 +2479,370 @@ label,
   font-size: 0.875rem;
   letter-spacing: 0.01em;
 }
+
+/* ========================================
+   COMPLETE MINIMALIST UI IMPROVEMENTS
+   CSS-only changes - Safe, no functionality affected
+   ======================================== */
+
+/* =========================================
+   1. SIMPLIFIED TASK ITEMS
+   - Hide action buttons by default
+   - Show on hover/focus
+   ========================================= */
+
+/* Hide edit and delete buttons by default */
+.todo-item .todo-edit-btn,
+.todo-item .todo-delete-btn,
+.task-item .todo-edit-btn,
+.task-item .todo-delete-btn {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Show buttons on hover */
+.todo-item:hover .todo-edit-btn,
+.todo-item:hover .todo-delete-btn,
+.task-item:hover .todo-edit-btn,
+.task-item:hover .todo-delete-btn,
+.todo-item:focus-within .todo-edit-btn,
+.todo-item:focus-within .todo-delete-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Always show on touch devices */
+@media (hover: none) {
+  .todo-item .todo-edit-btn,
+  .todo-item .todo-delete-btn,
+  .task-item .todo-edit-btn,
+  .task-item .todo-delete-btn {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* Cleaner priority indicator - subtle left border instead of dot */
+.todo-item.priority-high,
+.task-item.priority-high {
+  border-left: 3px solid #ef4444;
+}
+
+.todo-item.priority-medium,
+.task-item.priority-medium {
+  border-left: 3px solid #f59e0b;
+}
+
+.todo-item.priority-low,
+.task-item.priority-low {
+  border-left: 3px solid #22c55e;
+}
+
+/* Hide the inline priority badge (keep border only) */
+.todo-priority-badge {
+  display: none;
+}
+
+/* Cleaner checkbox styling */
+.todo-item input[type="checkbox"],
+.task-item input[type="checkbox"],
+.check-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(129, 140, 248, 0.5);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.todo-item input[type="checkbox"]:checked,
+.task-item input[type="checkbox"]:checked,
+.check-row input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border-color: #818cf8;
+}
+
+.todo-item input[type="checkbox"]:checked::after,
+.task-item input[type="checkbox"]:checked::after,
+.check-row input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* =========================================
+   2. STREAMLINED NAVIGATION
+   - Thinner, more elegant tab pills
+   - Subtle transitions
+   ========================================= */
+
+.tab-row {
+  gap: 4px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.tab-row button {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  border: none;
+  background: transparent;
+}
+
+.tab-row button.active,
+.tab-row button[class*="active"] {
+  background: rgba(129, 140, 248, 0.2);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.tab-row button:not(.active):hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Light theme tabs */
+[data-theme="light"] .tab-row {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .tab-row button.active {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* =========================================
+   3. TYPOGRAPHY & SPACING
+   - Lighter font weights for secondary text
+   - Consistent padding rhythm
+   ========================================= */
+
+/* Secondary/muted text */
+.routine-date,
+.daily-text-date,
+.encouragement-ref,
+.todo-due,
+.todo-meta {
+  font-weight: 400;
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+/* Consistent card padding */
+.card {
+  padding: 20px;
+}
+
+/* Section spacing */
+section.card + section.card {
+  margin-top: 16px;
+}
+
+/* Input fields - cleaner */
+input[type="text"],
+textarea,
+select {
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(129, 140, 248, 0.5);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+  outline: none;
+}
+
+/* =========================================
+   4. SMOOTH INTERACTION ANIMATIONS
+   ========================================= */
+
+/* Card hover effect */
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+}
+
+/* Button press effect */
+button {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* Checkbox row hover */
+.check-row {
+  padding: 10px 12px;
+  margin: 4px -12px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.check-row:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* Task item hover */
+.todo-item,
+.task-item {
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.todo-item:hover,
+.task-item:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* Copy button animation */
+.copy-btn {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.copy-btn:hover {
+  transform: scale(1.1);
+}
+
+.copy-btn.copied {
+  animation: copyPulse 0.3s ease;
+}
+
+@keyframes copyPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* =========================================
+   5. POLISH & REFINEMENTS
+   ========================================= */
+
+/* Softer shadows throughout */
+.card,
+.todo-input-container,
+.journal-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .card,
+body:not([data-theme="light"]) .card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Cleaner scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(129, 140, 248, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(129, 140, 248, 0.5);
+}
+
+/* Filter tabs styling */
+.todo-filter-row {
+  gap: 8px;
+}
+
+.todo-filter-btn {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.todo-filter-btn.active {
+  background: rgba(129, 140, 248, 0.2);
+}
+
+/* Quick links grid refinement */
+.quick-links-grid {
+  gap: 10px;
+}
+
+.quick-link-btn {
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.quick-link-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Rich text editor toolbar */
+.rich-note-toolbar button {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.rich-note-toolbar button:hover {
+  background: rgba(129, 140, 248, 0.15);
+}
+
+/* Day navigation buttons */
+.day-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.day-nav-btn:hover {
+  background: rgba(129, 140, 248, 0.15);
+  transform: scale(1.05);
+}
+
+/* Today button */
+.today-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Meeting part items */
+.meeting-part-item {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 6px 0;
+  transition: background 0.2s ease;
+}
+
+.meeting-part-item:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
