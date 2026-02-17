@@ -2039,3 +2039,215 @@ textarea,
   color: #64748b;
 }
 
+
+
+/* ===== APPLE VISIONOS GLASS ENHANCEMENT ===== */
+/* Layered on top of existing styles for enhanced frosted glass effect */
+
+/* Noise texture for frosted glass realism */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.card:hover {
+  background: rgba(255,255,255,0.05);
+  box-shadow: 
+    0 16px 48px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(255,255,255,0.08),
+    0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* Enhanced floating tab bar - visionOS style */
+.tab-row {
+  background: rgba(20,20,35,0.7);
+  backdrop-filter: blur(50px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.4),
+    0 0 80px rgba(99,102,241,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+
+.tab.active {
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(20px) brightness(1.2);
+  -webkit-backdrop-filter: blur(20px) brightness(1.2);
+  box-shadow: 
+    0 2px 16px rgba(99,102,241,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Enhanced ambient background blobs */
+body::before {
+  width: 600px;
+  height: 600px;
+  top: -150px;
+  left: -150px;
+  background: radial-gradient(circle, rgba(99,102,241,0.5) 0%, rgba(147,51,234,0.3) 40%, transparent 70%);
+  animation: float1 20s ease-in-out infinite;
+}
+
+body::after {
+  width: 700px;
+  height: 700px;
+  bottom: -200px;
+  right: -200px;
+  background: radial-gradient(circle, rgba(192,132,252,0.4) 0%, rgba(244,114,182,0.25) 40%, transparent 70%);
+  animation: float2 25s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, -30px) scale(1.05); }
+}
+
+/* Third ambient blob for extra depth */
+.app::before {
+  content: '';
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 60%);
+  filter: blur(80px);
+  z-index: -1;
+  pointer-events: none;
+  animation: float3 30s ease-in-out infinite;
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  33% { transform: translate(-40%, -60%) scale(1.15); }
+  66% { transform: translate(-60%, -40%) scale(0.9); }
+}
+
+/* Enhanced glass inputs */
+input[type="text"],
+input[type="date"],
+textarea,
+.rich-note-editor {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px) brightness(1.05);
+  -webkit-backdrop-filter: blur(12px) brightness(1.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.1);
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+.rich-note-editor:focus {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(129,140,248,0.4);
+  box-shadow: 
+    0 0 0 3px rgba(99,102,241,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 0 20px rgba(99,102,241,0.1);
+}
+
+/* Enhanced glass buttons */
+.workbook-btn,
+.todo-add-btn,
+.quick-link-btn {
+  background: rgba(99,102,241,0.25);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 
+    0 4px 16px rgba(99,102,241,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.1);
+}
+
+.workbook-btn:hover,
+.todo-add-btn:hover,
+.quick-link-btn:hover {
+  background: rgba(99,102,241,0.4);
+  box-shadow: 
+    0 8px 24px rgba(99,102,241,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    0 0 30px rgba(99,102,241,0.15);
+}
+
+/* Enhanced checkbox styling */
+.check-row:hover {
+  background: rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Day navigation buttons */
+.day-nav-btn {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.day-nav-btn:hover {
+  background: rgba(255,255,255,0.12);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Section headings subtle glow */
+.section-heading {
+  text-shadow: 0 0 20px rgba(129,140,248,0.3);
+}
+
+/* Rich note toolbar */
+.rich-note-toolbar {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.rich-note-toolbar button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.rich-note-toolbar button:hover {
+  background: rgba(255,255,255,0.1);
+  box-shadow: 
+    0 2px 8px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+}
