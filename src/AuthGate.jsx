@@ -20,15 +20,35 @@ export default function AuthGate({ children }) {
   const otpInputRef = useRef(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        // Validate the session is still good server-side
+        const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession()
+        if (refreshErr || !refreshed.session) {
+          console.warn('Session expired, clearing stale session')
+          await supabase.auth.signOut()
+          setSession(null)
+        } else {
+          setSession(refreshed.session)
+        }
+      } else {
+        setSession(null)
+      }
       setLoading(false)
     })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      if (session) {
-        setGuestMode(false)
-        setShowLogin(false)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        // Token refresh failed - session is dead
+        console.warn('Token refresh failed, signing out')
+        setSession(null)
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null)
+      } else {
+        setSession(session)
+        if (session) {
+          setGuestMode(false)
+          setShowLogin(false)
+        }
       }
     })
     return () => {
@@ -138,17 +158,14 @@ export default function AuthGate({ children }) {
   }
 
   if (loading) return (
-    <div className="auth-loading">
-      <div className="auth-spinner"></div>
-      <p>Loading...</p>
+    <div className="auth-wrapper">
+      <p className="auth-loading">Loading...</p>
     </div>
   )
 
   if (session) return (
     <>
-      <button className="sign-out-btn" onClick={handleSignOut}>
-        Sign Out
-      </button>
+      <button className="sign-out-btn" onClick={handleSignOut}>Sign Out</button>
       {React.Children.map(children, child =>
         React.cloneElement(child, { userId: session.user.id }))}
     </>
@@ -156,21 +173,19 @@ export default function AuthGate({ children }) {
 
   if (guestMode && !showLogin) return (
     <>
-      <button className="sign-in-btn" onClick={() => setShowLogin(true)}>Sign In</button>
+      <button className="sign-out-btn" onClick={() => setShowLogin(true)}>Sign In</button>
       {React.Children.map(children, child =>
         React.cloneElement(child, { userId: null }))}
     </>
   )
 
   if (step === 'email') return (
-    <div className="auth-gate">
+    <div className="auth-wrapper">
       <div className="auth-card">
-        <h1>Eat Pray Study</h1>
+        <h1 className="auth-title">Eat Pray Study</h1>
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
-        <h2>Welcome Back</h2>
-        <p className="auth-desc">
-          Enter your email to sign in. New here? Same button — we'll create your account automatically.
-        </p>
+        <h2 className="auth-heading">Welcome Back</h2>
+        <p className="auth-text">Enter your email to sign in. New here? Same button &mdash; we'll create your account automatically.</p>
         <form onSubmit={handleSendCode}>
           <input
             type="email"
@@ -183,23 +198,13 @@ export default function AuthGate({ children }) {
             autoFocus
           />
           {error && <p className="auth-error">{error}</p>}
-          {message && <p className="auth-message">{message}</p>}
-          <button
-            type="submit"
-            className="auth-btn"
-            disabled={sending || cooldown > 0}
-          >
+          {message && <p className="auth-success">{message}</p>}
+          <button type="submit" className="auth-btn" disabled={sending || cooldown > 0}>
             {sending ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Send Code'}
           </button>
         </form>
-        <p className="auth-hint">
-          We'll email you a secure code — no password needed.
-          You stay signed in until you sign out.
-        </p>
-        <button
-          className="guest-btn"
-          onClick={() => { setGuestMode(true); setShowLogin(false) }}
-        >
+        <p className="auth-hint">We'll email you a secure code &mdash; no password needed. You stay signed in until you sign out.</p>
+        <button className="guest-btn" onClick={() => { setGuestMode(true); setShowLogin(false) }}>
           Continue as Guest
         </button>
       </div>
@@ -207,14 +212,12 @@ export default function AuthGate({ children }) {
   )
 
   return (
-    <div className="auth-gate">
+    <div className="auth-wrapper">
       <div className="auth-card">
-        <h1>Eat Pray Study</h1>
+        <h1 className="auth-title">Eat Pray Study</h1>
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
-        <h2>Enter Your Code</h2>
-        <p className="auth-desc">
-          We sent a code to <strong>{email}</strong>
-        </p>
+        <h2 className="auth-heading">Enter Your Code</h2>
+        <p className="auth-text">We sent a code to <strong>{email}</strong></p>
         <form onSubmit={handleVerifyCode}>
           <input
             ref={otpInputRef}
@@ -232,32 +235,16 @@ export default function AuthGate({ children }) {
             style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '1.4rem', fontFamily: 'monospace' }}
           />
           {error && <p className="auth-error">{error}</p>}
-          {message && <p className="auth-message">{message}</p>}
-          <button
-            type="submit"
-            className="auth-btn"
-            disabled={verifying || otpToken.length < 6}
-          >
+          {message && <p className="auth-success">{message}</p>}
+          <button type="submit" className="auth-btn" disabled={verifying || otpToken.length < 6}>
             {verifying ? 'Verifying...' : 'Verify'}
           </button>
         </form>
-        <p className="auth-hint">
-          Didn't get it? Check your spam folder.
-        </p>
-        <button
-          className="guest-btn"
-          onClick={handleResendCode}
-          disabled={cooldown > 0}
-          style={{ marginBottom: '8px' }}
-        >
+        <p className="auth-hint">Didn't get it? Check your spam folder.</p>
+        <button className="guest-btn" onClick={handleResendCode} disabled={cooldown > 0} style={{ marginBottom: '8px' }}>
           {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend Code'}
         </button>
-        <button
-          className="guest-btn"
-          onClick={handleBackToEmail}
-        >
-          ← Use a different email
-        </button>
+        <button className="guest-btn" onClick={handleBackToEmail}>&larr; Use a different email</button>
       </div>
     </div>
   )
