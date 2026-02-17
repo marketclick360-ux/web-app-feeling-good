@@ -2440,3 +2440,42 @@ body:not([data-theme="light"]) .card {
 .task-item {
   transition: all 0.2s ease;
 }
+
+/* ========================================
+   ENHANCED MINIMALIST SELECTORS
+   Targeting actual heading elements
+   ======================================== */
+
+/* --- All H1, H2, H3 Headings: Title Case + Cleaner Style --- */
+h1, h2, h3, h4 {
+  text-transform: capitalize;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* --- Specifically target app headings --- */
+#root h1,
+#root h2,
+#root h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- More space between main content sections --- */
+#root > div > div {
+  margin-bottom: 24px;
+}
+
+/* --- Checkbox labels: Softer text --- */
+label,
+[type="checkbox"] + span,
+[type="checkbox"] ~ div {
+  text-transform: capitalize;
+  font-weight: 400;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+}
