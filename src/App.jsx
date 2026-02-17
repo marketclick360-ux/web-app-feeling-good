@@ -678,7 +678,7 @@ const loadJournal = useCallback(async () => {
             {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">This Week</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">Go to This Week</button>}
           </div>
           <section className="card">
-            <h3 className="section-heading sunday-heading">{"\u26ea"} Weekend Meeting (Public Talk & Watchtower Study)</h3>
+            <h3 className="section-heading sunday-heading">{"\ud83d\udcd6"} Weekend Meeting (Public Talk & Watchtower Study)</h3>
             <div className="sunday-article-box"><p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p><a href={weekData.sundayArticleUrl || "https://www.jw.org/en/library/magazines/"} target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a></div>
             {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>

@@ -333,6 +333,7 @@ textarea:focus {
   margin: 10px 0 14px;
   padding: 10px 20px;
   background: linear-gradient(135deg, rgba(99,102,241,0.92), rgba(79,70,229,0.92));
+  background: rgba(99,102,241,0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: #f8faff !important;
@@ -2306,12 +2307,12 @@ textarea:focus,
     background: rgba(30, 30, 50, 0.95) !important;
   }
   
-  [data-theme="light"] .card,
-  [data-theme="light"] .header,
-  [data-theme="light"] .week-nav button,
-  [data-theme="light"] .rich-note-toolbar,
-  [data-theme="light"] .todo-input-container,
-  [data-theme="light"] .task-item,
+  body.light-theme .card,
+  body.light-theme .header,
+  body.light-theme .week-nav button,
+  body.light-theme .rich-note-toolbar,
+  body.light-theme .todo-input-container,
+  body.light-theme .task-item,
   body.light-theme .card,
   body.light-theme .header,
   body.light-theme .week-nav button,
@@ -2672,11 +2673,11 @@ body.zoomed-viewport .rich-note-toolbar {
 }
 
 /* Light theme tabs */
-[data-theme="light"] .tab-row {
+body.light-theme .tab-row {
   background: rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="light"] .tab-row button.active {
+body.light-theme .tab-row button.active {
   background: rgba(99, 102, 241, 0.15);
 }
 
