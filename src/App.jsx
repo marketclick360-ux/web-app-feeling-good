@@ -29,7 +29,7 @@ const MORNING_ROUTINE = [
   { key: 'prayer_morning', label: '\ud83d\ude4f Morning prayer' },
   { key: 'daily_text', label: '\ud83d\udcc3 Read daily text' },
   { key: 'bible_reading', label: '\ud83d\udcd6 Personal Bible reading' },
-  { key: 'meditation', label: '\ud83e\uddd8 Meditate on a scripture' },
+  { key: 'meditation', label: '\ud83e\udde0 Meditate on a scripture' },
   { key: 'review_goals', label: '\ud83c\udfaf Review pioneer goals for the day' },
   { key: 'prepare_service', label: '\ud83d\udcbc Prepare for field service' }
 ]
@@ -726,7 +726,7 @@ const loadJournal = useCallback(async () => {
           <option value="general">📋 General</option>
           <option value="ministry">📣 Ministry</option>
           <option value="study">📖 Study</option>
-          <option value="meeting">⛪ Meeting</option>
+          <option value="meeting">🙏 Meeting</option>
           <option value="personal">🎯 Personal</option>
         </select>
 
