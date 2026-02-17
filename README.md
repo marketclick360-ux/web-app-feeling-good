@@ -23,6 +23,7 @@ web-app-feeling-good/
 |-- .gitignore
 ```
 
+<!-- rebuild trigger -->
 ## Deploy to Cloudflare Pages (Free)
 
 1. Go to Cloudflare > Workers & Pages > Pages
