@@ -2346,3 +2346,97 @@ textarea:focus,
     border-radius: inherit;
   }
 }
+
+
+/* ========================================
+   MINIMALIST UI ENHANCEMENTS
+   Cleaner Visual Hierarchy - CSS Only
+   (Does not remove any features)
+   ======================================== */
+
+/* --- Section Headers: Softer Typography --- */
+.section-heading,
+.card h2,
+.card h3,
+.card > div:first-child,
+[class*="heading"],
+[class*="title"] {
+  text-transform: capitalize;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-size: 0.9rem;
+}
+
+/* --- Increased Whitespace Between Sections --- */
+.card {
+  margin-bottom: 20px;
+}
+
+.card + .card {
+  margin-top: 24px;
+}
+
+/* --- Enhanced Accent Bar on Section Headers --- */
+.card > div:first-child::before,
+.section-heading::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 70%;
+  background: linear-gradient(180deg, #818cf8, #6366f1);
+  border-radius: 2px;
+}
+
+/* Position relative for accent bar */
+.card > div:first-child,
+.section-heading {
+  position: relative;
+  padding-left: 12px;
+}
+
+/* --- Softer Card Appearance --- */
+.card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .card,
+body:not([data-theme="light"]) .card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- Breathing Room for Content --- */
+.card > *:not(:last-child) {
+  margin-bottom: 16px;
+}
+
+/* --- Subtle Dividers Between Items --- */
+.task-item + .task-item,
+.checklist-item + .checklist-item {
+  border-top: 1px solid rgba(128, 128, 128, 0.1);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* --- Light Theme Refinements --- */
+[data-theme="light"] .card {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .section-heading,
+[data-theme="light"] .card h2,
+[data-theme="light"] .card h3 {
+  color: #374151;
+}
+
+/* --- Smooth Transitions --- */
+.card,
+.section-heading,
+.task-item {
+  transition: all 0.2s ease;
+}
