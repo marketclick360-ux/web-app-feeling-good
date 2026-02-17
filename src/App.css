@@ -3109,3 +3109,26 @@ button.tab-btn.active,
   background: rgba(120, 100, 200, 0.25) !important;
   background-color: rgba(120, 100, 200, 0.25) !important;
 }
+
+
+/* ===========================================
+   9. FIX TAB NAVIGATION BUTTONS (DIRECT BUTTONS)
+   =========================================== */
+
+/* Target the quick links tab buttons - these are plain buttons containing emoji+text */
+#root > button {
+  background: rgba(30, 30, 45, 0.8) !important;
+  background-color: rgba(30, 30, 45, 0.8) !important;
+  border: 1px solid rgba(100, 100, 140, 0.3) !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Light theme buttons */
+[data-theme="light"] #root > button {
+  background: rgba(240, 240, 250, 0.9) !important;
+  background-color: rgba(240, 240, 250, 0.9) !important;
+  color: rgba(50, 50, 70, 0.8) !important;
+}
