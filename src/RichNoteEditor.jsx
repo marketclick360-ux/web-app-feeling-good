@@ -174,27 +174,30 @@ if (html) {
   return (
     <div className="rich-note-wrapper">
       <div className="rich-note-toolbar">
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('bold')} title="Bold">B</button>
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('italic')} title="Italic"><i>I</i></button>
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('underline')} title="Underline">U</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('bold')} title="Bold" aria-label="Bold">B</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('italic')} title="Italic" aria-label="Italic"><i>I</i></button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('underline')} title="Underline" aria-label="Underline">U</button>
         <div className="rich-note-sep" />
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list">{"\u2022"}</button>
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list">1.</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list" aria-label="Bullet list">{"\u2022"}</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list" aria-label="Numbered list">1.</button>
         <div className="rich-note-sep" />
         <button
+          type="button"
           className={`color-picker-toggle ${showColors ? 'active' : ''}`}
           onMouseDown={e => e.preventDefault()}
           onClick={() => setShowColors(!showColors)}
           title="Font color"
+          aria-label="Choose text color"
         >
           A
         </button>
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting">{"\u2718"}</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting" aria-label="Clear formatting">{"\u2718"}</button>
       </div>
       {showColors && (
         <div className="color-picker-row" style={{position:'relative',top:'auto',left:'auto'}}>
           {FONT_COLORS.map(({ color, label }) => (
             <button
+              type="button"
               key={color}
               className="color-swatch"
               style={{ backgroundColor: color }}

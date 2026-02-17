@@ -165,7 +165,11 @@ export default function App({ userId }) {
   const goToday = () => setJournalDate(todayStr())
   const isToday = journalDate === todayStr()
   const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-  const [tab, setTab] = useState('morning')
+  const [tab, setTab] = useState(() => {
+    if (typeof window === 'undefined') return 'morning'
+    const saved = window.localStorage.getItem('eps-active-tab')
+    return ['morning', 'prep', 'sunday', 'todos'].includes(saved) ? saved : 'morning'
+  })
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -189,13 +193,32 @@ const [treasuresComments2, setTreasuresComments2] = useState('');
 const [encouragement, setEncouragement] = useState(null)  
  const [dailyTextLoading, setDailyTextLoading] = useState(true)
   const [todos, setTodos] = useState([])
-    const [colorMode, setColorMode] = useState('')
+    const [colorMode, setColorMode] = useState(() => {
+      if (typeof window === 'undefined') return ''
+      return window.localStorage.getItem('eps-theme') === 'light' ? 'light-theme' : ''
+    })
   const [newTodo, setNewTodo] = useState('')
   const [newTodoPriority, setNewTodoPriority] = useState('medium')
   const [newTodoDue, setNewTodoDue] = useState('')
   const [newTodoCategory, setNewTodoCategory] = useState('general')
   const [todoFilter, setTodoFilter] = useState('all')
-    const [editingTodoId, setEditingTodoId] = useState(null); const journalLoaded = useRef(false); const weekLoaded = useRef(false)
+    const [editingTodoId, setEditingTodoId] = useState(null)
+  const [editingTodoText, setEditingTodoText] = useState('')
+  const [syncStatus, setSyncStatus] = useState('Saved')
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
+  const [toasts, setToasts] = useState([])
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('eps-onboarding-dismissed') !== '1'
+  })
+  const journalLoaded = useRef(false); const weekLoaded = useRef(false)
+  const pushToast = useCallback((message, tone = 'error') => {
+    const id = Date.now() + Math.random()
+    setToasts(prev => [...prev, { id, message, tone }])
+    window.setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 4200)
+  }, [])
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
   useEffect(() => {
@@ -217,6 +240,7 @@ const { data, error } = await supabase
 
 if (error) {
   console.error('Error loading week:', error)
+  pushToast('Could not load weekly preparation data.', 'error')
   return
 }
     if (data) {
@@ -243,11 +267,29 @@ if (error) {
     setSundayArticle(wd.sundayArticle || '');
   }
 }
-  weekLoaded.current = true; }, [weekKey, apiWeekData, userId])
+  weekLoaded.current = true; }, [weekKey, apiWeekData, userId, pushToast])
   useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
-  const saveWeek = useCallback(async () => { if (!userId) return; if (!weekLoaded.current) return;
-  await supabase.from('weeks').upsert({ week_start: weekKey, user_id: userId, theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }, { onConflict: 'week_start,user_id' })  
- }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId])
+  const saveWeek = useCallback(async () => {
+    if (!userId) return
+    if (!weekLoaded.current) return
+    if (!isOnline) {
+      setSyncStatus('Offline')
+      return
+    }
+    setSyncStatus('Saving...')
+    const { error } = await supabase.from('weeks').upsert({
+      week_start: weekKey, user_id: userId, theme, bible_reading: bibleReading, scriptures, comments,
+      treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks,
+      sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2,
+      sunday_comments_3: sundayComments3, sunday_article: sundayArticle
+    }, { onConflict: 'week_start,user_id' })
+    if (error) {
+      setSyncStatus('Sync error')
+      pushToast('Could not save weekly notes. Please try again.', 'error')
+      return
+    }
+    setSyncStatus('Saved')
+  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 const loadJournal = useCallback(async () => {
     if (!userId) return;
@@ -260,6 +302,7 @@ const loadJournal = useCallback(async () => {
 
   if (error) {
     console.error('Journal load error:', error)
+    pushToast('Could not load journal data.', 'error')
     return
   }
 
@@ -284,30 +327,110 @@ const loadJournal = useCallback(async () => {
   }
 
   journalLoaded.current = true
-}, [journalDate, userId])
+}, [journalDate, userId, pushToast])
   useEffect(() => { journalLoaded.current = false; loadJournal() }, [loadJournal])
-  const saveJournal = useCallback(async () => { if (!userId) return; if (!journalLoaded.current) return;
-    await supabase.from('journal_entries').upsert({ entry_date: journalDate, user_id: userId, journal_text: journalText, tasks: journalTasks, notes: journalNotes, 
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }, { onConflict: 'entry_date,user_id' })
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId])
+  const saveJournal = useCallback(async () => {
+    if (!userId) return
+    if (!journalLoaded.current) return
+    if (!isOnline) {
+      setSyncStatus('Offline')
+      return
+    }
+    setSyncStatus('Saving...')
+    const { error } = await supabase.from('journal_entries').upsert({
+      entry_date: journalDate, user_id: userId, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
+      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
+    }, { onConflict: 'entry_date,user_id' })
+    if (error) {
+      setSyncStatus('Sync error')
+      pushToast('Could not save journal changes.', 'error')
+      return
+    }
+    setSyncStatus('Saved')
+  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('todo_items').select('*').eq('user_id', userId).order('created_at', { ascending: true })
+    if (!userId) return
+    const { data, error } = await supabase.from('todo_items').select('*').eq('user_id', userId).order('created_at', { ascending: true })
+    if (error) {
+      pushToast('Could not load to-do items.', 'error')
+      return
+    }
     if (data) setTodos(data)
-  }, [userId])
+  }, [userId, pushToast])
   useEffect(() => { loadTodos() }, [loadTodos])
-  const addTodo = async () => { if (!userId) return; if (!newTodo.trim()) return; const ins = { text: newTodo.trim(), user_id: userId, priority: newTodoPriority, category: newTodoCategory }; if (newTodoDue) ins.due_date = newTodoDue; const { data } = await supabase.from('todo_items').insert(ins).select().single(); if (data) setTodos(prev => [...prev, data]); setNewTodo(''); setNewTodoDue(''); setNewTodoPriority('medium'); setNewTodoCategory('general') }
-  const toggleTodo = async (id, done) => { if (!userId) return; await supabase.from('todo_items').update({ done: !done }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t)) }
-  const deleteTodo = async (id) => { if (!userId) return; await supabase.from('todo_items').delete().eq('id', id); setTodos(prev => prev.filter(t => t.id !== id)) }
-  const clearCompleted = async () => { const done = todos.filter(t => t.done); await supabase.from('todo_items')
-   .delete()
-  .in('id', done.map(t => t.id)); setTodos(prev => prev.filter(t => !t.done)) }
+  const addTodo = async () => {
+    if (!userId) return
+    if (!newTodo.trim()) return
+    const ins = { text: newTodo.trim(), user_id: userId, priority: newTodoPriority, category: newTodoCategory }
+    if (newTodoDue) ins.due_date = newTodoDue
+    const { data, error } = await supabase.from('todo_items').insert(ins).select().single()
+    if (error) {
+      pushToast('Could not add task.', 'error')
+      return
+    }
+    if (data) setTodos(prev => [...prev, data])
+    setNewTodo('')
+    setNewTodoDue('')
+    setNewTodoPriority('medium')
+    setNewTodoCategory('general')
+  }
+  const toggleTodo = async (id, done) => {
+    if (!userId) return
+    const { error } = await supabase.from('todo_items').update({ done: !done }).eq('id', id)
+    if (error) {
+      pushToast('Could not update task status.', 'error')
+      return
+    }
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t))
+  }
+  const deleteTodo = async (id) => {
+    if (!userId) return
+    if (!window.confirm('Delete this task permanently?')) return
+    const { error } = await supabase.from('todo_items').delete().eq('id', id)
+    if (error) {
+      pushToast('Could not delete task.', 'error')
+      return
+    }
+    setTodos(prev => prev.filter(t => t.id !== id))
+    if (editingTodoId === id) { setEditingTodoId(null); setEditingTodoText('') }
+  }
+  const clearCompleted = async () => {
+    if (!window.confirm('Delete all completed tasks?')) return
+    const done = todos.filter(t => t.done)
+    if (done.length === 0) return
+    const { error } = await supabase.from('todo_items').delete().in('id', done.map(t => t.id))
+    if (error) {
+      pushToast('Could not clear completed tasks.', 'error')
+      return
+    }
+    setTodos(prev => prev.filter(t => !t.done))
+  }
   const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 }
-    const editTodo = async (id, newText) => { if (!newText.trim()) return; await supabase.from('todo_items').update({ text: newText.trim() }).eq('id', id); setTodos(prev => prev.map(t => t.id === id ? { ...t, text: newText.trim() } : t)); setEditingTodoId(null) }
+    const editTodo = async (id, newText) => {
+      if (!newText.trim()) return
+      const { error } = await supabase.from('todo_items').update({ text: newText.trim() }).eq('id', id)
+      if (error) {
+        pushToast('Could not save task text.', 'error')
+        return
+      }
+      setTodos(prev => prev.map(t => t.id === id ? { ...t, text: newText.trim() } : t))
+      setEditingTodoId(null)
+      setEditingTodoText('')
+    }
+  const startTodoEdit = (todo) => { setEditingTodoId(todo.id); setEditingTodoText(todo.text || '') }
+  const cancelTodoEdit = () => { setEditingTodoId(null); setEditingTodoText('') }
+  const submitTodoEdit = async (id) => {
+    if (!editingTodoText.trim()) {
+      cancelTodoEdit()
+      return
+    }
+    await editTodo(id, editingTodoText)
+  }
   const sortedTodos = [...todos].sort((a, b) => { if (a.done !== b.done) return a.done ? 1 : -1; const pa = PRIORITY_ORDER[a.priority || 'medium'] ?? 1; const pb = PRIORITY_ORDER[b.priority || 'medium'] ?? 1; return pa - pb })
   const filteredTodos = todoFilter === 'all' ? sortedTodos : todoFilter === 'active' ? sortedTodos.filter(t => !t.done) : sortedTodos.filter(t => t.done)
   const todoDoneCount = todos.filter(t => t.done).length
+  const todayIso = todayStr()
   const toggleCheck = (id) => setChecks(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleSundayCheck = (key) => setSundayChecks(prev => ({ ...prev, [key]: !prev[key] }))
   const toggleMorning = (key) => setMorningChecks(prev => ({ ...prev, [key]: !prev[key] }))
@@ -317,11 +440,105 @@ const loadJournal = useCallback(async () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 1500)
-    })
+    }).catch(() => pushToast('Copy failed on this device.', 'warning'))
   }
-  useEffect(() => { fetch('/api/daily-text').then(r => r.ok ? r.json() : null).then(data => { setDailyText(data); setDailyTextLoading(false) }).catch(() => setDailyTextLoading(false)) }, [])
-  useEffect(() => { fetch('/api/encouragement').then(r => r.ok ? r.json() : null).then(data => { setEncouragement(data) }) }, [])
+  const dismissOnboarding = () => {
+    setShowOnboarding(false)
+    window.localStorage.setItem('eps-onboarding-dismissed', '1')
+  }
+  useEffect(() => {
+    let alive = true
+    fetch('/api/daily-text')
+      .then(async (r) => {
+        if (!r.ok) throw new Error('daily-text failed')
+        return r.json()
+      })
+      .then(data => {
+        if (!alive) return
+        setDailyText(data)
+      })
+      .catch(() => {
+        if (!alive) return
+        pushToast('Could not load daily text right now.', 'warning')
+      })
+      .finally(() => { if (alive) setDailyTextLoading(false) })
+    return () => { alive = false }
+  }, [pushToast])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/encouragement')
+      .then(async (r) => {
+        if (!r.ok) throw new Error('encouragement failed')
+        return r.json()
+      })
+      .then(data => {
+        if (!alive) return
+        setEncouragement(data)
+      })
+      .catch(() => {
+        if (!alive) return
+        pushToast('Could not load encouragement text.', 'warning')
+      })
+    return () => { alive = false }
+  }, [pushToast])
     useEffect(() => { const h = (e) => { const a = e.target.closest('a[href]'); if (!a) return; const hr = a.getAttribute('href'); if (hr && (hr.startsWith('http://') || hr.startsWith('https://')) && !hr.includes(window.location.hostname)) { e.preventDefault(); window.open(hr, '_blank', 'noopener,noreferrer'); } }; document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, [])
+  useEffect(() => {
+    const isLight = colorMode === 'light-theme'
+    document.body.classList.toggle('light-theme', isLight)
+    window.localStorage.setItem('eps-theme', isLight ? 'light' : 'dark')
+    return () => document.body.classList.remove('light-theme')
+  }, [colorMode])
+  useEffect(() => {
+    if (!window.visualViewport) return
+    const syncZoomClass = () => {
+      document.body.classList.toggle('zoomed-viewport', window.visualViewport.scale > 1.01)
+    }
+    syncZoomClass()
+    window.visualViewport.addEventListener('resize', syncZoomClass)
+    return () => {
+      window.visualViewport.removeEventListener('resize', syncZoomClass)
+      document.body.classList.remove('zoomed-viewport')
+    }
+  }, [])
+  useEffect(() => {
+    const isEditable = (el) => el && (
+      el.tagName === 'INPUT' ||
+      el.tagName === 'TEXTAREA' ||
+      el.tagName === 'SELECT' ||
+      el.isContentEditable
+    )
+    const onFocusIn = (e) => {
+      if (isEditable(e.target)) document.body.classList.add('keyboard-open')
+    }
+    const onFocusOut = () => document.body.classList.remove('keyboard-open')
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+      document.body.classList.remove('keyboard-open')
+    }
+  }, [])
+  useEffect(() => {
+    const onOnline = () => {
+      setIsOnline(true)
+      pushToast('Back online. Sync resumed.', 'ok')
+    }
+    const onOffline = () => {
+      setIsOnline(false)
+      setSyncStatus('Offline')
+      pushToast('You are offline. Changes will sync when connection returns.', 'warning')
+    }
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+    }
+  }, [pushToast])
+  useEffect(() => {
+    window.localStorage.setItem('eps-active-tab', tab)
+  }, [tab])
     const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
@@ -330,18 +547,33 @@ const loadJournal = useCallback(async () => {
   ]
   return (
     <div className={`app ${colorMode}`}>
-      <nav className="tab-row">
-        {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
+      <nav className="tab-row" aria-label="Primary tabs">
+        {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)} aria-label={`Open ${t.name} tab`} aria-current={tab === t.id ? 'page' : undefined}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
-            <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
+            <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} aria-label={colorMode === '' ? 'Switch to light mode' : 'Switch to dark mode'} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
+      <div className={`sync-pill ${!isOnline ? 'offline' : syncStatus === 'Sync error' ? 'error' : ''}`} aria-live="polite">
+        {!isOnline ? 'Offline' : syncStatus}
+      </div>
+      <div className="toast-stack" aria-live="polite" aria-atomic="false">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.tone || 'error'}`}>{t.message}</div>
+        ))}
+      </div>
       {tab === 'morning' && (
         <div className="morning-tab">
+          {showOnboarding && (
+            <section className="card onboarding-card">
+              <h3 className="section-heading morning-heading">Quick Start</h3>
+              <p className="onboarding-text">Use Morning for daily goals, Midweek/Sunday for meeting prep, and To-Do for action items. Your changes auto-save.</p>
+              <button className="today-btn" onClick={dismissOnboarding}>Got it</button>
+            </section>
+          )}
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <div className="day-nav">
-              <button onClick={prevDay} className="day-nav-btn">{"\u25C0"}</button>
+              <button onClick={prevDay} className="day-nav-btn" aria-label="Previous day">{"\u25C0"}</button>
               <span className="routine-date">{displayDate}</span>
-              <button onClick={nextDay} className="day-nav-btn">{"\u25B6"}</button>
+              <button onClick={nextDay} className="day-nav-btn" aria-label="Next day">{"\u25B6"}</button>
               {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
             </div>
             <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
@@ -367,7 +599,7 @@ const loadJournal = useCallback(async () => {
             )}
           </section>
                   <section className="card">
-          <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
+          <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
           <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
         </section>
           
@@ -399,7 +631,7 @@ const loadJournal = useCallback(async () => {
         </div>
       )}
       {tab === 'prep' && (
-        <div className="prep-tab"> <div className="day-nav"> <button onClick={prevWeek} className="day-nav-btn">{"\u25C0"}</button> <span className="routine-date">{weekLabel}</span> <button onClick={nextWeek} className="day-nav-btn">{"\u25B6"}</button> {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">This Week</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">Go to This Week</button>} </div>
+        <div className="prep-tab"> <div className="day-nav"> <button onClick={prevWeek} className="day-nav-btn" aria-label="Previous week">{"\u25C0"}</button> <span className="routine-date">{weekLabel}</span> <button onClick={nextWeek} className="day-nav-btn" aria-label="Next week">{"\u25B6"}</button> {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">This Week</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">Go to This Week</button>} </div>
           <section className="card meeting-card"> <p className="meeting-subtitle">Midweek Meeting {"\u2022"} {weekData.song}</p>
             <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} View Meeting Workbook on JW.org</a>
             <label>Theme<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || "This week's main theme..."} /></label>
@@ -408,8 +640,8 @@ const loadJournal = useCallback(async () => {
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
-              {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
-              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
+              {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text" aria-label="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
+              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
             {section.key === 'treasures' && (
   <div className="treasures-comments">
     <h4 className="treasures-comments-title">
@@ -418,6 +650,7 @@ const loadJournal = useCallback(async () => {
         className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`}
         onClick={() => copyToClipboard(treasuresComments2, 'treasures2')}
         title="Copy notes"
+        aria-label="Copy notes"
       >
         {copiedId === 'treasures2' ? '✅' : '📋'}
       </button>
@@ -432,17 +665,17 @@ const loadJournal = useCallback(async () => {
 )}
             </section>
           ))}
-          <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={comments} onChange={setComments} placeholder="Write your prepared comments for the meeting..." minHeight={150} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={notes} onChange={setNotes} placeholder="What stood out to you this week?" /></section>
+          <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures" aria-label="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></section>
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={comments} onChange={setComments} placeholder="Write your prepared comments for the meeting..." minHeight={150} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes" aria-label="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={notes} onChange={setNotes} placeholder="What stood out to you this week?" /></section>
         </div>
       )}
       {tab === 'sunday' && (
         <div className="sunday-tab">
           <div className="day-nav">
-            <button onClick={prevWeek} className="day-nav-btn">{"\u25C0"}</button>
+            <button onClick={prevWeek} className="day-nav-btn" aria-label="Previous week">{"\u25C0"}</button>
             <span className="routine-date">{weekLabel}</span>
-            <button onClick={nextWeek} className="day-nav-btn">{"\u25B6"}</button>
+            <button onClick={nextWeek} className="day-nav-btn" aria-label="Next week">{"\u25B6"}</button>
             {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">This Week</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">Go to This Week</button>}
           </div>
           <section className="card">
@@ -450,10 +683,10 @@ const loadJournal = useCallback(async () => {
             <div className="sunday-article-box"><p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p><a href={weekData.sundayArticleUrl || "https://www.jw.org/en/library/magazines/"} target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a></div>
             {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
-          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference & link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder="Write your prepared comments for the Watchtower study here..." minHeight={180} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (2)<button className={`copy-btn ${copiedId === 'sundayComments2' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments2, 'sundayComments2')} title="Copy comments">{copiedId === 'sundayComments2' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments2} onChange={setSundayComments2} placeholder="Write more prepared comments here..." minHeight={180} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (3)<button className={`copy-btn ${copiedId === 'sundayComments3' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments3, 'sundayComments3')} title="Copy comments">{copiedId === 'sundayComments3' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments3} onChange={setSundayComments3} placeholder="Write additional prepared comments here..." minHeight={180} /></section>
+          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference and link" aria-label="Copy reference and link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder="Write your prepared comments for the Watchtower study here..." minHeight={180} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (2)<button className={`copy-btn ${copiedId === 'sundayComments2' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments2, 'sundayComments2')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments2' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments2} onChange={setSundayComments2} placeholder="Write more prepared comments here..." minHeight={180} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (3)<button className={`copy-btn ${copiedId === 'sundayComments3' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments3, 'sundayComments3')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments3' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments3} onChange={setSundayComments3} placeholder="Write additional prepared comments here..." minHeight={180} /></section>
           <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
         </div>
       )}
@@ -526,6 +759,14 @@ const loadJournal = useCallback(async () => {
           Done ({todoDoneCount})
         </button>
       </div>
+      {todoDoneCount > 0 && (
+        <div className="todo-stats">
+          <span>{todoDoneCount} completed</span>
+          <button className="clear-done-btn" onClick={clearCompleted}>
+            Clear completed
+          </button>
+        </div>
+      )}
 
       {filteredTodos.length === 0 && (
         <p className="todo-empty">
@@ -537,7 +778,9 @@ const loadJournal = useCallback(async () => {
         </p>
       )}
 
-      {filteredTodos.map(todo => (
+      {filteredTodos.map(todo => {
+        const isEditing = editingTodoId === todo.id
+        return (
         <div
           key={todo.id}
           className={`todo-item priority-${todo.priority || 'medium'}`}
@@ -548,16 +791,31 @@ const loadJournal = useCallback(async () => {
               checked={todo.done}
               onChange={() => toggleTodo(todo.id, todo.done)}
             />
-            <span className={todo.done ? 'done' : ''}>
-              {todo.text}
-            </span>
+            {isEditing ? (
+              <input
+                type="text"
+                className="todo-edit-input"
+                value={editingTodoText}
+                onChange={(e) => setEditingTodoText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submitTodoEdit(todo.id)
+                  if (e.key === 'Escape') cancelTodoEdit()
+                }}
+                aria-label="Edit task text"
+                autoFocus
+              />
+            ) : (
+              <span className={todo.done ? 'done' : ''}>
+                {todo.text}
+              </span>
+            )}
           </label>
 
           <div className="todo-meta">
             {todo.due_date && (
-              <span
+                <span
                 className={`todo-due ${
-                  new Date(todo.due_date) < new Date() && !todo.done
+                  todo.due_date < todayIso && !todo.done
                     ? 'overdue'
                     : ''
                 }`}
@@ -582,24 +840,44 @@ const loadJournal = useCallback(async () => {
             </span>
           </div>
 
-          <button
-            className="todo-edit-btn"
-            onClick={() => {
-              const newText = prompt('Edit task:', todo.text)
-              if (newText !== null) editTodo(todo.id, newText)
-            }}
-          >
-            ✏
-          </button>
+          {isEditing ? (
+            <>
+              <button
+                className="todo-save-btn"
+                onClick={() => submitTodoEdit(todo.id)}
+                aria-label="Save task"
+              >
+                Save
+              </button>
+              <button
+                className="todo-cancel-btn"
+                onClick={cancelTodoEdit}
+                aria-label="Cancel edit"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className="todo-edit-btn"
+                onClick={() => startTodoEdit(todo)}
+                aria-label="Edit task"
+              >
+                ✏
+              </button>
 
-          <button
-            className="todo-delete-btn"
-            onClick={() => deleteTodo(todo.id)}
-          >
-            ✕
-          </button>
+              <button
+                className="todo-delete-btn"
+                onClick={() => deleteTodo(todo.id)}
+                aria-label="Delete task"
+              >
+                ✕
+              </button>
+            </>
+          )}
         </div>
-      ))}
+      )})}
     </section>
 
     <section className="card">
@@ -611,6 +889,7 @@ const loadJournal = useCallback(async () => {
           }`}
           onClick={() => copyToClipboard(journalText, 'todoJournal')}
           title="Copy journal"
+          aria-label="Copy journal"
         >
           {copiedId === 'todoJournal' ? '✅' : '📋'}
         </button>
