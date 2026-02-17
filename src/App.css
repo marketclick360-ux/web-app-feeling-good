@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap');
 
 /* -- Reset & Base -- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #0a0a1a;
   color: #e2e8f0;
   min-height: 100svh;
@@ -83,6 +83,7 @@ body.light-theme::after {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .header h1 {
+  font-family: 'Sora', 'Nunito Sans', sans-serif;
   font-size: 1.3rem;
   font-weight: 800;
   background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
@@ -226,6 +227,7 @@ body.light-theme::after {
 .tab.active { animation: glass-shimmer 3s ease-in-out infinite; }
 /* -- Section Headings -- */
 .section-heading {
+  font-family: 'Sora', 'Nunito Sans', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -330,24 +332,28 @@ textarea:focus {
   display: inline-block;
   margin: 10px 0 14px;
   padding: 10px 20px;
-  background: rgba(99,102,241,0.2);
+  background: linear-gradient(135deg, rgba(99,102,241,0.92), rgba(79,70,229,0.92));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.15);
+  color: #f8faff !important;
+  border: 1px solid rgba(195,205,255,0.5);
   border-radius: 14px;
   text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
   text-align: center;
   transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 4px 16px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: 0 1px 2px rgba(16,24,40,0.5);
+  box-shadow: 0 6px 18px rgba(79,70,229,0.35), inset 0 1px 0 rgba(255,255,255,0.28);
 }
 .workbook-btn:hover {
-  background: rgba(99,102,241,0.35);
-  box-shadow: 0 6px 24px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+  background: linear-gradient(135deg, rgba(99,102,241,1), rgba(67,56,202,1));
+  box-shadow: 0 8px 24px rgba(67,56,202,0.42), inset 0 1px 0 rgba(255,255,255,0.3);
   transform: translateY(-2px);
 }
+.workbook-btn:visited { color: #f8faff !important; }
 .workbook-link {
   color: #a5b4fc;
   font-weight: 600;
@@ -385,7 +391,7 @@ textarea:focus {
 .daily-text-loading { color: #64748b; font-style: italic; }
 .daily-text-date { font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600; }
 .daily-text-scripture { font-size: 1rem; color: #c4b5fd; line-height: 1.5; margin-bottom: 8px; }
-.daily-text-scripture em { font-style: italic; }
+.daily-text-scripture em { font-style: italic; font-family: 'Source Serif 4', Georgia, serif; font-size: 1.08em; }
 .daily-text-ref { font-size: 0.85rem; color: #818cf8; font-weight: 600; margin-bottom: 10px; }
 .daily-text-comment { font-size: 0.85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
 .daily-text-content .workbook-link { display: inline-block; margin-top: 8px; }
@@ -705,7 +711,7 @@ textarea:focus {
   border-left: 3px solid #a78bfa;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.encouragement-verse { font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 0.5rem; }
+.encouragement-verse { font-size: 1rem; line-height: 1.68; color: #cbd5e1; margin-bottom: 0.5rem; font-family: 'Source Serif 4', Georgia, serif; }
 .encouragement-ref { font-size: 0.875rem; color: #94a3b8; text-align: right; }
 /* -- Quick Links -- */
 .quick-links-card { background: rgba(255,255,255,0.04); }
@@ -810,33 +816,37 @@ textarea:focus {
 }
 .day-nav-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.1); }
 .today-btn {
-  background: rgba(129,140,248,0.15);
+  background: rgba(99,102,241,0.35);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(129,140,248,0.3);
-  color: #818cf8;
+  border: 1px solid rgba(167,180,255,0.65);
+  color: #eef2ff;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   padding: 4px 14px;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  text-shadow: 0 1px 1px rgba(15,23,42,0.35);
 }
-.today-btn:hover { background: rgba(129,140,248,0.3); }
+.today-btn:hover { background: rgba(99,102,241,0.5); }
 .today-badge {
-  background: rgba(129,140,248,0.15);
-  border: 1px solid rgba(129,140,248,0.3);
-  color: #818cf8;
+  background: rgba(99,102,241,0.32);
+  border: 1px solid rgba(167,180,255,0.55);
+  color: #e2e8ff;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   padding: 4px 14px;
   border-radius: 12px;
   cursor: default;
+  text-shadow: 0 1px 1px rgba(15,23,42,0.35);
 }
 .day-nav .routine-date {
   font-size: 0.95rem;
-  color: rgba(255,255,255,0.7);
-  font-weight: 500;
+  color: rgba(236,241,255,0.92);
+  font-weight: 600;
   min-width: 200px;
   text-align: center;
 }
@@ -1800,6 +1810,7 @@ textarea,
   box-sizing: border-box;
 }
 .auth-card h1 {
+  font-family: 'Sora', 'Nunito Sans', sans-serif;
   font-size: 1.8rem;
   margin-bottom: 4px;
   color: #818cf8;
@@ -1809,6 +1820,7 @@ textarea,
   background-clip: text;
 }
 .auth-card .auth-subtitle {
+  font-family: 'Nunito Sans', sans-serif;
   color: #94a3b8;
   font-size: 0.85rem;
   margin-bottom: 24px;
@@ -2407,8 +2419,10 @@ textarea:focus,
 
 .onboarding-text {
   color: #cbd5e1;
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.62;
+  letter-spacing: 0.01em;
 }
 
 .light-theme .onboarding-text {

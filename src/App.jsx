@@ -583,12 +583,12 @@ const loadJournal = useCallback(async () => {
           <section className="card daily-text-card">
             <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3> {dailyTextLoading ? (
               <p className="daily-text-loading">Loading today's daily text...</p>
-            ) : dailyText ? (
+            ) : dailyText && (dailyText.scripture || dailyText.comment || dailyText.note) ? (
               <div className="daily-text-content">
                 <p className="daily-text-date">{dailyText.dateLabel}</p>
-                <p className="daily-text-scripture"><em>{dailyText.scripture}</em></p>
+                <p className="daily-text-scripture"><em>{dailyText.scripture || dailyText.note}</em></p>
                 {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
-                {dailyText.comment && <p className="daily-text-comment">{dailyText.comment.length > 200 ? dailyText.comment.slice(0, 200) + '...' : dailyText.comment}</p>}
+                {(dailyText.comment || dailyText.note) && <p className="daily-text-comment">{(dailyText.comment || dailyText.note).length > 200 ? (dailyText.comment || dailyText.note).slice(0, 200) + '...' : (dailyText.comment || dailyText.note)}</p>}
                 <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {"\u2192"}</a>
               </div>
             ) : (
@@ -624,7 +624,6 @@ const loadJournal = useCallback(async () => {
             <div className="quick-links-grid">
               <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf10"} JW.org</a>
               <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcda"} Online Library</a>
-              <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcd3"} Meeting Workbook</a>
               <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
             </div>
           </section>
