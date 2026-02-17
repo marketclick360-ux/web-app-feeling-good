@@ -312,7 +312,6 @@ const loadJournal = useCallback(async () => {
     useEffect(() => { const h = (e) => { const a = e.target.closest('a[href]'); if (!a) return; const hr = a.getAttribute('href'); if (hr && (hr.startsWith('http://') || hr.startsWith('https://')) && !hr.includes(window.location.hostname)) { e.preventDefault(); window.open(hr, '_blank', 'noopener,noreferrer'); } }; document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, [])
     const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
-    { id: 'evening', icon: '\ud83c\udf19', name: 'Evening' },
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
     { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
@@ -384,23 +383,6 @@ const loadJournal = useCallback(async () => {
               <a href="https://www.jw.org/en/library/jw-meeting-workbook/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcd3"} Meeting Workbook</a>
               <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
             </div>
-          </section>
-        </div>
-      )}
-      {tab === 'evening' && (
-        <div className="evening-tab">
-          <section className="card">
-            <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
-            <div className="day-nav">
-              <button onClick={prevDay} className="day-nav-btn">{"\u25C0"}</button>
-              <span className="routine-date">{displayDate}</span>
-              <button onClick={nextDay} className="day-nav-btn">{"\u25B6"}</button>
-              {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
-            </div>
-            <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Tonight's Reflections & Goals</h4>
-            <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="What are your goals for tomorrow? Reflect on today's service..." />
-            <div className="routine-verse"><em>"I will show a thankful attitude; I will sing praises to your name, O Most High."</em> {"\u2014"} Psalm 9:2</div>
-            {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
         </div>
       )}
