@@ -3074,3 +3074,21 @@ a:hover,
 
 
 }
+
+/* ===========================================
+   8. FIX ACTIVE TAB STYLING FOR DARK THEME
+   =========================================== */
+
+/* Active tab button - use subtle purple instead of white */
+.tab-btn.active {
+  background: rgba(120, 100, 200, 0.25) !important;
+  border-color: rgba(140, 120, 220, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Period tabs active state */
+.period-btn.active {
+  background: rgba(120, 100, 200, 0.25) !important;
+  border-color: rgba(140, 120, 220, 0.4) !important;
+  color: #fff !important;
+}
