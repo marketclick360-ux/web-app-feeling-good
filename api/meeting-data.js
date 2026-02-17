@@ -26,9 +26,15 @@ const WEEKLY_MEETINGS = {
     bibleReading: 'Isaiah 36-37',
     song: 'Song 150 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
-    sundayArticle: '',
+        sundayArticle: 'Imitate Jehovah\'s Humility',
     sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/Imitate-Jehovahs-Humility/',
-    sundayScriptures: [],
+        sundayScriptures: [
+      { ref: 'Ephesians 5:1', url: 'https://www.jw.org/en/library/bible/study-bible/books/ephesians/5/#v49005001' },
+      { ref: 'Psalm 113:5-8', url: 'https://www.jw.org/en/library/bible/study-bible/books/psalms/113/#v19113005-v19113008' },
+      { ref: 'Psalm 62:8', url: 'https://www.jw.org/en/library/bible/study-bible/books/psalms/62/#v19062008' },
+      { ref: 'Psalm 138:6', url: 'https://www.jw.org/en/library/bible/study-bible/books/psalms/138/#v19138006' },
+      { ref: '2 Peter 3:9', url: 'https://www.jw.org/en/library/bible/study-bible/books/2-peter/3/#v61003009' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '🎤 Talk: "Do Not Be Afraid Because of the Words That You Heard" (10 min.) — Isa 36:1, 2; 37:6, 7' },
@@ -46,9 +52,15 @@ const WEEKLY_MEETINGS = {
     bibleReading: 'Isaiah 38-40',
     song: 'Song 4 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/',
-    sundayArticle: '',
+        sundayArticle: 'How to Plan a Wedding That Brings Honor to Jehovah',
     sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/How-to-Plan-a-Wedding-That-Brings-Honor-to-Jehovah/',
-    sundayScriptures: [],
+        sundayScriptures: [
+      { ref: '1 Corinthians 14:40', url: 'https://www.jw.org/en/library/bible/study-bible/books/1-corinthians/14/#v46014040' },
+      { ref: '1 Corinthians 10:31, 32', url: 'https://www.jw.org/en/library/bible/study-bible/books/1-corinthians/10/#v46010031-v46010032' },
+      { ref: 'Romans 13:13', url: 'https://www.jw.org/en/library/bible/study-bible/books/romans/13/#v45013013' },
+      { ref: '1 John 2:15-17', url: 'https://www.jw.org/en/library/bible/study-bible/books/1-john/2/#v62002015-v62002017' },
+      { ref: 'Philippians 4:6, 7', url: 'https://www.jw.org/en/library/bible/study-bible/books/philippians/4/#v50004006-v50004007' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '🎤 Talk: "Like a Shepherd He Will Care For His Flock" (10 min.) — Isa 40:8, 11, 26-29' },
