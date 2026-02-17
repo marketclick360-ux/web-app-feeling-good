@@ -3092,3 +3092,20 @@ a:hover,
   border-color: rgba(140, 120, 220, 0.4) !important;
   color: #fff !important;
 }
+
+/* Additional tab overrides with higher specificity */
+.quick-links-tabs .tab-btn.active,
+.tabs-container .tab-btn.active,
+button.tab-btn.active,
+.tab-btn.active[class] {
+  background: rgba(120, 100, 200, 0.25) !important;
+  background-color: rgba(120, 100, 200, 0.25) !important;
+  border-color: rgba(140, 120, 220, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Override any inline styles */
+.tab-btn[style].active {
+  background: rgba(120, 100, 200, 0.25) !important;
+  background-color: rgba(120, 100, 200, 0.25) !important;
+}
