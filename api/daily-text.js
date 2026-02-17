@@ -21,6 +21,10 @@ export default async function handler(req, res) {
       dateLabel,  // e.g. "Wednesday, February 11, 2026"
       wolUrl,     // link to today's daily text on wol.jw.org
       note,       // your own comment, NOT copied text
+      // Keep these for app compatibility.
+      scripture: note || '',
+      reference: '',
+      comment: note || '',
     });
   } catch (err) {
     console.error('Daily text error:', err);

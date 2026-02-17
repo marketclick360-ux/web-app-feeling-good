@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap');
 
 /* -- Reset & Base -- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #0a0a1a;
   color: #e2e8f0;
   min-height: 100svh;
@@ -83,6 +83,7 @@ body.light-theme::after {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .header h1 {
+  font-family: 'Sora', 'Nunito Sans', sans-serif;
   font-size: 1.3rem;
   font-weight: 800;
   background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
@@ -226,6 +227,7 @@ body.light-theme::after {
 .tab.active { animation: glass-shimmer 3s ease-in-out infinite; }
 /* -- Section Headings -- */
 .section-heading {
+  font-family: 'Sora', 'Nunito Sans', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -330,24 +332,29 @@ textarea:focus {
   display: inline-block;
   margin: 10px 0 14px;
   padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.92), rgba(79,70,229,0.92));
   background: rgba(99,102,241,0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.15);
+  color: #f8faff !important;
+  border: 1px solid rgba(195,205,255,0.5);
   border-radius: 14px;
   text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
   text-align: center;
   transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 4px 16px rgba(99,102,241,0.85), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: 0 1px 2px rgba(16,24,40,0.5);
+  box-shadow: 0 6px 18px rgba(79,70,229,0.35), inset 0 1px 0 rgba(255,255,255,0.28);
 }
 .workbook-btn:hover {
-  background: rgba(99,102,241,0.35);
-  box-shadow: 0 6px 24px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+  background: linear-gradient(135deg, rgba(99,102,241,1), rgba(67,56,202,1));
+  box-shadow: 0 8px 24px rgba(67,56,202,0.42), inset 0 1px 0 rgba(255,255,255,0.3);
   transform: translateY(-2px);
 }
+.workbook-btn:visited { color: #f8faff !important; }
 .workbook-link {
   color: #a5b4fc;
   font-weight: 600;
@@ -385,7 +392,7 @@ textarea:focus {
 .daily-text-loading { color: #64748b; font-style: italic; }
 .daily-text-date { font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600; }
 .daily-text-scripture { font-size: 1rem; color: #c4b5fd; line-height: 1.5; margin-bottom: 8px; }
-.daily-text-scripture em { font-style: italic; }
+.daily-text-scripture em { font-style: italic; font-family: 'Source Serif 4', Georgia, serif; font-size: 1.08em; }
 .daily-text-ref { font-size: 0.85rem; color: #818cf8; font-weight: 600; margin-bottom: 10px; }
 .daily-text-comment { font-size: 0.85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
 .daily-text-content .workbook-link { display: inline-block; margin-top: 8px; }
@@ -705,7 +712,7 @@ textarea:focus {
   border-left: 3px solid #a78bfa;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.encouragement-verse { font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 0.5rem; }
+.encouragement-verse { font-size: 1rem; line-height: 1.68; color: #cbd5e1; margin-bottom: 0.5rem; font-family: 'Source Serif 4', Georgia, serif; }
 .encouragement-ref { font-size: 0.875rem; color: #94a3b8; text-align: right; }
 /* -- Quick Links -- */
 .quick-links-card { background: rgba(255,255,255,0.04); }
@@ -810,33 +817,37 @@ textarea:focus {
 }
 .day-nav-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.1); }
 .today-btn {
-  background: rgba(129,140,248,0.15);
+  background: rgba(99,102,241,0.35);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(129,140,248,0.3);
-  color: #818cf8;
+  border: 1px solid rgba(167,180,255,0.65);
+  color: #eef2ff;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   padding: 4px 14px;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  text-shadow: 0 1px 1px rgba(15,23,42,0.35);
 }
-.today-btn:hover { background: rgba(129,140,248,0.3); }
+.today-btn:hover { background: rgba(99,102,241,0.5); }
 .today-badge {
-  background: rgba(129,140,248,0.15);
-  border: 1px solid rgba(129,140,248,0.3);
-  color: #818cf8;
+  background: rgba(99,102,241,0.32);
+  border: 1px solid rgba(167,180,255,0.55);
+  color: #e2e8ff;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   padding: 4px 14px;
   border-radius: 12px;
   cursor: default;
+  text-shadow: 0 1px 1px rgba(15,23,42,0.35);
 }
 .day-nav .routine-date {
   font-size: 0.95rem;
-  color: rgba(255,255,255,0.7);
-  font-weight: 500;
+  color: rgba(236,241,255,0.92);
+  font-weight: 600;
   min-width: 200px;
   text-align: center;
 }
@@ -1800,6 +1811,7 @@ textarea,
   box-sizing: border-box;
 }
 .auth-card h1 {
+  font-family: 'Sora', 'Nunito Sans', sans-serif;
   font-size: 1.8rem;
   margin-bottom: 4px;
   color: #818cf8;
@@ -1809,6 +1821,7 @@ textarea,
   background-clip: text;
 }
 .auth-card .auth-subtitle {
+  font-family: 'Nunito Sans', sans-serif;
   color: #94a3b8;
   font-size: 0.85rem;
   margin-bottom: 24px;
@@ -2407,8 +2420,10 @@ textarea:focus,
 
 .onboarding-text {
   color: #cbd5e1;
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.62;
+  letter-spacing: 0.01em;
 }
 
 .light-theme .onboarding-text {
@@ -2774,852 +2789,4 @@ button:active {
   0% { transform: scale(1); }
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
-}
-
-/* =========================================
-   5. POLISH & REFINEMENTS
-   ========================================= */
-
-/* Softer shadows throughout */
-.card,
-.todo-input-container,
-.journal-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-body:not(.light-theme) .card,
-body:not(.light-theme) .card {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-}
-
-/* Cleaner scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(129, 140, 248, 0.3);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(129, 140, 248, 0.5);
-}
-
-/* Filter tabs styling */
-.todo-filter-row {
-  gap: 8px;
-}
-
-.todo-filter-btn {
-  padding: 6px 12px;
-  font-size: 0.75rem;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.todo-filter-btn.active {
-  background: rgba(129, 140, 248, 0.2);
-}
-
-/* Quick links grid refinement */
-.quick-links-grid {
-  gap: 10px;
-}
-
-.quick-link-btn {
-  padding: 10px 16px;
-  font-size: 0.85rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.quick-link-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-}
-
-/* Rich text editor toolbar */
-.rich-note-toolbar button {
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  transition: all 0.15s ease;
-}
-
-.rich-note-toolbar button:hover {
-  background: rgba(129, 140, 248, 0.15);
-}
-
-/* Day navigation buttons */
-.day-nav-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.day-nav-btn:hover {
-  background: rgba(129, 140, 248, 0.15);
-  transform: scale(1.05);
-}
-
-/* Today button */
-.today-btn {
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-/* Meeting part items */
-.meeting-part-item {
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin: 6px 0;
-  transition: background 0.2s ease;
-}
-
-.meeting-part-item:hover {
-  background: rgba(129, 140, 248, 0.05);
-}
-
-/* ========================================
-   REFINED COLOR PALETTE
-   Elegant, softer colors for a premium feel
-   CSS-only - Safe, no functionality affected
-   ======================================== */
-
-/* =========================================
-   1. SOFTER PRIMARY COLORS
-   ========================================= */
-
-:root {
-  --primary-soft: #7c8ce0;
-  --primary-muted: #6b7bd4;
-  --primary-glow: rgba(124, 140, 224, 0.15);
-  --accent-warm: #a78bfa;
-  --text-primary: #f0f0f5;
-  --text-secondary: #b8b8c8;
-  --bg-card-dark: rgba(22, 22, 35, 0.75);
-  --bg-card-light: rgba(255, 255, 255, 0.85);
-  --border-subtle: rgba(124, 140, 224, 0.15);
-}
-
-/* =========================================
-   2. REFINED DARK MODE COLORS
-   ========================================= */
-
-/* Softer background gradient */
-  body:not(.light-theme) {
-  background: linear-gradient(135deg, 
-    #0a0a12 0%, 
-    #12121f 25%,
-    #1a1a2e 50%,
-    #12121f 75%,
-    #0a0a12 100%
-  ) !important;
-}
-
-/* Softer text colors */
-body,
-.app {
-  color: var(--text-primary);
-}
-
-/* Muted secondary text */
-.routine-date,
-.daily-text-date,
-.meeting-subtitle,
-.encouragement-ref,
-.todo-due,
-label,
-p {
-  color: var(--text-secondary);
-}
-
-/* Refined card backgrounds */
-.card {
-  background: var(--bg-card-dark) !important;
-  border: 1px solid var(--border-subtle) !important;
-}
-
-/* Softer accent colors on interactive elements */
-.workbook-btn,
-.todo-add-btn,
-.today-btn {
-  background: linear-gradient(135deg, var(--primary-soft), var(--primary-muted)) !important;
-}
-
-/* Softer borders on inputs */
-input[type="text"],
-textarea,
-select {
-  border-color: var(--border-subtle) !important;
-  background: rgba(15, 15, 25, 0.5) !important;
-}
-
-input[type="text"]:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--primary-soft) !important;
-  box-shadow: 0 0 0 3px var(--primary-glow) !important;
-}
-
-/* Softer section heading accents */
-.section-heading {
-  border-left-color: var(--primary-soft) !important;
-}
-
-/* =========================================
-   3. REFINED LIGHT MODE COLORS
-   ========================================= */
-
-body.light-theme {
-  --text-primary: #1a1a2e;
-  --text-secondary: #4a4a5a;
-  --bg-card-light: rgba(255, 255, 255, 0.9);
-  --border-subtle: rgba(99, 102, 241, 0.12);
-}
-
-body.light-theme body,
-body.light-theme .app {
-  background: linear-gradient(135deg,
-    #f8f8fc 0%,
-    #f0f0f8 25%,
-    #e8e8f4 50%,
-    #f0f0f8 75%,
-    #f8f8fc 100%
-  ) !important;
-  color: var(--text-primary);
-}
-
-body.light-theme .card {
-  background: var(--bg-card-light) !important;
-  border: 1px solid var(--border-subtle) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
-}
-
-body.light-theme input[type="text"],
-body.light-theme textarea,
-body.light-theme select {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border-color: var(--border-subtle) !important;
-  color: var(--text-primary);
-}
-
-body.light-theme .routine-date,
-body.light-theme .daily-text-date,
-body.light-theme .meeting-subtitle,
-body.light-theme label {
-  color: var(--text-secondary);
-}
-
-/* =========================================
-   4. ACCENT COLOR REFINEMENTS
-   ========================================= */
-
-/* Softer purple glow on hover states */
-.card:hover {
-  box-shadow: 0 4px 20px rgba(124, 140, 224, 0.1) !important;
-}
-
-/* Refined checkbox colors */
-.check-row input[type="checkbox"]:checked {
-  background: linear-gradient(135deg, var(--primary-soft), var(--accent-warm)) !important;
-  border-color: var(--primary-soft) !important;
-}
-
-/* Softer tab active state */
-.tab-row button.active,
-.week-nav button.active {
-  background: var(--primary-glow) !important;
-  color: var(--primary-soft) !important;
-}
-
-/* Refined priority colors - more muted */
-.todo-item.priority-high,
-.task-item.priority-high {
-  border-left-color: #e57373 !important;
-}
-
-.todo-item.priority-medium,
-.task-item.priority-medium {
-  border-left-color: #ffb74d !important;
-}
-
-.todo-item.priority-low,
-.task-item.priority-low {
-  border-left-color: #81c784 !important;
-}
-
-/* =========================================
-   5. GRADIENT MESH REFINEMENT
-   ========================================= */
-
-/* Softer, more subtle background orbs */
-body::before {
-  background: radial-gradient(circle, rgba(124, 140, 224, 0.08) 0%, transparent 70%) !important;
-  opacity: 0.6 !important;
-}
-
-body::after {
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.06) 0%, transparent 70%) !important;
-  opacity: 0.5 !important;
-}
-
-/* =========================================
-   6. LINK & BUTTON COLOR REFINEMENTS
-   ========================================= */
-
-a,
-.workbook-link,
-.scripture-link,
-.quick-link-btn {
-  color: var(--primary-soft) !important;
-}
-
-a:hover,
-.workbook-link:hover,
-.scripture-link:hover {
-  color: var(--accent-warm) !important;
-}
-
-/* Copy button softer colors */
-.copy-btn {
-  color: var(--text-secondary) !important;
-}
-
-.copy-btn:hover {
-  color: var(--primary-soft) !important;
-}
-
-/* =========================================
-   7. HEADER & NAVIGATION REFINEMENTS  
-   ========================================= */
-
-.header,
-.week-nav {
-  background: rgba(15, 15, 25, 0.6) !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-}
-
-body.light-theme .header,
-body.light-theme .week-nav {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-
-
-}
-
-/* ===========================================
-   8. FIX ACTIVE TAB STYLING FOR DARK THEME
-   =========================================== */
-
-/* Active tab button - use subtle purple instead of white */
-.tab-btn.active {
-  background: rgba(120, 100, 200, 0.25) !important;
-  border-color: rgba(140, 120, 220, 0.4) !important;
-  color: #fff !important;
-}
-
-/* Period tabs active state */
-.period-btn.active {
-  background: rgba(120, 100, 200, 0.25) !important;
-  border-color: rgba(140, 120, 220, 0.4) !important;
-  color: #fff !important;
-}
-
-/* Additional tab overrides with higher specificity */
-.quick-links-tabs .tab-btn.active,
-.tabs-container .tab-btn.active,
-button.tab-btn.active,
-.tab-btn.active[class] {
-  background: rgba(120, 100, 200, 0.25) !important;
-  background-color: rgba(120, 100, 200, 0.25) !important;
-  border-color: rgba(140, 120, 220, 0.4) !important;
-  color: #fff !important;
-}
-
-/* Override any inline styles */
-.tab-btn[style].active {
-  background: rgba(120, 100, 200, 0.25) !important;
-  background-color: rgba(120, 100, 200, 0.25) !important;
-}
-
-
-/* ===========================================
-   9. FIX TAB NAVIGATION BUTTONS (DIRECT BUTTONS)
-   =========================================== */
-
-/* Target the quick links tab buttons - these are plain buttons containing emoji+text */
-#root > button {
-  background: rgba(30, 30, 45, 0.8) !important;
-  background-color: rgba(30, 30, 45, 0.8) !important;
-  border: 1px solid rgba(100, 100, 140, 0.3) !important;
-  border-radius: 20px !important;
-  padding: 8px 16px !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  transition: all 0.2s ease !important;
-}
-
-/* Light theme buttons */
-body.light-theme #root > button {
-  background: rgba(240, 240, 250, 0.9) !important;
-  background-color: rgba(240, 240, 250, 0.9) !important;
-  color: rgba(50, 50, 70, 0.8) !important;
-}
-
-
-/* ========================================
-   LIGHT THEME MASTER OVERRIDE
-   Fixes all !important dark-mode rules above
-   Must remain at the BOTTOM of this file
-   ======================================== */
-
-/* Body & background */
-body.light-theme {
-  background: linear-gradient(135deg, #f8f8fc 0%, #f0f0f8 25%, #e8e8f4 50%, #f0f0f8 75%, #f8f8fc 100%) !important;
-  color: #1e293b !important;
-}
-
-body.light-theme::before {
-  background: radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%) !important;
-  opacity: 0.3 !important;
-}
-body.light-theme::after {
-  background: radial-gradient(circle, rgba(167,139,250,0.04) 0%, transparent 70%) !important;
-  opacity: 0.25 !important;
-}
-body.light-theme .app::before {
-  background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 60%) !important;
-}
-
-/* Cards */
-body.light-theme .card {
-  background: rgba(255,255,255,0.9) !important;
-  border: 1px solid rgba(0,0,0,0.08) !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
-}
-body.light-theme .card::before {
-  opacity: 0 !important;
-}
-body.light-theme .card:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important;
-}
-body.light-theme .daily-text-card {
-  background: rgba(99,102,241,0.05) !important;
-  border-color: rgba(99,102,241,0.12) !important;
-}
-body.light-theme .encouragement-card {
-  background: rgba(167,139,250,0.06) !important;
-  border-color: rgba(167,139,250,0.15) !important;
-}
-body.light-theme .meeting-card {
-  background: rgba(255,255,255,0.92) !important;
-}
-body.light-theme .greeting-card,
-body.light-theme .today-greeting-card {
-  background: rgba(99,102,241,0.06) !important;
-  border-color: rgba(99,102,241,0.12) !important;
-}
-
-/* Header */
-body.light-theme .header {
-  background: rgba(255,255,255,0.85) !important;
-  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
-}
-
-/* Text colors */
-body.light-theme,
-body.light-theme .app {
-  color: #1e293b !important;
-}
-body.light-theme .section-heading {
-  color: #334155 !important;
-  text-shadow: none !important;
-}
-body.light-theme .check-row span {
-  color: #334155 !important;
-}
-body.light-theme .check-row span.done {
-  color: #94a3b8 !important;
-}
-body.light-theme .routine-date,
-body.light-theme .daily-text-date,
-body.light-theme .meeting-subtitle,
-body.light-theme .encouragement-ref,
-body.light-theme .todo-due,
-body.light-theme label,
-body.light-theme .week-label,
-body.light-theme .greeting-date,
-body.light-theme .today-date {
-  color: #64748b !important;
-}
-body.light-theme .daily-text-scripture {
-  color: #6366f1 !important;
-}
-body.light-theme .daily-text-ref {
-  color: #4f46e5 !important;
-}
-body.light-theme .daily-text-comment {
-  color: #475569 !important;
-}
-body.light-theme .encouragement-verse {
-  color: #334155 !important;
-}
-body.light-theme .meeting-card h2 {
-  color: #6366f1 !important;
-}
-body.light-theme .meeting-part-item {
-  color: #334155 !important;
-}
-body.light-theme .sunday-article-box p {
-  color: #334155 !important;
-}
-body.light-theme .progress-label {
-  color: #64748b !important;
-}
-body.light-theme .progress-text {
-  color: #6366f1 !important;
-}
-body.light-theme .today-title {
-  color: #1e293b !important;
-}
-body.light-theme .today-greeting {
-  color: #64748b !important;
-}
-body.light-theme .onboarding-text {
-  color: #334155 !important;
-}
-
-/* Inputs & textareas */
-body.light-theme input[type="text"],
-body.light-theme input[type="date"],
-body.light-theme textarea,
-body.light-theme select,
-body.light-theme .todo-select,
-body.light-theme .todo-date {
-  background: rgba(255,255,255,0.8) !important;
-  border-color: rgba(0,0,0,0.12) !important;
-  color: #1e293b !important;
-  box-shadow: none !important;
-}
-body.light-theme input[type="text"]:focus,
-body.light-theme input[type="date"]:focus,
-body.light-theme textarea:focus,
-body.light-theme select:focus {
-  background: #fff !important;
-  border-color: rgba(99,102,241,0.5) !important;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
-}
-body.light-theme .rich-note-editor {
-  background: rgba(255,255,255,0.8) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-  color: #1e293b !important;
-}
-body.light-theme .rich-note-editor:focus {
-  background: #fff !important;
-  border-color: rgba(99,102,241,0.4) !important;
-}
-body.light-theme .rich-note-editor,
-body.light-theme .rich-note-editor p,
-body.light-theme .rich-note-editor span,
-body.light-theme .rich-note-editor div,
-body.light-theme .rich-note-editor b,
-body.light-theme .rich-note-editor i,
-body.light-theme .rich-note-editor u,
-body.light-theme .rich-note-editor li,
-body.light-theme .rich-note-editor a {
-  color: #1e293b !important;
-}
-body.light-theme .rich-note-toolbar {
-  background: rgba(0,0,0,0.03) !important;
-  border-color: rgba(0,0,0,0.08) !important;
-  box-shadow: none !important;
-}
-body.light-theme .rich-note-toolbar button {
-  background: rgba(0,0,0,0.04) !important;
-  border-color: rgba(0,0,0,0.08) !important;
-  color: #64748b !important;
-  box-shadow: none !important;
-}
-body.light-theme .rich-note-toolbar button:hover {
-  background: rgba(0,0,0,0.08) !important;
-  color: #334155 !important;
-}
-body.light-theme .rich-note-placeholder {
-  color: rgba(100,116,139,0.5) !important;
-}
-
-/* Tab bar */
-body.light-theme .tab-row {
-  background: rgba(255,255,255,0.9) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
-}
-body.light-theme .tab {
-  color: #64748b !important;
-}
-body.light-theme .tab:hover {
-  color: #334155 !important;
-  background: rgba(0,0,0,0.05) !important;
-}
-body.light-theme .tab.active {
-  background: #6366f1 !important;
-  color: #fff !important;
-  border-color: transparent !important;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.3) !important;
-}
-
-/* Buttons */
-body.light-theme .workbook-btn,
-body.light-theme .todo-add-btn {
-  background: #6366f1 !important;
-  color: #fff !important;
-  border-color: transparent !important;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.3) !important;
-}
-body.light-theme .workbook-btn:hover,
-body.light-theme .todo-add-btn:hover {
-  background: #4f46e5 !important;
-  box-shadow: 0 4px 12px rgba(99,102,241,0.4) !important;
-}
-body.light-theme .week-nav button {
-  background: rgba(0,0,0,0.04) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-  color: #6366f1 !important;
-}
-body.light-theme .week-nav button:hover {
-  background: rgba(0,0,0,0.08) !important;
-}
-body.light-theme .day-nav-btn {
-  background: rgba(0,0,0,0.05) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-  color: #334155 !important;
-  box-shadow: none !important;
-}
-body.light-theme .day-nav-btn:hover {
-  background: rgba(0,0,0,0.08) !important;
-  box-shadow: none !important;
-}
-body.light-theme .today-btn,
-body.light-theme .today-badge {
-  background: rgba(99,102,241,0.1) !important;
-  border-color: rgba(99,102,241,0.3) !important;
-  color: #6366f1 !important;
-}
-body.light-theme .print-btn {
-  background: rgba(74,124,89,0.15) !important;
-  color: #166534 !important;
-  border-color: rgba(74,124,89,0.3) !important;
-}
-
-/* Links */
-body.light-theme .workbook-link,
-body.light-theme a,
-body.light-theme .scripture-link,
-body.light-theme .quick-link-btn {
-  color: #6366f1 !important;
-}
-body.light-theme .scripture-link:visited {
-  color: #4f46e5 !important;
-}
-body.light-theme .wt-link {
-  color: #7c3aed !important;
-}
-
-/* Quick links */
-body.light-theme .quick-link-btn,
-body.light-theme .today-link-btn {
-  background: rgba(0,0,0,0.03) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-  box-shadow: none !important;
-}
-body.light-theme .quick-link-btn:hover,
-body.light-theme .today-link-btn:hover {
-  background: rgba(0,0,0,0.06) !important;
-  border-color: rgba(0,0,0,0.15) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
-}
-
-/* Todo items */
-body.light-theme .todo-item {
-  background: rgba(0,0,0,0.02) !important;
-}
-body.light-theme .todo-item:hover {
-  background: rgba(0,0,0,0.04) !important;
-}
-body.light-theme .todo-filter-btn {
-  border-color: rgba(0,0,0,0.1) !important;
-  color: #64748b !important;
-}
-body.light-theme .todo-filter-btn:hover {
-  color: #6366f1 !important;
-  background: rgba(99,102,241,0.05) !important;
-}
-body.light-theme .todo-filter-btn.active {
-  background: rgba(99,102,241,0.1) !important;
-  color: #6366f1 !important;
-  border-color: rgba(99,102,241,0.3) !important;
-}
-body.light-theme .todo-stats {
-  background: rgba(0,0,0,0.03) !important;
-  border-color: rgba(0,0,0,0.06) !important;
-  color: #64748b !important;
-}
-body.light-theme .todo-empty {
-  color: #94a3b8 !important;
-}
-body.light-theme .todo-edit-btn {
-  color: #64748b !important;
-}
-body.light-theme .todo-due {
-  background: rgba(0,0,0,0.05) !important;
-  color: #64748b !important;
-}
-body.light-theme .todo-save-btn,
-body.light-theme .todo-cancel-btn {
-  background: rgba(0,0,0,0.04) !important;
-  border-color: rgba(0,0,0,0.12) !important;
-  color: #334155 !important;
-}
-body.light-theme .clear-done-btn {
-  border-color: rgba(220,38,38,0.3) !important;
-  color: #dc2626 !important;
-}
-body.light-theme .clear-done-btn:hover {
-  background: rgba(220,38,38,0.1) !important;
-}
-
-/* Copy button */
-body.light-theme .copy-btn {
-  color: #64748b !important;
-}
-body.light-theme .copy-btn:hover {
-  background: rgba(0,0,0,0.06) !important;
-}
-
-/* Checkbox & rows */
-body.light-theme .check-row:hover {
-  background: rgba(0,0,0,0.03) !important;
-  box-shadow: none !important;
-}
-body.light-theme .check-row input[type="checkbox"]:checked {
-  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
-  border-color: #6366f1 !important;
-}
-
-/* Routine verse */
-body.light-theme .routine-verse {
-  background: rgba(99,102,241,0.06) !important;
-  border-color: rgba(99,102,241,0.1) !important;
-  color: #6366f1 !important;
-}
-
-/* Sunday article */
-body.light-theme .sunday-article-box {
-  background: rgba(0,0,0,0.03) !important;
-  border-color: rgba(0,0,0,0.08) !important;
-}
-
-/* Treasures comments */
-body.light-theme .treasures-comments {
-  border-top-color: rgba(0,0,0,0.08) !important;
-}
-body.light-theme .treasures-comments-title {
-  color: #6366f1 !important;
-}
-
-/* Footer */
-body.light-theme .footer {
-  color: rgba(0,0,0,0.2) !important;
-}
-
-/* Sync pill */
-body.light-theme .sync-pill {
-  background: rgba(255,255,255,0.88) !important;
-  border-color: rgba(0,0,0,0.12) !important;
-  color: #334155 !important;
-}
-body.light-theme .sync-pill.offline,
-body.light-theme .sync-pill.error {
-  color: #b91c1c !important;
-  border-color: rgba(185,28,28,0.25) !important;
-}
-
-/* Toasts */
-body.light-theme .toast {
-  background: rgba(255,240,240,0.95) !important;
-  border-color: rgba(220,38,38,0.3) !important;
-  color: #991b1b !important;
-}
-body.light-theme .toast.warning {
-  background: rgba(255,251,235,0.95) !important;
-  border-color: rgba(217,119,6,0.3) !important;
-  color: #92400e !important;
-}
-body.light-theme .toast.ok {
-  background: rgba(240,253,244,0.95) !important;
-  border-color: rgba(22,163,74,0.3) !important;
-  color: #166534 !important;
-}
-
-/* Sign out & sign in buttons */
-body.light-theme .sign-out-btn {
-  background: rgba(0,0,0,0.04) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-  color: #64748b !important;
-}
-body.light-theme .sign-out-btn:hover {
-  background: rgba(220,38,38,0.1) !important;
-  border-color: rgba(220,38,38,0.3) !important;
-  color: #dc2626 !important;
-}
-
-/* Theme toggle button */
-body.light-theme .theme-toggle {
-  background: rgba(0,0,0,0.05) !important;
-  border-color: rgba(0,0,0,0.1) !important;
-}
-body.light-theme .theme-toggle:hover {
-  background: rgba(0,0,0,0.1) !important;
-}
-
-/* Color picker */
-body.light-theme .color-picker-row {
-  background: rgba(255,255,255,0.95) !important;
-  border-color: rgba(0,0,0,0.12) !important;
-}
-
-/* Day nav routine date */
-body.light-theme .day-nav .routine-date {
-  color: #475569 !important;
-}
-
-/* Onboarding card */
-body.light-theme .onboarding-card {
-  border-color: rgba(99,102,241,0.2) !important;
-}
-
-/* Auth overrides for light */
-body.light-theme .auth-desc {
-  color: #64748b !important;
-}
-body.light-theme .guest-btn {
-  background: rgba(0,0,0,0.04) !important;
-  border-color: rgba(0,0,0,0.12) !important;
-  color: #64748b !important;
-}
-body.light-theme .guest-btn:hover {
-  background: rgba(0,0,0,0.08) !important;
-  color: #334155 !important;
 }
