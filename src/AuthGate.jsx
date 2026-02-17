@@ -193,7 +193,7 @@ export default function AuthGate({ children }) {
           </button>
         </form>
         <p className="auth-hint">
-          We'll email you a 6-digit code — no password needed.
+          We'll email you a secure code — no password needed.
           You stay signed in until you sign out.
         </p>
         <button
@@ -213,7 +213,7 @@ export default function AuthGate({ children }) {
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
         <h2>Enter Your Code</h2>
         <p className="auth-desc">
-          We sent a 6-digit code to <strong>{email}</strong>
+          We sent a code to <strong>{email}</strong>
         </p>
         <form onSubmit={handleVerifyCode}>
           <input
@@ -229,7 +229,7 @@ export default function AuthGate({ children }) {
             className="auth-input"
             autoComplete="one-time-code"
             autoFocus
-            style={{ textAlign: 'center', letterSpacing: '8px', fontSize: '1.5rem', fontFamily: 'monospace' }}
+            style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '1.4rem', fontFamily: 'monospace' }}
           />
           {error && <p className="auth-error">{error}</p>}
           {message && <p className="auth-message">{message}</p>}
