@@ -2846,3 +2846,276 @@ body:not([data-theme="light"]) .card {
 .meeting-part-item:hover {
   background: rgba(129, 140, 248, 0.05);
 }
+
+/* ========================================
+   REFINED COLOR PALETTE
+   Elegant, softer colors for a premium feel
+   CSS-only - Safe, no functionality affected
+   ======================================== */
+
+/* =========================================
+   1. SOFTER PRIMARY COLORS
+   ========================================= */
+
+:root {
+  --primary-soft: #7c8ce0;
+  --primary-muted: #6b7bd4;
+  --primary-glow: rgba(124, 140, 224, 0.15);
+  --accent-warm: #a78bfa;
+  --text-primary: #f0f0f5;
+  --text-secondary: #b8b8c8;
+  --bg-card-dark: rgba(22, 22, 35, 0.75);
+  --bg-card-light: rgba(255, 255, 255, 0.85);
+  --border-subtle: rgba(124, 140, 224, 0.15);
+}
+
+/* =========================================
+   2. REFINED DARK MODE COLORS
+   ========================================= */
+
+/* Softer background gradient */
+body {
+  background: linear-gradient(135deg, 
+    #0a0a12 0%, 
+    #12121f 25%,
+    #1a1a2e 50%,
+    #12121f 75%,
+    #0a0a12 100%
+  ) !important;
+}
+
+/* Softer text colors */
+body,
+.app {
+  color: var(--text-primary);
+}
+
+/* Muted secondary text */
+.routine-date,
+.daily-text-date,
+.meeting-subtitle,
+.encouragement-ref,
+.todo-due,
+label,
+p {
+  color: var(--text-secondary);
+}
+
+/* Refined card backgrounds */
+.card {
+  background: var(--bg-card-dark) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Softer accent colors on interactive elements */
+.workbook-btn,
+.todo-add-btn,
+.today-btn {
+  background: linear-gradient(135deg, var(--primary-soft), var(--primary-muted)) !important;
+}
+
+/* Softer borders on inputs */
+input[type="text"],
+textarea,
+select {
+  border-color: var(--border-subtle) !important;
+  background: rgba(15, 15, 25, 0.5) !important;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-soft) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+/* Softer section heading accents */
+.section-heading {
+  border-left-color: var(--primary-soft) !important;
+}
+
+/* =========================================
+   3. REFINED LIGHT MODE COLORS
+   ========================================= */
+
+[data-theme="light"] {
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a5a;
+  --bg-card-light: rgba(255, 255, 255, 0.9);
+  --border-subtle: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="light"] body,
+[data-theme="light"] .app {
+  background: linear-gradient(135deg,
+    #f8f8fc 0%,
+    #f0f0f8 25%,
+    #e8e8f4 50%,
+    #f0f0f8 75%,
+    #f8f8fc 100%
+  ) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .card {
+  background: var(--bg-card-light) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] input[type="text"],
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .routine-date,
+[data-theme="light"] .daily-text-date,
+[data-theme="light"] .meeting-subtitle,
+[data-theme="light"] label {
+  color: var(--text-secondary);
+}
+
+/* =========================================
+   4. ACCENT COLOR REFINEMENTS
+   ========================================= */
+
+/* Softer purple glow on hover states */
+.card:hover {
+  box-shadow: 0 4px 20px rgba(124, 140, 224, 0.1) !important;
+}
+
+/* Refined checkbox colors */
+.check-row input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, var(--primary-soft), var(--accent-warm)) !important;
+  border-color: var(--primary-soft) !important;
+}
+
+/* Softer tab active state */
+.tab-row button.active,
+.week-nav button.active {
+  background: var(--primary-glow) !important;
+  color: var(--primary-soft) !important;
+}
+
+/* Refined priority colors - more muted */
+.todo-item.priority-high,
+.task-item.priority-high {
+  border-left-color: #e57373 !important;
+}
+
+.todo-item.priority-medium,
+.task-item.priority-medium {
+  border-left-color: #ffb74d !important;
+}
+
+.todo-item.priority-low,
+.task-item.priority-low {
+  border-left-color: #81c784 !important;
+}
+
+/* =========================================
+   5. GRADIENT MESH REFINEMENT
+   ========================================= */
+
+/* Softer, more subtle background orbs */
+body::before {
+  background: radial-gradient(circle, rgba(124, 140, 224, 0.08) 0%, transparent 70%) !important;
+  opacity: 0.6 !important;
+}
+
+body::after {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.06) 0%, transparent 70%) !important;
+  opacity: 0.5 !important;
+}
+
+/* =========================================
+   6. LINK & BUTTON COLOR REFINEMENTS
+   ========================================= */
+
+a,
+.workbook-link,
+.scripture-link,
+.quick-link-btn {
+  color: var(--primary-soft) !important;
+}
+
+a:hover,
+.workbook-link:hover,
+.scripture-link:hover {
+  color: var(--accent-warm) !important;
+}
+
+/* Copy button softer colors */
+.copy-btn {
+  color: var(--text-secondary) !important;
+}
+
+.copy-btn:hover {
+  color: var(--primary-soft) !important;
+}
+
+/* =========================================
+   7. HEADER & NAVIGATION REFINEMENTS  
+   ========================================= */
+
+.header,
+.week-nav {
+  background: rgba(15, 15, 25, 0.6) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+[data-theme="light"] .header,
+[data-theme="light"] .week-nav {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+
+/* ===========================================
+   8. REFINED COLOR PALETTE
+   =========================================== */
+
+/* Softer, warmer primary accent */
+:root {
+  --accent-refined: rgba(120, 150, 255, 0.9);
+  --accent-soft: rgba(120, 150, 255, 0.6);
+  --bg-card-refined: rgba(30, 32, 45, 0.85);
+}
+
+[data-theme="light"] {
+  --accent-refined: rgba(80, 110, 200, 0.9);
+  --accent-soft: rgba(80, 110, 200, 0.6);
+  --bg-card-refined: rgba(255, 255, 255, 0.9);
+}
+
+/* Meeting cards - warmer tones */
+.meeting-card {
+  border-left-color: var(--accent-soft) !important;
+}
+
+/* Active states - softer blue */
+.tab-btn.active,
+.period-btn.active {
+  background: linear-gradient(135deg, rgba(100, 130, 240, 0.25), rgba(80, 120, 220, 0.15)) !important;
+  border-color: rgba(100, 130, 240, 0.4) !important;
+}
+
+/* Hover states - gentle warmth */
+.tab-btn:hover:not(.active),
+.period-btn:hover:not(.active) {
+  background: rgba(100, 130, 240, 0.1) !important;
+}
+
+/* Scripture highlighting - warm gold undertone */
+.scripture-link {
+  background: linear-gradient(90deg, rgba(255, 200, 100, 0.08), rgba(255, 180, 80, 0.05)) !important;
+  border-left-color: rgba(255, 190, 90, 0.5) !important;
+}
+
+[data-theme="light"] .scripture-link {
+  background: linear-gradient(90deg, rgba(255, 180, 80, 0.12), rgba(255, 160, 60, 0.08)) !important;
+  border-left-color: rgba(220, 160, 60, 0.6) !important;
+}
