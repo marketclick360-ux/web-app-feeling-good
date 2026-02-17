@@ -2039,3 +2039,443 @@ textarea,
   color: #64748b;
 }
 
+
+
+/* ===== APPLE VISIONOS GLASS ENHANCEMENT ===== */
+/* Layered on top of existing styles for enhanced frosted glass effect */
+
+/* Noise texture for frosted glass realism */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.card:hover {
+  background: rgba(255,255,255,0.05);
+  box-shadow: 
+    0 16px 48px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(255,255,255,0.08),
+    0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* Enhanced floating tab bar - visionOS style */
+.tab-row {
+  background: rgba(20,20,35,0.7);
+  backdrop-filter: blur(50px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.4),
+    0 0 80px rgba(99,102,241,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+
+.tab.active {
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(20px) brightness(1.2);
+  -webkit-backdrop-filter: blur(20px) brightness(1.2);
+  box-shadow: 
+    0 2px 16px rgba(99,102,241,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Enhanced ambient background blobs */
+body::before {
+  width: 600px;
+  height: 600px;
+  top: -150px;
+  left: -150px;
+  background: radial-gradient(circle, rgba(99,102,241,0.5) 0%, rgba(147,51,234,0.3) 40%, transparent 70%);
+  animation: float1 20s ease-in-out infinite;
+}
+
+body::after {
+  width: 700px;
+  height: 700px;
+  bottom: -200px;
+  right: -200px;
+  background: radial-gradient(circle, rgba(192,132,252,0.4) 0%, rgba(244,114,182,0.25) 40%, transparent 70%);
+  animation: float2 25s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, -30px) scale(1.05); }
+}
+
+/* Third ambient blob for extra depth */
+.app::before {
+  content: '';
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 60%);
+  filter: blur(80px);
+  z-index: -1;
+  pointer-events: none;
+  animation: float3 30s ease-in-out infinite;
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  33% { transform: translate(-40%, -60%) scale(1.15); }
+  66% { transform: translate(-60%, -40%) scale(0.9); }
+}
+
+/* Enhanced glass inputs */
+input[type="text"],
+input[type="date"],
+textarea,
+.rich-note-editor {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px) brightness(1.05);
+  -webkit-backdrop-filter: blur(12px) brightness(1.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.1);
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+.rich-note-editor:focus {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(129,140,248,0.4);
+  box-shadow: 
+    0 0 0 3px rgba(99,102,241,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 0 20px rgba(99,102,241,0.1);
+}
+
+/* Enhanced glass buttons */
+.workbook-btn,
+.todo-add-btn,
+.quick-link-btn {
+  background: rgba(99,102,241,0.25);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 
+    0 4px 16px rgba(99,102,241,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.1);
+}
+
+.workbook-btn:hover,
+.todo-add-btn:hover,
+.quick-link-btn:hover {
+  background: rgba(99,102,241,0.4);
+  box-shadow: 
+    0 8px 24px rgba(99,102,241,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    0 0 30px rgba(99,102,241,0.15);
+}
+
+/* Enhanced checkbox styling */
+.check-row:hover {
+  background: rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Day navigation buttons */
+.day-nav-btn {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.day-nav-btn:hover {
+  background: rgba(255,255,255,0.12);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Section headings subtle glow */
+.section-heading {
+  text-shadow: 0 0 20px rgba(129,140,248,0.3);
+}
+
+/* Rich note toolbar */
+.rich-note-toolbar {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.rich-note-toolbar button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.rich-note-toolbar button:hover {
+  background: rgba(255,255,255,0.1);
+  box-shadow: 
+    0 2px 8px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+
+/* ========================================
+   iPad/iOS Safari Glass Effect Fixes
+   ======================================== */
+
+/* Force GPU acceleration for smooth glass on iOS */
+.card,
+.header,
+.week-nav button,
+.rich-note-toolbar,
+.todo-input-container,
+.task-item,
+.journal-card {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, backdrop-filter;
+}
+
+/* Fallback for devices without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .card,
+  .header,
+  .week-nav button,
+  .rich-note-toolbar,
+  .todo-input-container,
+  .task-item {
+    background: rgba(30, 30, 50, 0.95) !important;
+  }
+  
+  [data-theme="light"] .card,
+  [data-theme="light"] .header,
+  [data-theme="light"] .week-nav button,
+  [data-theme="light"] .rich-note-toolbar,
+  [data-theme="light"] .todo-input-container,
+  [data-theme="light"] .task-item {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+}
+
+/* iPad-specific touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .card,
+  .header,
+  .week-nav button,
+  .rich-note-toolbar {
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+    backdrop-filter: blur(25px) saturate(150%);
+  }
+  
+  /* Larger touch targets on iPad */
+  .week-nav button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Smoother scrolling on iOS */
+  .app-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* iPad landscape mode adjustments */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .app {
+    max-width: 900px;
+  }
+  
+  .card {
+    padding: 24px;
+  }
+}
+
+/* iPad portrait mode adjustments */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .app {
+    max-width: 700px;
+    padding: 0 24px;
+  }
+}
+
+/* Fix for iOS Safari rendering issues with backdrop-filter */
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  .card::before,
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+  }
+}
+
+
+/* ========================================
+   MINIMALIST UI ENHANCEMENTS
+   Cleaner Visual Hierarchy - CSS Only
+   (Does not remove any features)
+   ======================================== */
+
+/* --- Section Headers: Softer Typography --- */
+.section-heading,
+.card h2,
+.card h3,
+.card > div:first-child,
+[class*="heading"],
+[class*="title"] {
+  text-transform: capitalize;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-size: 0.9rem;
+}
+
+/* --- Increased Whitespace Between Sections --- */
+.card {
+  margin-bottom: 20px;
+}
+
+.card + .card {
+  margin-top: 24px;
+}
+
+/* --- Enhanced Accent Bar on Section Headers --- */
+.card > div:first-child::before,
+.section-heading::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 70%;
+  background: linear-gradient(180deg, #818cf8, #6366f1);
+  border-radius: 2px;
+}
+
+/* Position relative for accent bar */
+.card > div:first-child,
+.section-heading {
+  position: relative;
+  padding-left: 12px;
+}
+
+/* --- Softer Card Appearance --- */
+.card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .card,
+body:not([data-theme="light"]) .card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- Breathing Room for Content --- */
+.card > *:not(:last-child) {
+  margin-bottom: 16px;
+}
+
+/* --- Subtle Dividers Between Items --- */
+.task-item + .task-item,
+.checklist-item + .checklist-item {
+  border-top: 1px solid rgba(128, 128, 128, 0.1);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* --- Light Theme Refinements --- */
+[data-theme="light"] .card {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .section-heading,
+[data-theme="light"] .card h2,
+[data-theme="light"] .card h3 {
+  color: #374151;
+}
+
+/* --- Smooth Transitions --- */
+.card,
+.section-heading,
+.task-item {
+  transition: all 0.2s ease;
+}
+
+/* ========================================
+   ENHANCED MINIMALIST SELECTORS
+   Targeting actual heading elements
+   ======================================== */
+
+/* --- All H1, H2, H3 Headings: Title Case + Cleaner Style --- */
+h1, h2, h3, h4 {
+  text-transform: capitalize;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* --- Specifically target app headings --- */
+#root h1,
+#root h2,
+#root h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- More space between main content sections --- */
+#root > div > div {
+  margin-bottom: 24px;
+}
+
+/* --- Checkbox labels: Softer text --- */
+label,
+[type="checkbox"] + span,
+[type="checkbox"] ~ div {
+  text-transform: capitalize;
+  font-weight: 400;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+}
