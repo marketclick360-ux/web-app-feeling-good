@@ -2524,3 +2524,656 @@ body.zoomed-viewport .rich-note-toolbar {
     transform: translateY(24px);
   }
 }
+
+/* ========================================
+   COMPLETE MINIMALIST UI IMPROVEMENTS
+   CSS-only changes - Safe, no functionality affected
+   ======================================== */
+
+/* =========================================
+   1. SIMPLIFIED TASK ITEMS
+   - Hide action buttons by default
+   - Show on hover/focus
+   ========================================= */
+
+/* Hide edit and delete buttons by default */
+.todo-item .todo-edit-btn,
+.todo-item .todo-delete-btn,
+.task-item .todo-edit-btn,
+.task-item .todo-delete-btn {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Show buttons on hover */
+.todo-item:hover .todo-edit-btn,
+.todo-item:hover .todo-delete-btn,
+.task-item:hover .todo-edit-btn,
+.task-item:hover .todo-delete-btn,
+.todo-item:focus-within .todo-edit-btn,
+.todo-item:focus-within .todo-delete-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Always show on touch devices */
+@media (hover: none) {
+  .todo-item .todo-edit-btn,
+  .todo-item .todo-delete-btn,
+  .task-item .todo-edit-btn,
+  .task-item .todo-delete-btn {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* Cleaner priority indicator - subtle left border instead of dot */
+.todo-item.priority-high,
+.task-item.priority-high {
+  border-left: 3px solid #ef4444;
+}
+
+.todo-item.priority-medium,
+.task-item.priority-medium {
+  border-left: 3px solid #f59e0b;
+}
+
+.todo-item.priority-low,
+.task-item.priority-low {
+  border-left: 3px solid #22c55e;
+}
+
+/* Hide the inline priority badge (keep border only) */
+.todo-priority-badge {
+  display: none;
+}
+
+/* Cleaner checkbox styling */
+.todo-item input[type="checkbox"],
+.task-item input[type="checkbox"],
+.check-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(129, 140, 248, 0.5);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.todo-item input[type="checkbox"]:checked,
+.task-item input[type="checkbox"]:checked,
+.check-row input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border-color: #818cf8;
+}
+
+.todo-item input[type="checkbox"]:checked::after,
+.task-item input[type="checkbox"]:checked::after,
+.check-row input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* =========================================
+   2. STREAMLINED NAVIGATION
+   - Thinner, more elegant tab pills
+   - Subtle transitions
+   ========================================= */
+
+.tab-row {
+  gap: 4px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.tab-row button {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  border: none;
+  background: transparent;
+}
+
+.tab-row button.active,
+.tab-row button[class*="active"] {
+  background: rgba(129, 140, 248, 0.2);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.tab-row button:not(.active):hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Light theme tabs */
+[data-theme="light"] .tab-row {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .tab-row button.active {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* =========================================
+   3. TYPOGRAPHY & SPACING
+   - Lighter font weights for secondary text
+   - Consistent padding rhythm
+   ========================================= */
+
+/* Secondary/muted text */
+.routine-date,
+.daily-text-date,
+.encouragement-ref,
+.todo-due,
+.todo-meta {
+  font-weight: 400;
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+/* Consistent card padding */
+.card {
+  padding: 20px;
+}
+
+/* Section spacing */
+section.card + section.card {
+  margin-top: 16px;
+}
+
+/* Input fields - cleaner */
+input[type="text"],
+textarea,
+select {
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(129, 140, 248, 0.5);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+  outline: none;
+}
+
+/* =========================================
+   4. SMOOTH INTERACTION ANIMATIONS
+   ========================================= */
+
+/* Card hover effect */
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+}
+
+/* Button press effect */
+button {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* Checkbox row hover */
+.check-row {
+  padding: 10px 12px;
+  margin: 4px -12px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.check-row:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* Task item hover */
+.todo-item,
+.task-item {
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.todo-item:hover,
+.task-item:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* Copy button animation */
+.copy-btn {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.copy-btn:hover {
+  transform: scale(1.1);
+}
+
+.copy-btn.copied {
+  animation: copyPulse 0.3s ease;
+}
+
+@keyframes copyPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* =========================================
+   5. POLISH & REFINEMENTS
+   ========================================= */
+
+/* Softer shadows throughout */
+.card,
+.todo-input-container,
+.journal-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .card,
+body:not([data-theme="light"]) .card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Cleaner scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(129, 140, 248, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(129, 140, 248, 0.5);
+}
+
+/* Filter tabs styling */
+.todo-filter-row {
+  gap: 8px;
+}
+
+.todo-filter-btn {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.todo-filter-btn.active {
+  background: rgba(129, 140, 248, 0.2);
+}
+
+/* Quick links grid refinement */
+.quick-links-grid {
+  gap: 10px;
+}
+
+.quick-link-btn {
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.quick-link-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Rich text editor toolbar */
+.rich-note-toolbar button {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.rich-note-toolbar button:hover {
+  background: rgba(129, 140, 248, 0.15);
+}
+
+/* Day navigation buttons */
+.day-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.day-nav-btn:hover {
+  background: rgba(129, 140, 248, 0.15);
+  transform: scale(1.05);
+}
+
+/* Today button */
+.today-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Meeting part items */
+.meeting-part-item {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 6px 0;
+  transition: background 0.2s ease;
+}
+
+.meeting-part-item:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* ========================================
+   REFINED COLOR PALETTE
+   Elegant, softer colors for a premium feel
+   CSS-only - Safe, no functionality affected
+   ======================================== */
+
+/* =========================================
+   1. SOFTER PRIMARY COLORS
+   ========================================= */
+
+:root {
+  --primary-soft: #7c8ce0;
+  --primary-muted: #6b7bd4;
+  --primary-glow: rgba(124, 140, 224, 0.15);
+  --accent-warm: #a78bfa;
+  --text-primary: #f0f0f5;
+  --text-secondary: #b8b8c8;
+  --bg-card-dark: rgba(22, 22, 35, 0.75);
+  --bg-card-light: rgba(255, 255, 255, 0.85);
+  --border-subtle: rgba(124, 140, 224, 0.15);
+}
+
+/* =========================================
+   2. REFINED DARK MODE COLORS
+   ========================================= */
+
+/* Softer background gradient */
+body {
+  background: linear-gradient(135deg, 
+    #0a0a12 0%, 
+    #12121f 25%,
+    #1a1a2e 50%,
+    #12121f 75%,
+    #0a0a12 100%
+  ) !important;
+}
+
+/* Softer text colors */
+body,
+.app {
+  color: var(--text-primary);
+}
+
+/* Muted secondary text */
+.routine-date,
+.daily-text-date,
+.meeting-subtitle,
+.encouragement-ref,
+.todo-due,
+label,
+p {
+  color: var(--text-secondary);
+}
+
+/* Refined card backgrounds */
+.card {
+  background: var(--bg-card-dark) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Softer accent colors on interactive elements */
+.workbook-btn,
+.todo-add-btn,
+.today-btn {
+  background: linear-gradient(135deg, var(--primary-soft), var(--primary-muted)) !important;
+}
+
+/* Softer borders on inputs */
+input[type="text"],
+textarea,
+select {
+  border-color: var(--border-subtle) !important;
+  background: rgba(15, 15, 25, 0.5) !important;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-soft) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+/* Softer section heading accents */
+.section-heading {
+  border-left-color: var(--primary-soft) !important;
+}
+
+/* =========================================
+   3. REFINED LIGHT MODE COLORS
+   ========================================= */
+
+[data-theme="light"] {
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a5a;
+  --bg-card-light: rgba(255, 255, 255, 0.9);
+  --border-subtle: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="light"] body,
+[data-theme="light"] .app {
+  background: linear-gradient(135deg,
+    #f8f8fc 0%,
+    #f0f0f8 25%,
+    #e8e8f4 50%,
+    #f0f0f8 75%,
+    #f8f8fc 100%
+  ) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .card {
+  background: var(--bg-card-light) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] input[type="text"],
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .routine-date,
+[data-theme="light"] .daily-text-date,
+[data-theme="light"] .meeting-subtitle,
+[data-theme="light"] label {
+  color: var(--text-secondary);
+}
+
+/* =========================================
+   4. ACCENT COLOR REFINEMENTS
+   ========================================= */
+
+/* Softer purple glow on hover states */
+.card:hover {
+  box-shadow: 0 4px 20px rgba(124, 140, 224, 0.1) !important;
+}
+
+/* Refined checkbox colors */
+.check-row input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, var(--primary-soft), var(--accent-warm)) !important;
+  border-color: var(--primary-soft) !important;
+}
+
+/* Softer tab active state */
+.tab-row button.active,
+.week-nav button.active {
+  background: var(--primary-glow) !important;
+  color: var(--primary-soft) !important;
+}
+
+/* Refined priority colors - more muted */
+.todo-item.priority-high,
+.task-item.priority-high {
+  border-left-color: #e57373 !important;
+}
+
+.todo-item.priority-medium,
+.task-item.priority-medium {
+  border-left-color: #ffb74d !important;
+}
+
+.todo-item.priority-low,
+.task-item.priority-low {
+  border-left-color: #81c784 !important;
+}
+
+/* =========================================
+   5. GRADIENT MESH REFINEMENT
+   ========================================= */
+
+/* Softer, more subtle background orbs */
+body::before {
+  background: radial-gradient(circle, rgba(124, 140, 224, 0.08) 0%, transparent 70%) !important;
+  opacity: 0.6 !important;
+}
+
+body::after {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.06) 0%, transparent 70%) !important;
+  opacity: 0.5 !important;
+}
+
+/* =========================================
+   6. LINK & BUTTON COLOR REFINEMENTS
+   ========================================= */
+
+a,
+.workbook-link,
+.scripture-link,
+.quick-link-btn {
+  color: var(--primary-soft) !important;
+}
+
+a:hover,
+.workbook-link:hover,
+.scripture-link:hover {
+  color: var(--accent-warm) !important;
+}
+
+/* Copy button softer colors */
+.copy-btn {
+  color: var(--text-secondary) !important;
+}
+
+.copy-btn:hover {
+  color: var(--primary-soft) !important;
+}
+
+/* =========================================
+   7. HEADER & NAVIGATION REFINEMENTS  
+   ========================================= */
+
+.header,
+.week-nav {
+  background: rgba(15, 15, 25, 0.6) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+[data-theme="light"] .header,
+[data-theme="light"] .week-nav {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+
+
+}
+
+/* ===========================================
+   8. FIX ACTIVE TAB STYLING FOR DARK THEME
+   =========================================== */
+
+/* Active tab button - use subtle purple instead of white */
+.tab-btn.active {
+  background: rgba(120, 100, 200, 0.25) !important;
+  border-color: rgba(140, 120, 220, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Period tabs active state */
+.period-btn.active {
+  background: rgba(120, 100, 200, 0.25) !important;
+  border-color: rgba(140, 120, 220, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Additional tab overrides with higher specificity */
+.quick-links-tabs .tab-btn.active,
+.tabs-container .tab-btn.active,
+button.tab-btn.active,
+.tab-btn.active[class] {
+  background: rgba(120, 100, 200, 0.25) !important;
+  background-color: rgba(120, 100, 200, 0.25) !important;
+  border-color: rgba(140, 120, 220, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Override any inline styles */
+.tab-btn[style].active {
+  background: rgba(120, 100, 200, 0.25) !important;
+  background-color: rgba(120, 100, 200, 0.25) !important;
+}
+
+
+/* ===========================================
+   9. FIX TAB NAVIGATION BUTTONS (DIRECT BUTTONS)
+   =========================================== */
+
+/* Target the quick links tab buttons - these are plain buttons containing emoji+text */
+#root > button {
+  background: rgba(30, 30, 45, 0.8) !important;
+  background-color: rgba(30, 30, 45, 0.8) !important;
+  border: 1px solid rgba(100, 100, 140, 0.3) !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Light theme buttons */
+[data-theme="light"] #root > button {
+  background: rgba(240, 240, 250, 0.9) !important;
+  background-color: rgba(240, 240, 250, 0.9) !important;
+  color: rgba(50, 50, 70, 0.8) !important;
+}

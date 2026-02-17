@@ -83,8 +83,14 @@ const WEEKLY_MEETINGS = {
     bibleReading: 'Isaiah 36-37',
     song: 'Song 150 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-16-22-2026/',
-    sundayArticle: '',
-    sundayScriptures: [],
+        sundayArticle: 'Imitate Jehovah\'s Humility',
+        sundayScriptures: [
+      { ref: 'Eph. 5:1', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=ephesians+5%3A1' },
+      { ref: 'Ps. 113:5-8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=psalms+113%3A5-8' },
+      { ref: 'Ps. 62:8', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=psalms+62%3A8' },
+      { ref: 'Ps. 138:6', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=psalms+138%3A6' },
+      { ref: '2 Pet. 3:9', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=2+peter+3%3A9' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cDo Not Be Afraid Because of the Words That You Heard\u201d (10 min.) \u2014 Isa 36:1, 2; 37:6, 7' },
@@ -102,8 +108,14 @@ const WEEKLY_MEETINGS = {
     bibleReading: 'Isaiah 38-40',
     song: 'Song 4 and Prayer',
     workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-23-March-1-2026/',
-    sundayArticle: '',
-    sundayScriptures: [],
+        sundayArticle: 'How to Plan a Wedding That Brings Honor to Jehovah',
+        sundayScriptures: [
+      { ref: '1 Cor. 14:40', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=1+corinthians+14%3A40' },
+      { ref: 'Prov. 5:18', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=proverbs+5%3A18' },
+      { ref: 'Gen. 2:24', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=genesis+2%3A24' },
+      { ref: 'Rom. 13:13', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=romans+13%3A13' },
+      { ref: '1 John 2:15-17', url: 'https://wol.jw.org/en/wol/l/r1/lp-e?q=1+john+2%3A15-17' }
+    ],
     sections: {
       treasures: [
         { id: 'talk', text: '\ud83c\udfa4 Talk: \u201cLike a Shepherd He Will Care For His Flock\u201d (10 min.) \u2014 Isa 40:8, 11, 26-29' },
