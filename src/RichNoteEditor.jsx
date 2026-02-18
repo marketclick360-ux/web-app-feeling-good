@@ -128,12 +128,26 @@ if (html) {
 
   }, [handleInput])
 
-  // Handle clicking on images in the editor to expand them
-  const handleEditorClick = useCallback((e) => {
-    if (e.target.tagName === 'IMG') {
-      setExpandedImg(e.target.src)
+  // Handle clicking on images or links in the editor
+const handleEditorClick = useCallback((e) => {
+  const target = e.target
+
+  // Image: open in modal
+  if (target.tagName === 'IMG') {
+    setExpandedImg(target.src)
+    return
+  }
+
+  // Link: open in new tab so the app stays in the current tab
+  if (target.tagName === 'A') {
+    e.preventDefault()
+    const href = target.getAttribute('href')
+    if (href) {
+      window.open(href, '_blank', 'noopener,noreferrer')
     }
-  }, [])
+  }
+}, [])
+
 
   const execCmd = (cmd, val = null) => {
     document.execCommand(cmd, false, val)
