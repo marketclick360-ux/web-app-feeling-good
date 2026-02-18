@@ -22,6 +22,10 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const editorRef = useRef(null)
   const isInternalChange = useRef(false)
   const [expandedImg, setExpandedImg] = useState(null)
+  const [height, setHeight] = useState(minHeight)
+  const resizingRef = useRef(false)
+  const startYRef = useRef(0)
+  const startHeightRef = useRef(minHeight)
   const [showColors, setShowColors] = useState(false)
 
   // Sync external value changes (e.g. loading from Supabase)
@@ -222,16 +226,25 @@ const handleEditorClick = useCallback((e) => {
           ))}
         </div>
       )}
-      <div
-        ref={editorRef}
-        className="rich-note-editor"
-        contentEditable
-        onInput={handleInput}
-        onPaste={handlePaste}
-        onClick={handleEditorClick}
-        data-placeholder={placeholder}
-        style={{ minHeight }}
-      />
+<div
+  ref={editorRef}
+  className="rich-note-editor"
+  contentEditable
+  onInput={handleInput}
+  onPaste={handlePaste}
+  onClick={handleEditorClick}
+  data-placeholder={placeholder}
+  style={{ minHeight: height }}
+/>
+<div
+  className="rich-note-resizer"
+  onMouseDown={(e) => {
+    e.preventDefault()
+    resizingRef.current = true
+    startYRef.current = e.clientY
+    startHeightRef.current = height
+  }}
+/>
       {isEmpty && (
         <div className="rich-note-placeholder">{placeholder}</div>
       )}
