@@ -44,7 +44,8 @@ useEffect(() => {
 useEffect(() => {
   const onMove = (e) => {
     if (!resizingRef.current) return
-    const delta = e.clientY - startYRef.current
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+    const delta = clientY - startYRef.current
     setHeight(() => Math.max(minHeight, startHeightRef.current + delta))
   }
   const onUp = () => {
@@ -52,11 +53,16 @@ useEffect(() => {
   }
   window.addEventListener('mousemove', onMove)
   window.addEventListener('mouseup', onUp)
+  window.addEventListener('touchmove', onMove, { passive: false })
+  window.addEventListener('touchend', onUp)
   return () => {
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
+    window.removeEventListener('touchmove', onMove)
+    window.removeEventListener('touchend', onUp)
   }
 }, [minHeight])
+
 
 const handleInput = useCallback(() => {
   const el = editorRef.current
@@ -255,6 +261,7 @@ const handleEditorClick = useCallback((e) => {
   data-placeholder={placeholder}
   style={{ minHeight: height }}
 />
+      
 <div
   className="rich-note-resizer"
   onMouseDown={(e) => {
@@ -263,6 +270,13 @@ const handleEditorClick = useCallback((e) => {
     startYRef.current = e.clientY
     startHeightRef.current = height
   }}
+  onTouchStart={(e) => {
+    resizingRef.current = true
+    startYRef.current = e.touches[0].clientY
+    startHeightRef.current = height
+  }}
+/>
+
 />
       {isEmpty && (
         <div className="rich-note-placeholder">{placeholder}</div>
