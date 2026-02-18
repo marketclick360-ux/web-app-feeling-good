@@ -943,6 +943,8 @@ textarea:focus {
   height: 8px;
   cursor: row-resize;
   background: transparent;
+    min-height: 24px;
+  touch-action: none;
 }
 
 .rich-note-resizer:hover {
