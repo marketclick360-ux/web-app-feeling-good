@@ -277,7 +277,6 @@ const handleEditorClick = useCallback((e) => {
   }}
 />
 
-/>
       {isEmpty && (
         <div className="rich-note-placeholder">{placeholder}</div>
       )}
