@@ -84,3 +84,16 @@ a {
 a:hover {
   text-decoration: underline;
 }
+.rich-note-wrapper {
+  position: relative;
+}
+
+.rich-note-resizer {
+  height: 8px;
+  cursor: row-resize;
+  background: transparent;
+}
+
+.rich-note-resizer:hover {
+  background: rgba(148, 163, 184, 0.4); /* subtle line */
+}
