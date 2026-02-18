@@ -22,26 +22,55 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const editorRef = useRef(null)
   const isInternalChange = useRef(false)
   const [expandedImg, setExpandedImg] = useState(null)
+  const [height, setHeight] = useState(minHeight)
+  const resizingRef = useRef(false)
+  const startYRef = useRef(0)
+  const startHeightRef = useRef(minHeight)
   const [showColors, setShowColors] = useState(false)
 
   // Sync external value changes (e.g. loading from Supabase)
-  useEffect(() => {
-    if (isInternalChange.current) {
-      isInternalChange.current = false
-      return
-    }
-    const el = editorRef.current
-    if (el && el.innerHTML !== (value || '')) {
-      el.innerHTML = value || ''
-    }
-  }, [value])
+useEffect(() => {
+  if (isInternalChange.current) {
+    isInternalChange.current = false
+    return
+  }
+  const el = editorRef.current
+  if (el && el.innerHTML !== (value || '')) {
+    el.innerHTML = value || ''
+  }
+}, [value])
 
-  const handleInput = useCallback(() => {
-    const el = editorRef.current
-    if (!el) return
-    isInternalChange.current = true
-    onChange(el.innerHTML)
-  }, [onChange])
+// Resize handler
+useEffect(() => {
+  const onMove = (e) => {
+    if (!resizingRef.current) return
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+    const delta = clientY - startYRef.current
+    setHeight(() => Math.max(minHeight, startHeightRef.current + delta))
+  }
+  const onUp = () => {
+    resizingRef.current = false
+  }
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
+  window.addEventListener('touchmove', onMove, { passive: false })
+  window.addEventListener('touchend', onUp)
+  return () => {
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+    window.removeEventListener('touchmove', onMove)
+    window.removeEventListener('touchend', onUp)
+  }
+}, [minHeight])
+
+
+const handleInput = useCallback(() => {
+  const el = editorRef.current
+  if (!el) return
+  isInternalChange.current = true
+  onChange(el.innerHTML)
+}, [onChange])
+
 
   const handlePaste = useCallback((e) => {
     const items = e.clipboardData?.items
@@ -128,12 +157,26 @@ if (html) {
 
   }, [handleInput])
 
-  // Handle clicking on images in the editor to expand them
-  const handleEditorClick = useCallback((e) => {
-    if (e.target.tagName === 'IMG') {
-      setExpandedImg(e.target.src)
+  // Handle clicking on images or links in the editor
+const handleEditorClick = useCallback((e) => {
+  const target = e.target
+
+  // Image: open in modal
+  if (target.tagName === 'IMG') {
+    setExpandedImg(target.src)
+    return
+  }
+
+  // Link: open in new tab so the app stays in the current tab
+  if (target.tagName === 'A') {
+    e.preventDefault()
+    const href = target.getAttribute('href')
+    if (href) {
+      window.open(href, '_blank', 'noopener,noreferrer')
     }
-  }, [])
+  }
+}, [])
+
 
   const execCmd = (cmd, val = null) => {
     document.execCommand(cmd, false, val)
@@ -208,16 +251,33 @@ if (html) {
           ))}
         </div>
       )}
-      <div
-        ref={editorRef}
-        className="rich-note-editor"
-        contentEditable
-        onInput={handleInput}
-        onPaste={handlePaste}
-        onClick={handleEditorClick}
-        data-placeholder={placeholder}
-        style={{ minHeight }}
-      />
+<div
+  ref={editorRef}
+  className="rich-note-editor"
+  contentEditable
+  onInput={handleInput}
+  onPaste={handlePaste}
+  onClick={handleEditorClick}
+  data-placeholder={placeholder}
+  style={{ minHeight: height }}
+/>
+      
+<div
+  className="rich-note-resizer"
+  onMouseDown={(e) => {
+    e.preventDefault()
+    resizingRef.current = true
+    startYRef.current = e.clientY
+    startHeightRef.current = height
+  }}
+  onTouchStart={(e) => {
+    resizingRef.current = true
+    startYRef.current = e.touches[0].clientY
+    startHeightRef.current = height
+  }}
+/>
+
+/>
       {isEmpty && (
         <div className="rich-note-placeholder">{placeholder}</div>
       )}
