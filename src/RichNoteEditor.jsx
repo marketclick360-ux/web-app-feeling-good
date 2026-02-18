@@ -29,23 +29,42 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const [showColors, setShowColors] = useState(false)
 
   // Sync external value changes (e.g. loading from Supabase)
-  useEffect(() => {
-    if (isInternalChange.current) {
-      isInternalChange.current = false
-      return
-    }
-    const el = editorRef.current
-    if (el && el.innerHTML !== (value || '')) {
-      el.innerHTML = value || ''
-    }
-  }, [value])
+useEffect(() => {
+  if (isInternalChange.current) {
+    isInternalChange.current = false
+    return
+  }
+  const el = editorRef.current
+  if (el && el.innerHTML !== (value || '')) {
+    el.innerHTML = value || ''
+  }
+}, [value])
 
-  const handleInput = useCallback(() => {
-    const el = editorRef.current
-    if (!el) return
-    isInternalChange.current = true
-    onChange(el.innerHTML)
-  }, [onChange])
+// Resize handler
+useEffect(() => {
+  const onMove = (e) => {
+    if (!resizingRef.current) return
+    const delta = e.clientY - startYRef.current
+    setHeight(() => Math.max(minHeight, startHeightRef.current + delta))
+  }
+  const onUp = () => {
+    resizingRef.current = false
+  }
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
+  return () => {
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+  }
+}, [minHeight])
+
+const handleInput = useCallback(() => {
+  const el = editorRef.current
+  if (!el) return
+  isInternalChange.current = true
+  onChange(el.innerHTML)
+}, [onChange])
+
 
   const handlePaste = useCallback((e) => {
     const items = e.clipboardData?.items
