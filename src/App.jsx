@@ -624,6 +624,7 @@ const loadJournal = useCallback(async () => {
             <div className="quick-links-grid">
               <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf10"} JW.org</a>
               <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcda"} Online Library</a>
+                          <a href="https://www.jw.org/en/library/videos/#en/mediaitems/VODPgmEvtMorningWorship" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf05"} Morning Worship</a>
               <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
             </div>
           </section>
