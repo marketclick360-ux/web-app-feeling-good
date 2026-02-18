@@ -934,6 +934,21 @@ textarea:focus {
   font-size: 0.95rem;
 }
 
+/* -- Rich Note Resizer -- */
+.rich-note-wrapper {
+  position: relative;
+}
+
+.rich-note-resizer {
+  height: 8px;
+  cursor: row-resize;
+  background: transparent;
+}
+
+.rich-note-resizer:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
 /* -- Image Modal -- */
 .image-modal {
   display: none;
