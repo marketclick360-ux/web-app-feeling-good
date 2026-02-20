@@ -208,7 +208,7 @@ const [encouragement, setEncouragement] = useState(null)
     const [editingTodoId, setEditingTodoId] = useState(null)
   const [editingTodoText, setEditingTodoText] = useState('')
   const [syncStatus, setSyncStatus] = useState('Saved')
-      const [showMenu, setShowMenu] = useState(false)
+      const [showMenu, setShowMenu] = useState(false)   const settingsRef = useRef(null)   useEffect(() => { const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowMenu(false) }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler) }, [])
   const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -559,7 +559,7 @@ const loadJournal = useCallback(async () => {
         {tab !== null && <span className="section-title">{TABS.find(t => t.id === tab)?.icon} {TABS.find(t => t.id === tab)?.name}</span>}
         <div className="top-bar-right">
           <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} aria-label={colorMode === '' ? 'Switch to light mode' : 'Switch to dark mode'} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
-          <div className="settings-menu-wrap">
+          <div className="settings-menu-wrap" ref={settingsRef}>
             <button className="settings-btn" onClick={() => setShowMenu(!showMenu)} aria-label="Settings">{"\u2699\ufe0f"}</button>
             {showMenu && <div className="settings-dropdown">
               {onSignOut && <button onClick={() => { onSignOut(); setShowMenu(false) }}>Sign Out</button>}
