@@ -151,7 +151,7 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' 
     </svg>
   )
 }
-export default function App({ userId }) {
+export default function App({ userId, onSignOut, onSignIn }) {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const weekLabel = formatRange(weekStart)
   const weekKey = toISO(weekStart)
@@ -168,7 +168,7 @@ export default function App({ userId }) {
   const [tab, setTab] = useState(() => {
     if (typeof window === 'undefined') return 'morning'
     const saved = window.localStorage.getItem('eps-active-tab')
-    return ['morning', 'prep', 'sunday', 'todos'].includes(saved) ? saved : 'morning'
+    return ['morning', 'prep', 'sunday', 'todos'].includes(saved) ? saved : null
   })
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
@@ -207,7 +207,7 @@ const [encouragement, setEncouragement] = useState(null)
   const [todoFilter, setTodoFilter] = useState('all')
     const [editingTodoId, setEditingTodoId] = useState(null)
   const [editingTodoText, setEditingTodoText] = useState('')
-  const [syncStatus, setSyncStatus] = useState('Saved')
+  const [syncStatus, setSyncStatus] = useState('Saved')   const [showMenu, setShowMenu] = useState(false)
   const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -220,7 +220,7 @@ const [encouragement, setEncouragement] = useState(null)
     setToasts(prev => [...prev, { id, message, tone }])
     window.setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id))
-    }, 4200)
+    }, tone === 'ok' ? 1500 : 4200)
   }, [])
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
@@ -291,7 +291,7 @@ if (error) {
       pushToast('Could not save weekly notes. Please try again.', 'error')
       return
     }
-    setSyncStatus('Saved')
+    pushToast('\u2713 Saved', 'ok')
   }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 const loadJournal = useCallback(async () => {
@@ -351,7 +351,7 @@ const loadJournal = useCallback(async () => {
       pushToast('Could not save journal changes.', 'error')
       return
     }
-    setSyncStatus('Saved')
+    pushToast('\u2713 Saved', 'ok')
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, todoJournalText, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
@@ -542,7 +542,7 @@ const loadJournal = useCallback(async () => {
     }
   }, [pushToast])
   useEffect(() => {
-    window.localStorage.setItem('eps-active-tab', tab)
+    if (tab) window.localStorage.setItem('eps-active-tab', tab)
   }, [tab])
     const TABS = [
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
@@ -552,18 +552,42 @@ const loadJournal = useCallback(async () => {
   ]
   return (
     <div className={`app ${colorMode}`}>
-      <nav className="tab-row" aria-label="Primary tabs">
-        {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)} aria-label={`Open ${t.name} tab`} aria-current={tab === t.id ? 'page' : undefined}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
-      </nav>
-            <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} aria-label={colorMode === '' ? 'Switch to light mode' : 'Switch to dark mode'} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
-      <div className={`sync-pill ${!isOnline ? 'offline' : syncStatus === 'Sync error' ? 'error' : ''}`} aria-live="polite">
-        {!isOnline ? 'Offline' : syncStatus}
+      {/* Top bar */}
+      <div className="top-bar">
+        {tab !== null && <button className="back-btn" onClick={() => setTab(null)} aria-label="Back to home">{"\u2190"}</button>}
+        {tab !== null && <span className="section-title">{TABS.find(t => t.id === tab)?.icon} {TABS.find(t => t.id === tab)?.name}</span>}
+        <div className="top-bar-right">
+          <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} aria-label={colorMode === '' ? 'Switch to light mode' : 'Switch to dark mode'} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
+          <div className="settings-menu-wrap">
+            <button className="settings-btn" onClick={() => setShowMenu(!showMenu)} aria-label="Settings">{"\u2699\ufe0f"}</button>
+            {showMenu && <div className="settings-dropdown">
+              {onSignOut && <button onClick={() => { onSignOut(); setShowMenu(false) }}>Sign Out</button>}
+              {onSignIn && <button onClick={() => { onSignIn(); setShowMenu(false) }}>Sign In</button>}
+            </div>}
+          </div>
+        </div>
       </div>
       <div className="toast-stack" aria-live="polite" aria-atomic="false">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.tone || 'error'}`}>{t.message}</div>
         ))}
       </div>
+            {tab === null && (
+        <div className="home-view">
+          <section className="card greeting-card">
+            <h2 className="greeting-title">{getGreeting()}</h2>
+            <p className="greeting-date">{displayDate}</p>
+          </section>
+          <div className="home-grid">
+            {TABS.map(t => (
+              <button key={t.id} className="home-card" onClick={() => setTab(t.id)}>
+                <span className="home-card-icon">{t.icon}</span>
+                <span className="home-card-name">{t.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {tab === 'morning' && (
         <div className="morning-tab">
           {showOnboarding && (
