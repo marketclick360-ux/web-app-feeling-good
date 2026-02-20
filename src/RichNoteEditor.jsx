@@ -63,7 +63,6 @@ useEffect(() => {
   }
 }, [minHeight])
 
-
 const handleInput = useCallback(() => {
   const el = editorRef.current
   if (!el) return
@@ -71,90 +70,136 @@ const handleInput = useCallback(() => {
   onChange(el.innerHTML)
 }, [onChange])
 
-
   const handlePaste = useCallback((e) => {
     const items = e.clipboardData?.items
-    if (!items) return
 
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault()
-        const file = item.getAsFile()
-        if (!file) return
+    // Check for pasted images first
+    if (items) {
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (!file) return
 
-        // Compress and insert image
-        const reader = new FileReader()
-        reader.onload = (evt) => {
-          const img = new Image()
-          img.onload = () => {
-            // Resize if too large (max 800px wide)
-            const MAX_W = 800
-            let w = img.width, h = img.height
-            if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W }
-            const canvas = document.createElement('canvas')
-            canvas.width = w; canvas.height = h
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0, w, h)
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
+          // Compress and insert image
+          const reader = new FileReader()
+          reader.onload = (evt) => {
+            const img = new Image()
+            img.onload = () => {
+              // Resize if too large (max 800px wide)
+              const MAX_W = 800
+              let w = img.width, h = img.height
+              if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W }
+              const canvas = document.createElement('canvas')
+              canvas.width = w; canvas.height = h
+              const ctx = canvas.getContext('2d')
+              ctx.drawImage(img, 0, 0, w, h)
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
 
-            // Insert at cursor
-            const sel = window.getSelection()
-            if (sel.rangeCount) {
-              const range = sel.getRangeAt(0)
-              range.deleteContents()
-              const imgEl = document.createElement('img')
-              imgEl.src = dataUrl
-              imgEl.className = 'rich-note-img'
-              imgEl.style.maxWidth = '100%'
-              imgEl.style.maxHeight = '200px'
-              imgEl.style.objectFit = 'contain'
-              imgEl.style.borderRadius = '8px'
-              imgEl.style.margin = '8px 0'
-              imgEl.style.display = 'inline-block'
-                            imgEl.style.verticalAlign = 'top'
-              imgEl.style.cursor = 'pointer'
-              range.insertNode(imgEl)
-              // Move cursor after image
-              range.setStartAfter(imgEl)
-              range.collapse(true)
-              sel.removeAllRanges()
-              sel.addRange(range)
+              // Insert at cursor
+              const sel = window.getSelection()
+              if (sel.rangeCount) {
+                const range = sel.getRangeAt(0)
+                range.deleteContents()
+                const imgEl = document.createElement('img')
+                imgEl.src = dataUrl
+                imgEl.className = 'rich-note-img'
+                imgEl.style.maxWidth = '100%'
+                imgEl.style.maxHeight = '200px'
+                imgEl.style.objectFit = 'contain'
+                imgEl.style.borderRadius = '8px'
+                imgEl.style.margin = '8px 0'
+                imgEl.style.display = 'inline-block'
+                imgEl.style.verticalAlign = 'top'
+                imgEl.style.cursor = 'pointer'
+                range.insertNode(imgEl)
+                // Move cursor after image
+                range.setStartAfter(imgEl)
+                range.collapse(true)
+                sel.removeAllRanges()
+                sel.addRange(range)
+              }
+              handleInput()
             }
-            handleInput()
+            img.src = evt.target.result
           }
-          img.src = evt.target.result
+          reader.readAsDataURL(file)
+          return
         }
-        reader.readAsDataURL(file)
-        return
       }
     }
 
-// Smart clean paste (keep formatting, remove bad styles)
-const html = e.clipboardData.getData('text/html')
-if (html) {
-  e.preventDefault()
+    // Smart clean paste (keep formatting, remove bad styles)
+    const html = e.clipboardData?.getData('text/html')
+    if (html) {
+      e.preventDefault()
 
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(html, 'text/html')
 
-  // Remove background colors and font overrides
-  doc.querySelectorAll('*').forEach(el => {
-    el.style.background = ''
-    el.style.backgroundColor = ''
-    el.style.fontFamily = ''
-    el.style.fontSize = ''
-    
-    // Remove inline color but allow default
-    if (el.style.color) {
-      el.style.color = ''
+      // Remove background colors and font overrides
+      doc.querySelectorAll('*').forEach(el => {
+        el.style.background = ''
+        el.style.backgroundColor = ''
+        el.style.fontFamily = ''
+        el.style.fontSize = ''
+
+        // Remove inline color but allow default
+        if (el.style.color) {
+          el.style.color = ''
+        }
+
+        // Remove empty style attributes so CSS inheritance works
+        if (!el.getAttribute('style')?.trim()) {
+          el.removeAttribute('style')
+        }
+      })
+
+      // Use DOM insertion instead of deprecated execCommand
+      const sel = window.getSelection()
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0)
+        range.deleteContents()
+        const frag = range.createContextualFragment(doc.body.innerHTML)
+        const lastNode = frag.lastChild
+        range.insertNode(frag)
+        if (lastNode) {
+          range.setStartAfter(lastNode)
+          range.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(range)
+        }
+      }
+      handleInput()
+      return
     }
-  })
 
-  document.execCommand('insertHTML', false, doc.body.innerHTML)
-  handleInput()
-  return
-}
-
+    // Plain text fallback - prevents uncontrolled browser paste
+    const text = e.clipboardData?.getData('text/plain')
+    if (text) {
+      e.preventDefault()
+      const sanitized = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+      const sel = window.getSelection()
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0)
+        range.deleteContents()
+        const frag = range.createContextualFragment(sanitized)
+        const lastNode = frag.lastChild
+        range.insertNode(frag)
+        if (lastNode) {
+          range.setStartAfter(lastNode)
+          range.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(range)
+        }
+      }
+      handleInput()
+      return
+    }
   }, [handleInput])
 
   // Handle clicking on images or links in the editor
@@ -177,7 +222,6 @@ const handleEditorClick = useCallback((e) => {
   }
 }, [])
 
-
   const execCmd = (cmd, val = null) => {
     document.execCommand(cmd, false, val)
     editorRef.current?.focus()
@@ -190,23 +234,27 @@ const handleEditorClick = useCallback((e) => {
     if (!sel.rangeCount) { setShowColors(false); return }
     const range = sel.getRangeAt(0)
     const selectedText = range.toString()
+
     if (!selectedText) {
       // No selection: just use foreColor for cursor-forward typing
       execCmd('foreColor', color)
       setShowColors(false)
       return
     }
+
     // Wrap selected text in a span with inline style (beats CSS specificity)
     range.deleteContents()
     const span = document.createElement('span')
     span.style.color = color
     span.textContent = selectedText
     range.insertNode(span)
+
     // Move cursor after the span
     range.setStartAfter(span)
     range.collapse(true)
     sel.removeAllRanges()
     sel.addRange(range)
+
     editorRef.current?.focus()
     handleInput()
     setShowColors(false)
@@ -236,6 +284,7 @@ const handleEditorClick = useCallback((e) => {
         </button>
         <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting" aria-label="Clear formatting">{"\u2718"}</button>
       </div>
+
       {showColors && (
         <div className="color-picker-row" style={{position:'relative',top:'auto',left:'auto'}}>
           {FONT_COLORS.map(({ color, label }) => (
@@ -251,35 +300,38 @@ const handleEditorClick = useCallback((e) => {
           ))}
         </div>
       )}
-<div
-  ref={editorRef}
-  className="rich-note-editor"
-  contentEditable
-  onInput={handleInput}
-  onPaste={handlePaste}
-  onClick={handleEditorClick}
-  data-placeholder={placeholder}
-  style={{ minHeight: height }}
-/>
-      
-<div
-  className="rich-note-resizer"
-  onMouseDown={(e) => {
-    e.preventDefault()
-    resizingRef.current = true
-    startYRef.current = e.clientY
-    startHeightRef.current = height
-  }}
-  onTouchStart={(e) => {
-    resizingRef.current = true
-    startYRef.current = e.touches[0].clientY
-    startHeightRef.current = height
-  }}
-/>
+
+      <div ref={editorRef}
+        className="rich-note-editor"
+        contentEditable
+        spellCheck={true}
+        autoCorrect="on"
+        autoCapitalize="sentences"
+        onInput={handleInput}
+        onPaste={handlePaste}
+        onClick={handleEditorClick}
+        data-placeholder={placeholder}
+        style={{ minHeight: height }}
+      />
+
+      <div className="rich-note-resizer"
+        onMouseDown={(e) => {
+          e.preventDefault()
+          resizingRef.current = true
+          startYRef.current = e.clientY
+          startHeightRef.current = height
+        }}
+        onTouchStart={(e) => {
+          resizingRef.current = true
+          startYRef.current = e.touches[0].clientY
+          startHeightRef.current = height
+        }}
+      />
 
       {isEmpty && (
         <div className="rich-note-placeholder">{placeholder}</div>
       )}
+
       {expandedImg && (
         <div className="image-modal" style={{ display: 'flex' }} onClick={() => setExpandedImg(null)}>
           <img src={expandedImg} alt="Expanded view" />

@@ -180,9 +180,12 @@ const [treasuresComments2, setTreasuresComments2] = useState('');
 
   const [notes, setNotes] = useState('')
   const [sundayChecks, setSundayChecks] = useState({})
-  const [sundayComments, setSundayComments] = useState(''); const [sundayComments2, setSundayComments2] = useState(''); const [sundayComments3, setSundayComments3] = useState('')
+    const [sundayComments, setSundayComments] = useState('')
+  const [sundayComments2, setSundayComments2] = useState('')
+  const [sundayComments3, setSundayComments3] = useState('')
   const [sundayArticle, setSundayArticle] = useState('')
-  const [journalText, setJournalText] = useState('')
+    const [journalText, setJournalText] = useState('')
+    const [todoJournalText, setTodoJournalText] = useState('')
   const [journalTasks, setJournalTasks] = useState({})
   const [journalNotes, setJournalNotes] = useState('')
   const [morningChecks, setMorningChecks] = useState({})
@@ -314,6 +317,7 @@ const loadJournal = useCallback(async () => {
     setEveningChecks(data.evening_checks || {})
     setMorningGoals(data.morning_goals || '')
     setEveningGoals(data.evening_goals || '')
+        setTodoJournalText(data.todo_journal_text || '')
   } else {
     if (!journalLoaded.current) {
       setJournalText('')
@@ -323,6 +327,7 @@ const loadJournal = useCallback(async () => {
       setEveningChecks({})
       setMorningGoals('')
       setEveningGoals('')
+            setTodoJournalText('')
     }
   }
 
@@ -339,7 +344,7 @@ const loadJournal = useCallback(async () => {
     setSyncStatus('Saving...')
     const { error } = await supabase.from('journal_entries').upsert({
       entry_date: journalDate, user_id: userId, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
+      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals, todo_journal_text: todoJournalText
     }, { onConflict: 'entry_date,user_id' })
     if (error) {
       setSyncStatus('Sync error')
@@ -347,7 +352,7 @@ const loadJournal = useCallback(async () => {
       return
     }
     setSyncStatus('Saved')
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
+  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, todoJournalText, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
     if (!userId) return
@@ -568,18 +573,40 @@ const loadJournal = useCallback(async () => {
               <button className="today-btn" onClick={dismissOnboarding}>Got it</button>
             </section>
           )}
+          
+        <section className="card greeting-card">
+          <h2 className="greeting-title">{getGreeting()}</h2>
+          <p className="greeting-date">{displayDate}</p>
+          <div className="progress-grid">
+            <div className="progress-item">
+              <ProgressRing progress={morningProgress} color="#fbbf24" />
+              <span className="progress-label">Morning</span>
+            </div>
+            <div className="progress-item">
+              <ProgressRing progress={eveningProgress} color="#818cf8" />
+              <span className="progress-label">Evening</span>
+            </div>
+          </div>
+        </section>
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <div className="day-nav">
               <button onClick={prevDay} className="day-nav-btn" aria-label="Previous day">{"\u25C0"}</button>
               <span className="routine-date">{displayDate}</span>
               <button onClick={nextDay} className="day-nav-btn" aria-label="Next day">{"\u25B6"}</button>
-              {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
+                        {isToday ? <span className="today-badge">Today</span> : <button onClick={goToday} className="today-btn">Today</button>}
             </div>
             <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
             <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
             {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
+          
+        <section className="card">
+          <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
+          <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Evening Reflection</h4>
+          <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="How did your day go? What are you grateful for?" />
+          {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+        </section>
           <section className="card daily-text-card">
             <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3> {dailyTextLoading ? (
               <p className="daily-text-loading">Loading today's daily text...</p>
@@ -887,7 +914,7 @@ const loadJournal = useCallback(async () => {
           className={`copy-btn ${
             copiedId === 'todoJournal' ? 'copied' : ''
           }`}
-          onClick={() => copyToClipboard(journalText, 'todoJournal')}
+          onClick={() => copyToClipboard(todoJournalText, 'todoJournal')}
           title="Copy journal"
           aria-label="Copy journal"
         >
@@ -895,9 +922,9 @@ const loadJournal = useCallback(async () => {
         </button>
       </h3>
       <RichNoteEditor
-        value={journalText}
-        onChange={setJournalText}
-        placeholder="Write your thoughts, reflections, and experiences..."
+        value={todoJournalText}
+        onChange={setTodoJournalText}
+        placeholder="Write your thoughts, End of day reflections, notes, and thoughts..."
         minHeight={200}
       />
     </section>
