@@ -1486,10 +1486,8 @@ body {
 
 /* Theme toggle button */
 .theme-toggle {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  background: rgba(255,255,255,0.1);
+    position: static;
+   background: rgba(255,255,255,0.1); 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.15);
@@ -1498,7 +1496,6 @@ body {
   height: 44px;
   font-size: 1.3rem;
   cursor: pointer;
-  z-index: 200;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
