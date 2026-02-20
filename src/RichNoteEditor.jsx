@@ -304,6 +304,9 @@ const handleEditorClick = useCallback((e) => {
       <div ref={editorRef}
         className="rich-note-editor"
         contentEditable
+                                spellCheck={true}
+                autoCorrect="on"
+                autoCapitalize="sentences"
         onInput={handleInput}
         onPaste={handlePaste}
         onClick={handleEditorClick}
