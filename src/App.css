@@ -2450,7 +2450,7 @@ textarea:focus,
 .sync-pill {
   position: fixed;
   top: 16px;
-  left: 16px;
+  left: 90px;
   z-index: 210;
   padding: 6px 10px;
   border-radius: 999px;
