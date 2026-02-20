@@ -215,7 +215,7 @@ const [encouragement, setEncouragement] = useState(null)
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem('eps-onboarding-dismissed') !== '1'
   })
-  const journalLoaded = useRef(false); const weekLoaded = useRef(false)
+  const journalLoaded = useRef(false); const weekLoaded = useRef(false); const todoJournalLoaded = useRef(false)
   const pushToast = useCallback((message, tone = 'error') => {
     const id = Date.now() + Math.random()
     setToasts(prev => [...prev, { id, message, tone }])
@@ -318,7 +318,7 @@ const loadJournal = useCallback(async () => {
     setEveningChecks(data.evening_checks || {})
     setMorningGoals(data.morning_goals || '')
     setEveningGoals(data.evening_goals || '')
-        setTodoJournalText(data.todo_journal_text || '')
+        
   } else {
     if (!journalLoaded.current) {
       setJournalText('')
@@ -328,7 +328,7 @@ const loadJournal = useCallback(async () => {
       setEveningChecks({})
       setMorningGoals('')
       setEveningGoals('')
-            setTodoJournalText('')
+            
     }
   }
 
@@ -345,7 +345,7 @@ const loadJournal = useCallback(async () => {
     setSyncStatus('Saving...')
     const { error } = await supabase.from('journal_entries').upsert({
       entry_date: journalDate, user_id: userId, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals, todo_journal_text: todoJournalText
+      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
     }, { onConflict: 'entry_date,user_id' })
     if (error) {
       setSyncStatus('Sync error')
@@ -353,8 +353,29 @@ const loadJournal = useCallback(async () => {
       return
     }
     pushToast('\u2713 Saved', 'ok')
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, todoJournalText, userId, isOnline, pushToast])
+  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
+    const loadTodoJournal = useCallback(async () => {
+    if (!userId) return
+    const todayDate = todayStr()
+    const { data } = await supabase.from('journal_entries').select('todo_journal_text').eq('entry_date', todayDate).eq('user_id', userId).maybeSingle()
+    if (data) { setTodoJournalText(data.todo_journal_text || '') } else { if (!todoJournalLoaded.current) setTodoJournalText('') }
+    todoJournalLoaded.current = true
+  }, [userId])
+  useEffect(() => { todoJournalLoaded.current = false; loadTodoJournal() }, [loadTodoJournal])
+    const saveTodoJournal = useCallback(async () => {
+    if (!userId) return
+    if (!todoJournalLoaded.current) return
+    if (!isOnline) return
+    const todayDate = todayStr()
+    const { data: existing } = await supabase.from('journal_entries').select('entry_date').eq('entry_date', todayDate).eq('user_id', userId).maybeSingle()
+    if (existing) {
+      await supabase.from('journal_entries').update({ todo_journal_text: todoJournalText }).eq('entry_date', todayDate).eq('user_id', userId)
+    } else {
+      await supabase.from('journal_entries').upsert({ entry_date: todayDate, user_id: userId, todo_journal_text: todoJournalText }, { onConflict: 'entry_date,user_id' })
+    }
+  }, [todoJournalText, userId, isOnline])
+  useEffect(() => { const t = setTimeout(saveTodoJournal, 800); return () => clearTimeout(t) }, [saveTodoJournal])
   const loadTodos = useCallback(async () => {
     if (!userId) return
     const { data, error } = await supabase.from('todo_items').select('*').eq('user_id', userId).order('created_at', { ascending: true })
