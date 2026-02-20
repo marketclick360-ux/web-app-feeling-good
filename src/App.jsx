@@ -570,13 +570,28 @@ const loadJournal = useCallback(async () => {
               <button className="today-btn" onClick={dismissOnboarding}>Got it</button>
             </section>
           )}
+          
+        <section className="card greeting-card">
+          <h2 className="greeting-title">{getGreeting()}</h2>
+          <p className="greeting-date">{displayDate}</p>
+          <div className="progress-grid">
+            <div className="progress-item">
+              <ProgressRing progress={morningProgress} color="#fbbf24" />
+              <span className="progress-label">Morning</span>
+            </div>
+            <div className="progress-item">
+              <ProgressRing progress={eveningProgress} color="#818cf8" />
+              <span className="progress-label">Evening</span>
+            </div>
+          </div>
+        </section>
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <div className="day-nav">
               <button onClick={prevDay} className="day-nav-btn" aria-label="Previous day">{"\u25C0"}</button>
               <span className="routine-date">{displayDate}</span>
               <button onClick={nextDay} className="day-nav-btn" aria-label="Next day">{"\u25B6"}</button>
-              {!isToday && <button onClick={goToday} className="today-btn">Today</button>}
+                        {isToday ? <span className="today-badge">Today</span> : <button onClick={goToday} className="today-btn">Today</button>}
             </div>
             <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
             <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
