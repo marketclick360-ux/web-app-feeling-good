@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabaseClient'
-
 const COOLDOWN_SECONDS = 60
-
 export default function AuthGate({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -22,7 +20,6 @@ export default function AuthGate({ children }) {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (data.session) {
-        // Validate the session is still good server-side
         const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession()
         if (refreshErr || !refreshed.session) {
           console.warn('Session expired, clearing stale session')
@@ -38,7 +35,6 @@ export default function AuthGate({ children }) {
     })
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'TOKEN_REFRESHED' && !session) {
-        // Token refresh failed - session is dead
         console.warn('Token refresh failed, signing out')
         setSession(null)
       } else if (event === 'SIGNED_OUT') {
@@ -165,17 +161,15 @@ export default function AuthGate({ children }) {
 
   if (session) return (
     <>
-      <button className="sign-out-btn" onClick={handleSignOut}>Sign Out</button>
       {React.Children.map(children, child =>
-        React.cloneElement(child, { userId: session.user.id }))}
+        React.cloneElement(child, { userId: session.user.id, onSignOut: handleSignOut }))}
     </>
   )
 
   if (guestMode && !showLogin) return (
     <>
-      <button className="sign-out-btn" onClick={() => setShowLogin(true)}>Sign In</button>
       {React.Children.map(children, child =>
-        React.cloneElement(child, { userId: null }))}
+        React.cloneElement(child, { userId: null, onSignOut: null, onSignIn: () => setShowLogin(true) }))}
     </>
   )
 
@@ -185,7 +179,7 @@ export default function AuthGate({ children }) {
         <h1 className="auth-title">Eat Pray Study</h1>
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
         <h2 className="auth-heading">Welcome Back</h2>
-        <p className="auth-text">Enter your email to sign in. New here? Same button &mdash; we'll create your account automatically.</p>
+        <p className="auth-text">Enter your email to sign in. New here? Same button \u2014 we'll create your account automatically.</p>
         <form onSubmit={handleSendCode}>
           <input
             type="email"
@@ -203,7 +197,7 @@ export default function AuthGate({ children }) {
             {sending ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Send Code'}
           </button>
         </form>
-        <p className="auth-hint">We'll email you a secure code &mdash; no password needed. You stay signed in until you sign out.</p>
+        <p className="auth-hint">We'll email you a secure code \u2014 no password needed. You stay signed in until you sign out.</p>
         <button className="guest-btn" onClick={() => { setGuestMode(true); setShowLogin(false) }}>
           Continue as Guest
         </button>
@@ -244,7 +238,7 @@ export default function AuthGate({ children }) {
         <button className="guest-btn" onClick={handleResendCode} disabled={cooldown > 0} style={{ marginBottom: '8px' }}>
           {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend Code'}
         </button>
-        <button className="guest-btn" onClick={handleBackToEmail}>&larr; Use a different email</button>
+        <button className="guest-btn" onClick={handleBackToEmail}>\u2190 Use a different email</button>
       </div>
     </div>
   )
