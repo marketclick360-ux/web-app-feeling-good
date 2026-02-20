@@ -2807,3 +2807,182 @@ button:active {
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
+/* ===== NEW: Top Bar ===== */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(10, 10, 26, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.back-btn {
+  background: none;
+  border: none;
+  color: #818cf8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.back-btn:hover {
+  background: rgba(129,140,248,0.1);
+}
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-left: 8px;
+}
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.settings-menu-wrap {
+  position: relative;
+}
+.settings-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.settings-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+.settings-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 150px;
+  background: #1e1e3a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 6px 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 200;
+}
+.settings-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #e2e8f0;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.settings-dropdown button:hover {
+  background: rgba(129,140,248,0.15);
+}
+
+/* ===== NEW: Home View (Section Cards) ===== */
+.home-view {
+  padding: 0 16px 32px;
+  animation: fadeIn 0.3s ease;
+}
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+.home-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 32px 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.home-card:hover {
+  transform: translateY(-2px);
+  background: rgba(129,140,248,0.08);
+  box-shadow: 0 8px 24px rgba(129,140,248,0.12);
+}
+.home-card:active {
+  transform: scale(0.97);
+}
+.home-card-icon {
+  font-size: 2.5rem;
+}
+.home-card-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+/* ===== NEW: Toast OK Style ===== */
+.toast.ok {
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #4ade80;
+}
+
+/* ===== Hide old sign-out-btn (now in settings) ===== */
+.sign-out-btn {
+  display: none;
+}
+
+/* ===== Fade In Animation ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Light theme overrides for new components ===== */
+.light-theme .top-bar {
+  background: rgba(255,255,255,0.85);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.light-theme .back-btn {
+  color: #5b6abf;
+}
+.light-theme .section-title {
+  color: #1e293b;
+}
+.light-theme .settings-dropdown {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.light-theme .settings-dropdown button {
+  color: #1e293b;
+}
+.light-theme .settings-dropdown button:hover {
+  background: rgba(91,106,191,0.1);
+}
+.light-theme .home-card {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.08);
+}
+.light-theme .home-card:hover {
+  background: rgba(91,106,191,0.06);
+}
+.light-theme .home-card-name {
+  color: #1e293b;
+}
+.light-theme .toast.ok {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.3);
+  color: #16a34a;
+}
