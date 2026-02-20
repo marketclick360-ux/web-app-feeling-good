@@ -582,6 +582,13 @@ const loadJournal = useCallback(async () => {
             <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
             {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
           </section>
+          
+        <section className="card">
+          <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
+          <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Evening Reflection</h4>
+          <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="How did your day go? What are you grateful for?" />
+          {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+        </section>
           <section className="card daily-text-card">
             <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3> {dailyTextLoading ? (
               <p className="daily-text-loading">Loading today's daily text...</p>
