@@ -182,7 +182,7 @@ const [treasuresComments2, setTreasuresComments2] = useState('');
   const [sundayChecks, setSundayChecks] = useState({})
   const [sundayComments, setSundayComments] = useState(''); const [sundayComments2, setSundayComments2] = useState(''); const [sundayComments3, setSundayComments3] = useState('')
   const [sundayArticle, setSundayArticle] = useState('')
-  const [journalText, setJournalText] = useState('')
+  const [journalText, setJournalText] = useState('')   const [todoJournalText, setTodoJournalText] = useState('')
   const [journalTasks, setJournalTasks] = useState({})
   const [journalNotes, setJournalNotes] = useState('')
   const [morningChecks, setMorningChecks] = useState({})
@@ -314,6 +314,7 @@ const loadJournal = useCallback(async () => {
     setEveningChecks(data.evening_checks || {})
     setMorningGoals(data.morning_goals || '')
     setEveningGoals(data.evening_goals || '')
+        setTodoJournalText(data.todo_journal_text || '')
   } else {
     if (!journalLoaded.current) {
       setJournalText('')
@@ -323,6 +324,7 @@ const loadJournal = useCallback(async () => {
       setEveningChecks({})
       setMorningGoals('')
       setEveningGoals('')
+            setTodoJournalText('')
     }
   }
 
@@ -339,7 +341,7 @@ const loadJournal = useCallback(async () => {
     setSyncStatus('Saving...')
     const { error } = await supabase.from('journal_entries').upsert({
       entry_date: journalDate, user_id: userId, journal_text: journalText, tasks: journalTasks, notes: journalNotes,
-      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals
+      morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals, todo_journal_text: todoJournalText
     }, { onConflict: 'entry_date,user_id' })
     if (error) {
       setSyncStatus('Sync error')
@@ -347,7 +349,7 @@ const loadJournal = useCallback(async () => {
       return
     }
     setSyncStatus('Saved')
-  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
+  }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, todoJournalText, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
   const loadTodos = useCallback(async () => {
     if (!userId) return
@@ -887,7 +889,7 @@ const loadJournal = useCallback(async () => {
           className={`copy-btn ${
             copiedId === 'todoJournal' ? 'copied' : ''
           }`}
-          onClick={() => copyToClipboard(journalText, 'todoJournal')}
+          onClick={() => copyToClipboard(todoJournalText, 'todoJournal')}
           title="Copy journal"
           aria-label="Copy journal"
         >
@@ -895,9 +897,9 @@ const loadJournal = useCallback(async () => {
         </button>
       </h3>
       <RichNoteEditor
-        value={journalText}
-        onChange={setJournalText}
-        placeholder="Write your thoughts, reflections, and experiences..."
+        value={todoJournalText}
+        onChange={setTodoJournalText}
+        placeholder="Write your thoughts, End of day reflections, notes, and thoughts..."
         minHeight={200}
       />
     </section>
