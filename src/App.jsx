@@ -208,7 +208,7 @@ const [encouragement, setEncouragement] = useState(null)
     const [editingTodoId, setEditingTodoId] = useState(null)
   const [editingTodoText, setEditingTodoText] = useState('')
   const [syncStatus, setSyncStatus] = useState('Saved')
-      const [showMenu, setShowMenu] = useState(false)   const settingsRef = useRef(null)   useEffect(() => { const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowMenu(false) }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler) }, [])
+      const [showMenu, setShowMenu] = useState(false); const settingsRef = useRef(null); useEffect(() => { const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowMenu(false) }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler) }, [])
   const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
