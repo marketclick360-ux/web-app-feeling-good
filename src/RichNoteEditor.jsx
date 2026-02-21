@@ -319,23 +319,23 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
 
   return (
     <div className="rich-note-editor">
-      <div className="rne-toolbar">
+              <div className="rich-note-toolbar">
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('bold')} title="Bold" aria-label="Bold">B</button>
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('italic')} title="Italic" aria-label="Italic"><em>I</em></button>
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('underline')} title="Underline" aria-label="Underline">U</button>
-        <span className="rne-sep" />
+        <span className="rne-toolbar-sep" />
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list" aria-label="Bullet list">{"\u2022"}</button>
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list" aria-label="Numbered list">1.</button>
-        <span className="rne-sep" />
+        <span className="rne-toolbar-sep" />
         <button onMouseDown={e => e.preventDefault()} onClick={() => setShowColors(!showColors)} title="Font color" aria-label="Choose text color"
         >A</button>
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting" aria-label="Clear formatting">{"\u2718"}</button>
       </div>
 
       {showColors && (
-        <div className="rne-color-row">
+        <div className="color-picker-row">
           {FONT_COLORS.map(({ color, label }) => (
-            <button key={color} className="rne-color-dot" style={{ background: color }} onMouseDown={e => e.preventDefault()} onClick={() => applyColor(color)} title={label} />
+            <button key={color} className="color-swatch" style={{ background: color }} onMouseDown={e => e.preventDefault()} onClick={() => applyColor(color)} title={label} />
           ))}
         </div>
       )}
@@ -354,7 +354,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         aria-label={placeholder}
       />
       <div
-        className="rne-resize"
+        className="rich-note-resizer"
         onMouseDown={(e) => {
           e.preventDefault()
           resizingRef.current = true
@@ -368,12 +368,12 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         }}
       />
       {isEmpty && (
-        <div className="rne-placeholder">
+        <div className="rich-note-placeholder">
           {placeholder}
         </div>
       )}
       {expandedImg && (
-        <div className="rne-lightbox" onClick={() => setExpandedImg(null)}>
+        <div className="image-modal" onClick={() => setExpandedImg(null)}>
           <img src={expandedImg} alt="Expanded view" />
         </div>
       )}
