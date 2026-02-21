@@ -63,13 +63,55 @@ useEffect(() => {
   }
 }, [minHeight])
 
+
+  // Auto-capitalize after sentence-ending punctuation (. ? !) + space
+  const autoCapitalize = useCallback(() => {
+    const sel = window.getSelection()
+    if (!sel.rangeCount) return
+    const range = sel.getRangeAt(0)
+    if (!range.collapsed) return
+    const node = range.startContainer
+    if (node.nodeType !== Node.TEXT_NODE) return
+    const offset = range.startOffset
+    const text = node.textContent
+    if (offset < 1) return
+    const ch = text[offset - 1]
+    // Only act on lowercase letters
+    if (ch < 'a' || ch > 'z') return
+    // Capitalize first character of the entire editor
+    const editorText = editorRef.current?.textContent || ''
+    const trimmed = editorText.replace(/^\s+/, '')
+    if (trimmed.length === 1 && trimmed[0] === ch) {
+      node.textContent = text.slice(0, offset - 1) + ch.toUpperCase() + text.slice(offset)
+      range.setStart(node, offset)
+      range.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(range)
+      return
+    }
+    // Capitalize after sentence punctuation: ". ", "? ", "! " followed by the letter
+    if (offset >= 2) {
+      const prev = text[offset - 2]
+      if (prev === ' ') {
+        // Look further back for punctuation
+        const before = text.substring(0, offset - 2).replace(/\s+$/, '')
+        if (before.length > 0 && '.?!'.includes(before[before.length - 1])) {
+          node.textContent = text.slice(0, offset - 1) + ch.toUpperCase() + text.slice(offset)
+          range.setStart(node, offset)
+          range.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(range)
+        }
+      }
+    }
+  }, [])
 const handleInput = useCallback(() => {
   const el = editorRef.current
   if (!el) return
   isInternalChange.current = true
+      autoCapitalize()
   onChange(el.innerHTML)
-}, [onChange])
-
+  }, [onChange, autoCapitalize])
   const handlePaste = useCallback((e) => {
     const items = e.clipboardData?.items
 
