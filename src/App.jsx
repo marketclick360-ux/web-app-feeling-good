@@ -680,16 +680,6 @@ const loadJournal = useCallback(async () => {
                                       )}
         </section>
 
-          <section className="card">
-            <h3 className="section-heading morning-heading" onClick={() => setShowJournal(!showJournal)} style={{cursor:'pointer'}}>
-              {showJournal ? '\u25BC' : '\u25B6'} {"\u270d\ufe0f"} Morning Journal
-              <button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={(e) => { e.stopPropagation(); copyToClipboard(journalText, 'morningJournal') }} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button>
-            </h3>
-            {showJournal && (
-              <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
-            )}
-          </section>
-
                 <section className="card">
           <h3 className="section-heading evening-heading" onClick={() => setShowEvening(!showEvening)} style={{cursor:'pointer'}}>
             {showEvening ? '\u25BC' : '\u25B6'} {"\ud83c\udf19"} Evening Routine
