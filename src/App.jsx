@@ -675,12 +675,10 @@ const loadJournal = useCallback(async () => {
             <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
             <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
             {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
-                          </>
-                                        )}
-          </section>
-<section className="card">
           <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
           <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
+                        </>
+                                      )}
         </section>
 
                 <section className="card">
