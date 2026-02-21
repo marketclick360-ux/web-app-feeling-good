@@ -511,7 +511,6 @@ const loadJournal = useCallback(async () => {
       })
     return () => { alive = false }
   }, [pushToast])
-    useEffect(() => { const h = (e) => { const a = e.target.closest('a[href]'); if (!a) return; const hr = a.getAttribute('href'); if (hr && (hr.startsWith('http://') || hr.startsWith('https://')) && !hr.includes(window.location.hostname)) { e.preventDefault(); window.open(hr, '_blank', 'noopener,noreferrer'); } }; document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, [])
   useEffect(() => {
     const isLight = colorMode === 'light-theme'
     document.body.classList.toggle('light-theme', isLight)
