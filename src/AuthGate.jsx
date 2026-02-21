@@ -83,9 +83,12 @@ export default function AuthGate({ children }) {
       if (error.message.toLowerCase().includes('rate') || error.status === 429) {
         setError('Too many requests. Please wait a moment before trying again.')
         startCooldown()
-      } else {
-        setError(error.message)
-      }
+      } else if (error.message.toLowerCase().includes('sending') || error.message.toLowerCase().includes('confirmation')) {
+          setError('Could not send code right now. Please try again in a minute, or check your email address.')
+          startCooldown()
+        } else {
+          setError(error.message)
+        }
     } else {
       setMessage('Code sent! Check your email.')
       setStep('otp')
@@ -179,7 +182,7 @@ export default function AuthGate({ children }) {
         <h1 className="auth-title">Eat Pray Study</h1>
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
         <h2 className="auth-heading">Welcome Back</h2>
-        <p className="auth-text">Enter your email to sign in. New here? Same button \u2014 we'll create your account automatically.</p>
+        <p className="auth-text">Enter your email to sign in. New here? Same button — we'll create your account automatically.</p>
         <form onSubmit={handleSendCode}>
           <input
             type="email"
@@ -197,7 +200,7 @@ export default function AuthGate({ children }) {
             {sending ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Send Code'}
           </button>
         </form>
-        <p className="auth-hint">We'll email you a secure code \u2014 no password needed. You stay signed in until you sign out.</p>
+        <p className="auth-hint">We'll email you a secure code — no password needed. You stay signed in until you sign out.</p>
         <button className="guest-btn" onClick={() => { setGuestMode(true); setShowLogin(false) }}>
           Continue as Guest
         </button>
@@ -238,7 +241,7 @@ export default function AuthGate({ children }) {
         <button className="guest-btn" onClick={handleResendCode} disabled={cooldown > 0} style={{ marginBottom: '8px' }}>
           {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend Code'}
         </button>
-        <button className="guest-btn" onClick={handleBackToEmail}>\u2190 Use a different email</button>
+        <button className="guest-btn" onClick={handleBackToEmail}>← Use a different email</button>
       </div>
     </div>
   )
