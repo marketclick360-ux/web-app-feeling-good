@@ -75,7 +75,7 @@ export default function AuthGate({ children }) {
     setMessage('')
     setSending(true)
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim(),
       options: { shouldCreateUser: true }
     })
     setSending(false)
@@ -100,7 +100,7 @@ export default function AuthGate({ children }) {
     setMessage('')
     setVerifying(true)
     const { error } = await supabase.auth.verifyOtp({
-      email,
+            email: email.trim(),
       token: otpToken,
       type: 'email'
     })
@@ -122,7 +122,7 @@ export default function AuthGate({ children }) {
     setMessage('')
     setSending(true)
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim(),
       options: { shouldCreateUser: true }
     })
     setSending(false)
