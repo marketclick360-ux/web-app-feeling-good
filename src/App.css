@@ -2291,6 +2291,15 @@ textarea:focus,
 }
 
 
+.rne-toolbar-sep {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: rgba(255,255,255,0.15);
+  vertical-align: middle;
+}
+
 /* ========================================
    iPad/iOS Safari Glass Effect Fixes
    ======================================== */
@@ -2982,4 +2991,15 @@ button:active {
   background: rgba(34,197,94,0.1);
   border-color: rgba(34,197,94,0.3);
   color: #16a34a;
+}
+
+/* Light theme: hide ambient background blobs */
+.light-theme body::before,
+.light-theme body::after {
+  opacity: 0;
+}
+
+/* Light theme: toolbar separator */
+.light-theme .rne-toolbar-sep {
+  background: rgba(0,0,0,0.12);
 }
