@@ -209,7 +209,8 @@ const [encouragement, setEncouragement] = useState(null)
   const [editingTodoText, setEditingTodoText] = useState('')
   const [syncStatus, setSyncStatus] = useState('Saved')
       const [showMenu, setShowMenu] = useState(false); const settingsRef = useRef(null); useEffect(() => { const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowMenu(false) }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler) }, [])
-  const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
+    const [showEvening, setShowEvening] = useState(false)
+        const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -623,37 +624,8 @@ const loadJournal = useCallback(async () => {
         <section className="card greeting-card">
           <h2 className="greeting-title">{getGreeting()}</h2>
           <p className="greeting-date">{displayDate}</p>
-          <div className="progress-grid">
-            <div className="progress-item">
-              <ProgressRing progress={morningProgress} color="#fbbf24" />
-              <span className="progress-label">Morning</span>
-            </div>
-            <div className="progress-item">
-              <ProgressRing progress={eveningProgress} color="#818cf8" />
-              <span className="progress-label">Evening</span>
-            </div>
-          </div>
         </section>
-          <section className="card">
-            <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
-            <div className="day-nav">
-              <button onClick={prevDay} className="day-nav-btn" aria-label="Previous day">{"\u25C0"}</button>
-              <span className="routine-date">{displayDate}</span>
-              <button onClick={nextDay} className="day-nav-btn" aria-label="Next day">{"\u25B6"}</button>
-                        {isToday ? <span className="today-badge">Today</span> : <button onClick={goToday} className="today-btn">Today</button>}
-            </div>
-            <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
-            <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
-            {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
-          </section>
-          
-        <section className="card">
-          <h3 className="section-heading evening-heading">{"\ud83c\udf19"} Evening Routine</h3>
-          <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Evening Reflection</h4>
-          <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="How did your day go? What are you grateful for?" />
-          {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
-        </section>
-          <section className="card daily-text-card">
+                    <section className="card daily-text-card">
             <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3> {dailyTextLoading ? (
               <p className="daily-text-loading">Loading today's daily text...</p>
             ) : dailyText && (dailyText.dateLabel || dailyText.wolUrl || dailyText.scripture || dailyText.comment || dailyText.note) ? (
@@ -671,12 +643,20 @@ const loadJournal = useCallback(async () => {
               </div>
             )}
           </section>
-                  <section className="card">
-          <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
-          <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
-        </section>
+<section className="card">
+            <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
+            <div className="day-nav">
+              <button onClick={prevDay} className="day-nav-btn" aria-label="Previous day">{"\u25C0"}</button>
+              <span className="routine-date">{displayDate}</span>
+              <button onClick={nextDay} className="day-nav-btn" aria-label="Next day">{"\u25B6"}</button>
+                        {isToday ? <span className="today-badge">Today</span> : <button onClick={goToday} className="today-btn">Today</button>}
+            </div>
+            <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
+            <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
+            {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+          </section>
           
-<section className="card encouragement-card">
+                  <section className="card encouragement-card">
   <h3 className="section-heading">{"\u2728"} Encouragement</h3>
   {encouragement ? (
     <>
@@ -691,6 +671,24 @@ const loadJournal = useCallback(async () => {
     </>
   )}
 </section>
+<section className="card">
+          <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
+          <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
+        </section>
+
+                <section className="card">
+          <h3 className="section-heading evening-heading" onClick={() => setShowEvening(!showEvening)} style={{cursor:'pointer'}}>
+            {showEvening ? '\u25BC' : '\u25B6'} {"\ud83c\udf19"} Evening Routine
+          </h3>
+          {showEvening && (
+            <>
+              <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Evening Reflection</h4>
+              <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="How did your day go? What are you grateful for?" />
+              {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+            </>
+          )}
+        </section>
+          
 
           <section className="card">
             <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83d\udd17"} Quick Links</h3>
