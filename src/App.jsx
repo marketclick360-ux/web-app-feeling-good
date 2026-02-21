@@ -211,6 +211,7 @@ const [encouragement, setEncouragement] = useState(null)
       const [showMenu, setShowMenu] = useState(false); const settingsRef = useRef(null); useEffect(() => { const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowMenu(false) }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler) }, [])
     const [showEvening, setShowEvening] = useState(false)
         const [showMorning, setShowMorning] = useState(false)
+          const [showJournal, setShowJournal] = useState(false)
         const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -645,6 +646,21 @@ const loadJournal = useCallback(async () => {
             )}
           </section>
           
+                  <section className="card encouragement-card">
+  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
+  {encouragement ? (
+    <>
+      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
+      <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
+      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
+    </>
+  ) : (
+    <>
+      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
+      <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
+    </>
+  )}
+</section>
 <section className="card">
                 <h3 className="section-heading morning-heading" onClick={() => setShowMorning(!showMorning)} style={{cursor:'pointer'}}>
                                   {showMorning ? '\u25BC' : '\u25B6'} {"\u2600\ufe0f"} Morning Routine
@@ -663,25 +679,15 @@ const loadJournal = useCallback(async () => {
                         </>
                                       )}
         </section>
-                  <section className="card encouragement-card">
-  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
-  {encouragement ? (
-    <>
-      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
-      <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
-      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
-    </>
-  ) : (
-    <>
-      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
-      <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
-    </>
-  )}
-</section>
 
           <section className="card">
-            <h3 className="section-heading morning-heading">{"\u270d\ufe0f"} Morning Journal<button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={() => copyToClipboard(journalText, 'morningJournal')} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button></h3>
-            <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
+            <h3 className="section-heading morning-heading" onClick={() => setShowJournal(!showJournal)} style={{cursor:'pointer'}}>
+              {showJournal ? '\u25BC' : '\u25B6'} {"\u270d\ufe0f"} Morning Journal
+              <button className={`copy-btn ${copiedId === 'morningJournal' ? 'copied' : ''}`} onClick={(e) => { e.stopPropagation(); copyToClipboard(journalText, 'morningJournal') }} title="Copy journal" aria-label="Copy journal">{copiedId === 'morningJournal' ? '\u2705' : '\ud83d\udccb'}</button>
+            </h3>
+            {showJournal && (
+              <RichNoteEditor value={journalText} onChange={setJournalText} placeholder="Write your thoughts, reflections, and spiritual experiences..." minHeight={200} />
+            )}
           </section>
 
                 <section className="card">
