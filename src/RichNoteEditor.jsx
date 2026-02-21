@@ -62,49 +62,52 @@ useEffect(() => {
     window.removeEventListener('touchend', onUp)
   }
 }, [minHeight])
-
-
   // Auto-capitalize after sentence-ending punctuation (. ? !) + space
   const autoCapitalize = useCallback(() => {
     const sel = window.getSelection()
-    if (!sel.rangeCount) return
+    if (!sel || !sel.rangeCount) return
     const range = sel.getRangeAt(0)
     if (!range.collapsed) return
     const node = range.startContainer
     if (node.nodeType !== Node.TEXT_NODE) return
-    const offset = range.startOffset
-    const text = node.textContent
-    if (offset < 1) return
-    const ch = text[offset - 1]
-    // Only act on lowercase letters
+    const off = range.startOffset
+    const txt = node.textContent
+    if (off < 1) return
+    const ch = txt[off - 1]
     if (ch < 'a' || ch > 'z') return
-    // Capitalize first character of the entire editor
-    const editorText = editorRef.current?.textContent || ''
-    const trimmed = editorText.replace(/^\s+/, '')
-    if (trimmed.length === 1 && trimmed[0] === ch) {
-      node.textContent = text.slice(0, offset - 1) + ch.toUpperCase() + text.slice(offset)
-      range.setStart(node, offset)
-      range.collapse(true)
-      sel.removeAllRanges()
-      sel.addRange(range)
-      return
+    const upper = ch.toUpperCase()
+    // Check: is this the very first letter in the editor?
+    const full = editorRef.current?.textContent || ''
+    const firstLetterIdx = full.search(/[a-zA-Z]/)
+    if (firstLetterIdx >= 0 && full[firstLetterIdx] === ch) {
+      const beforeFirst = full.substring(0, firstLetterIdx)
+      if (!/[a-zA-Z]/.test(beforeFirst)) {
+        node.textContent = txt.slice(0, off - 1) + upper + txt.slice(off)
+        const r2 = document.createRange()
+        r2.setStart(node, off)
+        r2.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(r2)
+        return
+      }
     }
-    // Capitalize after sentence punctuation: ". ", "? ", "! " followed by the letter
-    if (offset >= 2) {
-      const prev = text[offset - 2]
-      if (prev === ' ') {
-        // Look further back for punctuation
-        const before = text.substring(0, offset - 2).replace(/\s+$/, '')
-        if (before.length > 0 && '.?!'.includes(before[before.length - 1])) {
-          node.textContent = text.slice(0, offset - 1) + ch.toUpperCase() + text.slice(offset)
-          range.setStart(node, offset)
-          range.collapse(true)
-          sel.removeAllRanges()
-          sel.addRange(range)
-        }
+    // Check: letter right after ". " or "? " or "! "
+    if (off >= 2 && txt[off - 2] === ' ') {
+      const leftPart = txt.substring(0, off - 2)
+      const trimmed = leftPart.trimEnd()
+
+      if (trimmed.length > 0 && '.?!'.includes(trimmed[trimmed.length - 1])) {
+        node.textContent = txt.slice(0, off - 1) + upper + txt.slice(off)
+        const r2 = document.createRange()
+        r2.setStart(node, off)
+        r2.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(r2)
       }
     }
   }, [])
+
+
 const handleInput = useCallback(() => {
   const el = editorRef.current
   if (!el) return
