@@ -637,7 +637,7 @@ const loadJournal = useCallback(async () => {
         </section>
                     <section className="card daily-spiritual-food-card">
             <h3 className="section-heading morning-heading" onClick={() => setShowSpiritualFood(!showSpiritualFood)} style={{cursor:'pointer'}}>{showSpiritualFood ? '\u25BC' : '\u25B6'} {t('dailySpiritualFood')}</h3>
-            {showSpiritualFood && (<></>
+            {showSpiritualFood && (<>
                         {dailyTextLoading ? (
 <p className="daily-text-loading">{t('loadingDailyText')}</p>
             ) : dailyText && (dailyText.dateLabel || dailyText.wolUrl || dailyText.scripture || dailyText.comment || dailyText.note) ? (
