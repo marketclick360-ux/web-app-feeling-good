@@ -219,6 +219,7 @@ const [encouragement, setEncouragement] = useState(null)
     const [showEvening, setShowEvening] = useState(false)
         const [showMorning, setShowMorning] = useState(false)
           const [showJournal, setShowJournal] = useState(false)
+            const [showSpiritualFood, setShowSpiritualFood] = useState(false)
         const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -635,8 +636,9 @@ const loadJournal = useCallback(async () => {
           <p className="greeting-date">{displayDate}</p>
         </section>
                     <section className="card daily-spiritual-food-card">
-            <h3 className="section-heading morning-heading">{t('dailySpiritualFood')}</h3> {dailyTextLoading ? (
-              <p className="daily-text-loading">{t('loadingDailyText')}</p>
+            <h3 className="section-heading morning-heading" onClick={() => setShowSpiritualFood(!showSpiritualFood)} style={{cursor:'pointer'}}>{showSpiritualFood ? '\u25BC' : '\u25B6'} {t('dailySpiritualFood')}</h3> {dailyTextLoading ? (
+            {showSpiritualFood && (<></>
+<p className="daily-text-loading">{t('loadingDailyText')}</p>
             ) : dailyText && (dailyText.dateLabel || dailyText.wolUrl || dailyText.scripture || dailyText.comment || dailyText.note) ? (
               <div className="daily-text-content">
                 <p className="daily-text-date">{dailyText.dateLabel}</p>
@@ -664,6 +666,7 @@ const loadJournal = useCallback(async () => {
       <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
     </>
   )}
+            </>)}
 </section>
 <section className="card">
                 <h3 className="section-heading morning-heading" onClick={() => setShowMorning(!showMorning)} style={{cursor:'pointer'}}>
