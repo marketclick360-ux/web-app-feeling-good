@@ -251,7 +251,7 @@ const translations = {
         originalSongs: '\ud83c\udfb5 Canciones Originales',
         // Encouragement
         encouragement: '\u2728 \u00c1nimo',
-        readOnJwOrg: 'Leer en JW.org \u2192',
+        readOnJwOrg: 'Leer en JW.org',
         // Midweek prep
         midweekMeeting: 'Reuni\u00f3n de entre semana',
         viewWorkbook: '\ud83d\udcd6 Ver el Libro de Actividades en JW.org',
@@ -276,7 +276,7 @@ const translations = {
         // Daily text
         dailyTextTitle: '\ud83d\udcc3 Texto Diario',
         loadingDailyText: 'Cargando el texto diario de hoy...',
-        readFullDailyText: 'Leer Texto Diario Completo \u2192',
+        readFullDailyText: 'Leer Texto Diario Completo',
         couldNotLoadDailyText: 'No se pudo cargar el texto diario.',
         viewDailyTextJwOrg: 'Ver Texto Diario en JW.org',
         // Morning Journal
@@ -285,7 +285,20 @@ const translations = {
         // Footer
         footerText: 'Eat Pray Study',
         // Locale
-        dateLocale: 'es',
+                dateLocale: 'es',
+                        // Missing keys aligned to App.jsx t() calls
+        dailyText: 'Texto Diario',
+        treasuresLabel: '\ud83d\udc8e TESOROS DE LA PALABRA DE DIOS',
+        livingLabel: '\ud83d\udc9a NUESTRA VIDA CRISTIANA',
+        bibleReadingNotes: 'Mis Notas de Lectura B\u00edblica y Perlas Espirituales',
+        bibleReadingNotes2: 'Mis Notas de Lectura B\u00edblica y Perlas Espirituales (2)',
+        defaultEncouragement: 'Conf\u00eda en Jehov\u00e1 con todo tu coraz\u00f3n, y no te apoyes en tu propio entendimiento.',
+        addTaskPlaceholder: 'A\u00f1adir una nueva tarea...',
+        noTasks: 'No hay tareas a\u00fan. \u00a1A\u00f1ade una arriba!',
+        allCompleted: '\u00a1Todas las tareas completadas!',
+        noCompleted: 'No hay tareas completadas.',
+        completed: 'completadas',
+        appTitle: 'Eat Pray Study',
     },
 };
 
