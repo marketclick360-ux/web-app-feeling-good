@@ -856,6 +856,9 @@ textarea:focus {
   margin-top: 12px;
 }
 .rich-note-toolbar {
+  position: sticky;
+  top: 48px;
+  z-index: 10;
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
@@ -888,9 +891,6 @@ textarea:focus {
   border-color: rgba(129,140,248,0.3);
 }
 .rich-note-editor {
-  min-height: 150px;
-  max-height: 400px;
-  overflow-y: auto;
   padding: 14px;
   background: rgba(255,255,255,0.04);
   backdrop-filter: blur(12px);
@@ -904,6 +904,12 @@ textarea:focus {
   position: relative;
 }
 
+
+.rne-content {
+  min-height: 150px;
+  max-height: 400px;
+  overflow-y: auto;
+}
 /* Fix for pasted text color in dark mode — allow font color picks */
   .rich-note-editor *:not(font):not([style*="color"]) {
     color: inherit;
@@ -1080,6 +1086,7 @@ body {
 /* -- Print Styles -- */
 @media print {
   .rich-note-editor { max-height: none !important; overflow: visible !important; height: auto !important; }
+    .rne-content { max-height: none !important; overflow: visible !important; height: auto !important; }
   .rich-note-editor img { max-height: none !important; page-break-inside: avoid; }
   .rich-note-toolbar { display: none !important; }
   .image-modal { display: none !important; }
