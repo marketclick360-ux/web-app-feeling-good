@@ -327,19 +327,19 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list" aria-label="Bullet list">{"\u2022"}</button>
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list" aria-label="Numbered list">1.</button>
         <span className="rne-toolbar-sep" />
-        <button onMouseDown={e => e.preventDefault()} onClick={() => setShowColors(!showColors)} title="Font color" aria-label="Choose text color"
-        >A</button>
-        <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting" aria-label="Clear formatting">{"\u2718"}</button>
-      </div>
-
-      {showColors && (
-        <div className="color-picker-row">
-          {FONT_COLORS.map(({ color, label }) => (
-            <button key={color} className="color-swatch" style={{ background: color }} onMouseDown={e => e.preventDefault()} onClick={() => applyColor(color)} title={label} />
-          ))}
-        </div>
-      )}
-
+        <span className="color-picker-toggle">
+            <button onMouseDown={e => e.preventDefault()} onClick={() => setShowColors(!showColors)} title="Font color" aria-label="Choose text color"
+            >A</button>
+            {showColors && (
+              <div className="color-picker-row">
+                {FONT_COLORS.map(({ color, label }) => (
+                  <button key={color} className="color-swatch" style={{ backgroundColor: color }} onMouseDown={e => e.preventDefault()} onClick={() => applyColor(color)} title={label} />
+                ))}
+              </div>
+            )}
+            </span>
+            <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('removeFormat')} title="Clear formatting" aria-label="Clear formatting">{"\u2718"}</button>
+          </div>
       <div
         ref={editorRef}
         className="rne-content"
