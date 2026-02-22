@@ -28,6 +28,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
   const startYRef = useRef(0)
   const startHeightRef = useRef(minHeight)
   const [showColors, setShowColors] = useState(false)
+    const colorPickerRef = useRef(null)
   // Sync external value changes (e.g. loading from Supabase)
   useEffect(() => {
     if (isInternalChange.current) {
@@ -39,6 +40,22 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
       el.innerHTML = value || ''
     }
   }, [value])
+
+    // Close color picker on click outside
+  useEffect(() => {
+    if (!showColors) return
+    const handler = (e) => {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target)) {
+        setShowColors(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [showColors])
 
   // Resize handler
   useEffect(() => {
@@ -327,7 +344,7 @@ export default function RichNoteEditor({ value, onChange, placeholder = 'Write y
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} title="Bullet list" aria-label="Bullet list">{"\u2022"}</button>
         <button onMouseDown={e => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} title="Numbered list" aria-label="Numbered list">1.</button>
         <span className="rne-toolbar-sep" />
-        <span className="color-picker-toggle">
+        <span ref={colorPickerRef} className="color-picker-toggle">
             <button onMouseDown={e => e.preventDefault()} onClick={() => setShowColors(!showColors)} title="Font color" aria-label="Choose text color"
             >A</button>
             {showColors && (
