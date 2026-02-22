@@ -652,6 +652,22 @@ const loadJournal = useCallback(async () => {
               </div>
             )}
           </section>
+                            
+                  <section className="card encouragement-card">
+  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
+  {encouragement ? (
+    <>
+      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
+      <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
+      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
+    </>
+  ) : (
+    <>
+      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
+      <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
+    </>
+  )}
+</section>
 <section className="card">
                 <h3 className="section-heading morning-heading" onClick={() => setShowMorning(!showMorning)} style={{cursor:'pointer'}}>
                                   {showMorning ? '\u25BC' : '\u25B6'} {"\u2600\ufe0f"} Morning Routine
@@ -670,22 +686,7 @@ const loadJournal = useCallback(async () => {
                         </>
                                       )}
         </section>
-                  
-                  <section className="card encouragement-card">
-  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
-  {encouragement ? (
-    <>
-      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
-      <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
-      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
-    </>
-  ) : (
-    <>
-      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
-      <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
-    </>
-  )}
-</section>
+
 
           <section className="card">
             <h3 className="section-heading" onClick={() => setShowJournal(!showJournal)} style={{cursor:'pointer'}}>
