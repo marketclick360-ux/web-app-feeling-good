@@ -11,46 +11,46 @@ function mondayOf(date) {
   d.setHours(0, 0, 0, 0)
   return d
 }
-function formatRange(mon) {
+function formatRange(mon, locale = 'en-US') {
   const sun = new Date(mon)
   sun.setDate(sun.getDate() + 6)
   const opts = { month: 'long', day: 'numeric' }
   const y = mon.getFullYear()
-  return `${mon.toLocaleDateString('en-US', opts)} \u2013 ${sun.toLocaleDateString('en-US', opts)}, ${y}`
+  return `${mon.toLocaleDateString(locale, opts)} \u2013 ${sun.toLocaleDateString(locale, opts)}, ${y}`
 }
 function toISO(d) { var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+dd }
 function todayStr() { return toISO(new Date()) }
-function getGreeting() {
+function getGreeting(t) {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Good Morning'
-  if (hour < 17) return 'Good Afternoon'
-  return 'Good Evening'
+  if (hour < 12) return t('goodMorning')
+  if (hour < 17) return t('goodAfternoon')
+  return t('goodEvening')
 }
 const MORNING_ROUTINE = [
-  { key: 'prayer_morning', label: '\ud83d\ude4f Morning prayer' },
-  { key: 'daily_text', label: '\ud83d\udcc3 Read daily text' },
-  { key: 'bible_reading', label: '\ud83d\udcd6 Personal Bible reading' },
-  { key: 'meditation', label: '\ud83e\udde0 Meditate on a scripture' },
-  { key: 'review_goals', label: '\ud83c\udfaf Review pioneer goals for the day' },
-  { key: 'prepare_service', label: '\ud83d\udcbc Prepare for field service' }
+  { key: 'prayer_morning', tKey: 'prayerMorning', label: '\ud83d\ude4f Morning prayer' },
+  { key: 'daily_text', tKey: 'dailyTextCheck', label: '\ud83d\udcc3 Read daily text' },
+  { key: 'bible_reading', tKey: 'bibleReadingCheck', label: '\ud83d\udcd6 Personal Bible reading' },
+  { key: 'meditation', tKey: 'meditation', label: '\ud83e\udde0 Meditate on a scripture' },
+  { key: 'review_goals', tKey: 'reviewGoals', label: '\ud83c\udfaf Review pioneer goals for the day' },
+  { key: 'prepare_service', tKey: 'prepareService', label: '\ud83d\udcbc Prepare for field service' }
 ]
 const EVENING_ROUTINE = [
-  { key: 'review_day', label: '\ud83d\udcdd Review the day in service' },
-  { key: 'study_wt', label: '\ud83d\udcd5 Study Watchtower or publication' },
-  { key: 'meeting_prep', label: '\ud83d\udcda Meeting preparation' },
-  { key: 'prayer_evening', label: '\ud83d\ude4f Evening prayer of thanks' },
-  { key: 'plan_tomorrow', label: '\ud83d\udcc5 Plan tomorrow\'s service' },
-  { key: 'journal', label: '\u270d\ufe0f Write in journal' }
+  { key: 'review_day', tKey: 'reviewDay', label: '\ud83d\udcdd Review the day in service' },
+  { key: 'study_wt', tKey: 'studyWt', label: '\ud83d\udcd5 Study Watchtower or publication' },
+  { key: 'meeting_prep', tKey: 'meetingPrep', label: '\ud83d\udcda Meeting preparation' },
+  { key: 'prayer_evening', tKey: 'prayerEvening', label: '\ud83d\ude4f Evening prayer of thanks' },
+  { key: 'plan_tomorrow', tKey: 'planTomorrow', label: '\ud83d\udcc5 Plan tomorrow\'s service' },
+  { key: 'journal', tKey: 'writeJournal', label: '\u270d\ufe0f Write in journal' }
 ]
 const SUNDAY_CHECKLIST = [
-  { key: 'read_twice', label: 'Read study article twice' },
-  { key: 'underline', label: 'Underline key points and answers to study questions' },
-  { key: 'research', label: 'Research unfamiliar references or cross-references' },
-  { key: 'prepare_comments', label: 'Prepare 3-4 comments showing application to pioneer life' }
+  { key: 'read_twice', tKey: 'readTwice', label: 'Read study article twice' },
+  { key: 'underline', tKey: 'underline', label: 'Underline key points and answers to study questions' },
+  { key: 'research', tKey: 'research', label: 'Research unfamiliar references or cross-references' },
+  { key: 'prepare_comments', tKey: 'prepareComments', label: 'Prepare 3-4 comments showing application to pioneer life' }
 ]
 const SECTION_LABELS = [
-  { key: 'treasures', label: '\ud83d\udc8e TREASURES FROM GOD\u2019S WORD', color: '#5b6abf' },
-  { key: 'living', label: '\ud83d\udc9a LIVING AS CHRISTIANS', color: '#b5463c' }
+  { key: 'treasures', tKey: 'treasuresLabel', label: '\ud83d\udc8e TREASURES FROM GOD\u2019S WORD', color: '#5b6abf' },
+  { key: 'living', tKey: 'livingLabel', label: '\ud83d\udc9a LIVING AS CHRISTIANS', color: '#b5463c' }
 ]
 const WEEKLY_MEETINGS = {
   '2026-02-09': {
@@ -160,7 +160,7 @@ export default function App({ userId, onSignOut, onSignIn }) {
   const t = (key) => (translations[locale] && translations[locale][key]) || translations.en[key] || key
     useEffect(() => { window.localStorage.setItem('eps-locale', locale); document.documentElement.lang = locale }, [locale])
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
-  const weekLabel = formatRange(weekStart)
+  const weekLabel = formatRange(weekStart, t('dateLocale'))
   const weekKey = toISO(weekStart)
   const [apiWeekData, setApiWeekData] = useState(null)
   const _raw = apiWeekData || DEFAULT_WEEK; const weekData = { ...DEFAULT_WEEK, ..._raw, sections: { treasures: (_raw.sections?.treasures ?? DEFAULT_WEEK.sections.treasures), living: (_raw.sections?.living ?? DEFAULT_WEEK.sections.living) } }
@@ -171,7 +171,7 @@ export default function App({ userId, onSignOut, onSignIn }) {
   const nextDay = () => { const d = new Date(journalDate + 'T12:00'); d.setDate(d.getDate() + 1); setJournalDate(toISO(d)) }
   const goToday = () => setJournalDate(todayStr())
   const isToday = journalDate === todayStr()
-  const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+  const displayDate = new Date(journalDate + 'T12:00').toLocaleDateString(t('dateLocale'), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   const [tab, setTab] = useState(() => {
     if (typeof window === 'undefined') return 'morning'
     const saved = window.localStorage.getItem('eps-active-tab')
@@ -576,10 +576,10 @@ const loadJournal = useCallback(async () => {
     if (tab) window.localStorage.setItem('eps-active-tab', tab)
   }, [tab])
     const TABS = [
-    { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
-    { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
-    { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
-    { id: 'todos', icon: '\u2705', name: 'To-Do' },
+    { id: 'morning', icon: '\u2600\ufe0f', name: t('morning') },
+    { id: 'prep', icon: '\ud83d\udcdd', name: t('midweek') },
+    { id: 'sunday', icon: '\ud83d\udcd6', name: t('sunday') },
+    { id: 'todos', icon: '\u2705', name: t('todo') },
   ]
   return (
     <div className={`app ${colorMode}`}>
@@ -592,9 +592,9 @@ const loadJournal = useCallback(async () => {
           <div className="settings-menu-wrap" ref={settingsRef}>
             <button className="settings-btn" onClick={() => setShowMenu(!showMenu)} aria-label="Settings">{"\u2699\ufe0f"}</button>
             {showMenu && <div className="settings-dropdown">
-              {onSignOut && <button onClick={() => { onSignOut(); setShowMenu(false) }}>Sign Out</button>}
+              {onSignOut && <button onClick={() => { onSignOut(); setShowMenu(false) }}>{t('signOut')}</button>}
                               <button onClick={() => { setLocale(locale === 'en' ? 'es' : 'en'); setShowMenu(false) }} className="settings-menu-item">{locale === 'en' ? 'ES' : 'EN'}</button>
-              {onSignIn && <button onClick={() => { onSignIn(); setShowMenu(false) }}>Sign In</button>}
+              {onSignIn && <button onClick={() => { onSignIn(); setShowMenu(false) }}>{t('signIn')}</button>}
             </div>}
           </div>
         </div>
@@ -607,7 +607,7 @@ const loadJournal = useCallback(async () => {
             {tab === null && (
         <div className="home-view">
           <section className="card greeting-card">
-            <h2 className="greeting-title">{getGreeting()}</h2>
+            <h2 className="greeting-title">{getGreeting(t)}</h2>
             <p className="greeting-date">{displayDate}</p>
           </section>
           <div className="home-grid">
@@ -631,7 +631,7 @@ const loadJournal = useCallback(async () => {
           )}
           
         <section className="card greeting-card">
-          <h2 className="greeting-title">{getGreeting()}</h2>
+          <h2 className="greeting-title">{getGreeting(t)}</h2>
           <p className="greeting-date">{displayDate}</p>
         </section>
                     <section className="card daily-text-card">
@@ -682,7 +682,7 @@ const loadJournal = useCallback(async () => {
             </div>
             <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
             <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
-            {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+            {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{t(item.tKey)}</span></label>))}
                         </>
                                       )}
         </section>
@@ -712,7 +712,7 @@ const loadJournal = useCallback(async () => {
             <>
               <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Evening Reflection</h4>
               <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="How did your day go? What are you grateful for?" />
-              {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+              {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{t(item.tKey)}</span></label>))}
             </>
           )}
         </section>
@@ -738,7 +738,7 @@ const loadJournal = useCallback(async () => {
           </section>
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
-              <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
+              <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{t(section.tKey)}</h3>
               {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text" aria-label="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
               {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
             {section.key === 'treasures' && (
@@ -780,7 +780,7 @@ const loadJournal = useCallback(async () => {
           <section className="card">
             <h3 className="section-heading sunday-heading">{"\ud83d\udcd6"} Weekend Meeting (Public Talk & Watchtower Study)</h3>
             <div className="sunday-article-box"><p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p><a href={weekData.sundayArticleUrl || "https://www.jw.org/en/library/magazines/"} target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a></div>
-            {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{item.label}</span></label>))}
+            {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{t(item.tKey)}</span></label>))}
           </section>
           {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference and link" aria-label="Copy reference and link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
           <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder="Write your prepared comments for the Watchtower study here..." minHeight={180} /></section>
@@ -799,7 +799,7 @@ const loadJournal = useCallback(async () => {
           type="text"
           value={newTodo}
           onChange={e => setNewTodo(e.target.value)}
-          placeholder="Add a new task..."
+          placeholder={t('addTaskPlaceholder')}
           onKeyDown={e => e.key === 'Enter' && addTodo()}
         />
         <button className="todo-add-btn" onClick={addTodo}>
@@ -860,7 +860,7 @@ const loadJournal = useCallback(async () => {
       </div>
       {todoDoneCount > 0 && (
         <div className="todo-stats">
-          <span>{todoDoneCount} completed</span>
+          <span>{todoDoneCount} {t('completed')}</span>
           <button className="clear-done-btn" onClick={clearCompleted}>
             Clear completed
           </button>
