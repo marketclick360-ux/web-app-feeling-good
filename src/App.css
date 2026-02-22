@@ -714,6 +714,13 @@ textarea:focus {
 }
 .encouragement-verse { font-size: 1rem; line-height: 1.68; color: #cbd5e1; margin-bottom: 0.5rem; font-family: 'Source Serif 4', Georgia, serif; }
 .encouragement-ref { font-size: 0.875rem; color: #94a3b8; text-align: right; }
+
+/* -- Spiritual Food Divider -- */
+.spiritual-food-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 1.2rem 0;
+}
 /* -- Quick Links -- */
 .quick-links-card { background: rgba(255,255,255,0.04); }
 .quick-links-grid {
@@ -1326,6 +1333,10 @@ body {
 
 .light-theme .encouragement-ref {
   color: #64748b;
+}
+
+.light-theme .spiritual-food-divider {
+  border-top-color: rgba(0,0,0,0.1);
 }
 
 .light-theme .quick-link-btn,

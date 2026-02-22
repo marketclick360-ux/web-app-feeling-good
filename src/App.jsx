@@ -634,8 +634,8 @@ const loadJournal = useCallback(async () => {
           <h2 className="greeting-title">{getGreeting(t)}</h2>
           <p className="greeting-date">{displayDate}</p>
         </section>
-                    <section className="card daily-text-card">
-            <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} {t('dailyText')}</h3> {dailyTextLoading ? (
+                    <section className="card daily-spiritual-food-card">
+            <h3 className="section-heading morning-heading">{t('dailySpiritualFood')}</h3> {dailyTextLoading ? (
               <p className="daily-text-loading">{t('loadingDailyText')}</p>
             ) : dailyText && (dailyText.dateLabel || dailyText.wolUrl || dailyText.scripture || dailyText.comment || dailyText.note) ? (
               <div className="daily-text-content">
@@ -651,10 +651,7 @@ const loadJournal = useCallback(async () => {
                 <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">{t('viewDailyTextJwOrg')}</a>
               </div>
             )}
-          </section>
-                            
-                  <section className="card encouragement-card">
-  <h3 className="section-heading">{"\u2728"} {t('encouragement')}</h3>
+            <hr className="spiritual-food-divider" />
   {encouragement ? (
     <>
       <p className="encouragement-verse"><em>{encouragement.text}</em></p>

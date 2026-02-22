@@ -44,6 +44,7 @@ const translations = {
     morningJournal: 'Morning Journal',
     journalPlaceholder: 'Write your thoughts, reflections, and spiritual experiences...',
     // Encouragement
+            dailySpiritualFood: 'Daily Spiritual Food',
     encouragement: 'Encouragement',
     readOnJwOrg: 'Read on JW.org',
     defaultEncouragement: 'Trust in Jehovah with all your heart, and do not rely on your own understanding.',
@@ -250,6 +251,7 @@ const translations = {
         morningWorship: '\ud83c\udf05 Adoraci\u00f3n Matutina',
         originalSongs: '\ud83c\udfb5 Canciones Originales',
         // Encouragement
+                dailySpiritualFood: 'Alimento Espiritual Diario',
         encouragement: '\u2728 \u00c1nimo',
         readOnJwOrg: 'Leer en JW.org',
         // Midweek prep
