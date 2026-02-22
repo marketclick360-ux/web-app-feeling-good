@@ -624,9 +624,9 @@ const loadJournal = useCallback(async () => {
         <div className="morning-tab">
           {showOnboarding && (
             <section className="card onboarding-card">
-              <h3 className="section-heading morning-heading">Quick Start</h3>
-              <p className="onboarding-text">Use Morning for daily goals, Midweek/Sunday for meeting prep, and To-Do for action items. Your changes auto-save.</p>
-              <button className="today-btn" onClick={dismissOnboarding}>Got it</button>
+              <h3 className="section-heading morning-heading">{t('quickStart')}</h3>
+              <p className="onboarding-text">{t('onboardingText')}</p>
+              <button className="today-btn" onClick={dismissOnboarding}>{t('gotIt')}</button>
             </section>
           )}
           
@@ -635,42 +635,42 @@ const loadJournal = useCallback(async () => {
           <p className="greeting-date">{displayDate}</p>
         </section>
                     <section className="card daily-text-card">
-            <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} Daily Text</h3> {dailyTextLoading ? (
-              <p className="daily-text-loading">Loading today's daily text...</p>
+            <h3 className="section-heading morning-heading">{"\ud83d\udcc3"} {t('dailyText')}</h3> {dailyTextLoading ? (
+              <p className="daily-text-loading">{t('loadingDailyText')}</p>
             ) : dailyText && (dailyText.dateLabel || dailyText.wolUrl || dailyText.scripture || dailyText.comment || dailyText.note) ? (
               <div className="daily-text-content">
                 <p className="daily-text-date">{dailyText.dateLabel}</p>
                 <p className="daily-text-scripture"><em>{dailyText.scripture || dailyText.note}</em></p>
                 {dailyText.reference && <p className="daily-text-ref">{dailyText.reference}</p>}
                 {(dailyText.comment || dailyText.note) && <p className="daily-text-comment">{(dailyText.comment || dailyText.note).length > 200 ? (dailyText.comment || dailyText.note).slice(0, 200) + '...' : (dailyText.comment || dailyText.note)}</p>}
-                <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read Full Daily Text {"\u2192"}</a>
+                <a href={dailyText.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">{t('readFullDailyText')} {"\u2192"}</a>
               </div>
             ) : (
               <div>
-                <p>Could not load daily text.</p>
-                <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">View Daily Text on JW.org</a>
+                <p>{t('couldNotLoadDailyText')}</p>
+                <a href="https://wol.jw.org/en/wol/dt/r1/lp-e" target="_blank" rel="noopener noreferrer" className="workbook-link">{t('viewDailyTextJwOrg')}</a>
               </div>
             )}
           </section>
                             
                   <section className="card encouragement-card">
-  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
+  <h3 className="section-heading">{"\u2728"} {t('encouragement')}</h3>
   {encouragement ? (
     <>
       <p className="encouragement-verse"><em>{encouragement.text}</em></p>
       <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
-      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
+      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">{t('readOnJwOrg')} →</a>
     </>
   ) : (
     <>
-      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
+      <p className="encouragement-verse"><em>{t('defaultEncouragement')}</em></p>
       <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
     </>
   )}
 </section>
 <section className="card">
                 <h3 className="section-heading morning-heading" onClick={() => setShowMorning(!showMorning)} style={{cursor:'pointer'}}>
-                                  {showMorning ? '\u25BC' : '\u25B6'} {"\u2600\ufe0f"} Morning Routine
+                                  {showMorning ? '\u25BC' : '\u25B6'} {"\u2600\ufe0f"} {t('morningRoutine')}
                                                 </h3>
                                                               {showMorning && (
                                                                               <>
@@ -678,10 +678,10 @@ const loadJournal = useCallback(async () => {
               <button onClick={prevDay} className="day-nav-btn" aria-label="Previous day">{"\u25C0"}</button>
               <span className="routine-date">{displayDate}</span>
               <button onClick={nextDay} className="day-nav-btn" aria-label="Next day">{"\u25B6"}</button>
-                        {isToday ? <span className="today-badge">Today</span> : <button onClick={goToday} className="today-btn">Today</button>}
+                        {isToday ? <span className="today-badge">Today</span> : <button onClick={goToday} className="today-btn">{t('today')}</button>}
             </div>
-            <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} Today's Goals</h4>
-            <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder="What are your spiritual goals for today?" />
+            <h4 className="section-heading morning-heading">{"\ud83c\udfaf"} {t('todaysGoals')}</h4>
+            <textarea rows={3} value={morningGoals} onChange={e => setMorningGoals(e.target.value)} placeholder={t('morningGoalsPlaceholder')} />
             {MORNING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!morningChecks[item.key]} onChange={() => toggleMorning(item.key)} /><span className={morningChecks[item.key] ? 'done' : ''}>{t(item.tKey)}</span></label>))}
                         </>
                                       )}
@@ -690,14 +690,14 @@ const loadJournal = useCallback(async () => {
 
           <section className="card">
             <h3 className="section-heading" onClick={() => setShowJournal(!showJournal)} style={{cursor:'pointer'}}>
-              {showJournal ? '\u25BC' : '\u25B6'} {"\u270D\uFE0F"} Morning Journal
+              {showJournal ? '\u25BC' : '\u25B6'} {"\u270D\uFE0F"} {t('morningJournal')}
             </h3>
             {showJournal && (
               <>
                 <RichNoteEditor
                   value={journalText}
                   onChange={setJournalText}
-                  placeholder="Write your morning thoughts, reflections, and spiritual observations..."
+                  placeholder={t('journalPlaceholder')}
                   minHeight={150}
                 />
               </>
@@ -706,12 +706,12 @@ const loadJournal = useCallback(async () => {
 
                 <section className="card">
           <h3 className="section-heading evening-heading" onClick={() => setShowEvening(!showEvening)} style={{cursor:'pointer'}}>
-            {showEvening ? '\u25BC' : '\u25B6'} {"\ud83c\udf19"} Evening Routine
+            {showEvening ? '\u25BC' : '\u25B6'} {"\ud83c\udf19"} {t('eveningRoutine')}
           </h3>
           {showEvening && (
             <>
-              <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} Evening Reflection</h4>
-              <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder="How did your day go? What are you grateful for?" />
+              <h4 className="section-heading evening-heading">{"\ud83c\udfaf"} {t('eveningReflection')}</h4>
+              <textarea rows={3} value={eveningGoals} onChange={e => setEveningGoals(e.target.value)} placeholder={t('eveningGoalsPlaceholder')} />
               {EVENING_ROUTINE.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!eveningChecks[item.key]} onChange={() => toggleEvening(item.key)} /><span className={eveningChecks[item.key] ? 'done' : ''}>{t(item.tKey)}</span></label>))}
             </>
           )}
@@ -719,32 +719,32 @@ const loadJournal = useCallback(async () => {
           
 
           <section className="card">
-            <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83d\udd17"} Quick Links</h3>
+            <h3 className="section-heading" style={{borderLeftColor: '#e0a800'}}>{"\ud83d\udd17"} {t('quickLinks')}</h3>
             <div className="quick-links-grid">
               <a href="https://www.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf10"} JW.org</a>
-              <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcda"} Online Library</a>
-                          <a href="https://www.jw.org/en/library/videos/#en/mediaitems/VODPgmEvtMorningWorship" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf05"} Morning Worship</a>
-              <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} Original Songs</a>
+              <a href="https://wol.jw.org" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83d\udcda"} {t('onlineLibrary')}</a>
+                          <a href="https://www.jw.org/en/library/videos/#en/mediaitems/VODPgmEvtMorningWorship" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udf05"} {t('morningWorship')}</a>
+              <a href="https://www.jw.org/en/library/music-songs/original-songs/" target="_blank" rel="noopener noreferrer" className="quick-link-btn">{"\ud83c\udfb5"} {t('originalSongs')}</a>
             </div>
           </section>
         </div>
       )}
       {tab === 'prep' && (
-        <div className="prep-tab"> <div className="day-nav"> <button onClick={prevWeek} className="day-nav-btn" aria-label="Previous week">{"\u25C0"}</button> <span className="routine-date">{weekLabel}</span> <button onClick={nextWeek} className="day-nav-btn" aria-label="Next week">{"\u25B6"}</button> {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">This Week</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">Go to This Week</button>} </div>
-          <section className="card meeting-card"> <p className="meeting-subtitle">Midweek Meeting {"\u2022"} {weekData.song}</p>
-            <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} View Meeting Workbook on JW.org</a>
-            <label>Theme<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || "This week's main theme..."} /></label>
-            <label>Bible Reading {bibleReading && <a href={`https://wol.jw.org/en/wol/l/r1/lp-e?q=${encodeURIComponent(bibleReading)}`} target="_blank" rel="noopener noreferrer" className="bible-link">📖</a>}<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
+        <div className="prep-tab"> <div className="day-nav"> <button onClick={prevWeek} className="day-nav-btn" aria-label="Previous week">{"\u25C0"}</button> <span className="routine-date">{weekLabel}</span> <button onClick={nextWeek} className="day-nav-btn" aria-label="Next week">{"\u25B6"}</button> {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">{t('thisWeek')}</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">{t('goToThisWeek')}</button>} </div>
+          <section className="card meeting-card"> <p className="meeting-subtitle">{t('midweekMeeting')} {"\u2022"} {weekData.song}</p>
+            <a href={weekData.workbookUrl} target="_blank" rel="noopener noreferrer" className="workbook-btn">{"\ud83d\udcd6"} {t('viewWorkbook')}</a>
+            <label>{t('themeLabel')}<input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder={weekData.theme || t('themePlaceholder')} /></label>
+            <label>{t('bibleReadingLabel')} {bibleReading && <a href={`https://wol.jw.org/en/wol/l/r1/lp-e?q=${encodeURIComponent(bibleReading)}`} target="_blank" rel="noopener noreferrer" className="bible-link">📖</a>}<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
           </section>
           {SECTION_LABELS.map(section => (
             <section key={section.key} className="card">
               <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{t(section.tKey)}</h3>
               {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text" aria-label="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
-              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
+              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} {t('bibleReadingNotes')}<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder={t('bibleReadingNotesPlaceholder')} minHeight={150} /></div>)}
             {section.key === 'treasures' && (
   <div className="treasures-comments">
     <h4 className="treasures-comments-title">
-      {"📝"} My Bible Reading & Spiritual Gems Notes (2)
+      {"📝"} {t('bibleReadingNotes2')}
       <button
         className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`}
         onClick={() => copyToClipboard(treasuresComments2, 'treasures2')}
@@ -757,16 +757,16 @@ const loadJournal = useCallback(async () => {
     <RichNoteEditor
       value={treasuresComments2}
       onChange={setTreasuresComments2}
-      placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..."
+      placeholder={t('bibleReadingNotesPlaceholder')}
       minHeight={150}
     />
   </div>
 )}
             </section>
           ))}
-          <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures" aria-label="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={comments} onChange={setComments} placeholder="Write your prepared comments for the meeting..." minHeight={150} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes" aria-label="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={notes} onChange={setNotes} placeholder="What stood out to you this week?" /></section>
+          <section className="card"><h3 className="section-heading notes-heading">{t('keyScriptures')}<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures" aria-label="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder={t('scripturesPlaceholder')} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">{t('myComments')}<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={comments} onChange={setComments} placeholder={t('commentsPlaceholder')} minHeight={150} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">{t('personalStudyNotes')}<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes" aria-label="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={notes} onChange={setNotes} placeholder={t('studyNotesPlaceholder')} /></section>
         </div>
       )}
       {tab === 'sunday' && (
@@ -775,24 +775,24 @@ const loadJournal = useCallback(async () => {
             <button onClick={prevWeek} className="day-nav-btn" aria-label="Previous week">{"\u25C0"}</button>
             <span className="routine-date">{weekLabel}</span>
             <button onClick={nextWeek} className="day-nav-btn" aria-label="Next week">{"\u25B6"}</button>
-            {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">This Week</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">Go to This Week</button>}
+            {weekKey === toISO(mondayOf(new Date())) ? <span className="today-badge">{t('thisWeek')}</span> : <button onClick={() => setWeekStart(mondayOf(new Date()))} className="today-btn">{t('goToThisWeek')}</button>}
           </div>
           <section className="card">
-            <h3 className="section-heading sunday-heading">{"\ud83d\udcd6"} Weekend Meeting (Public Talk & Watchtower Study)</h3>
-            <div className="sunday-article-box"><p><strong>Watchtower Study Article:</strong> {sundayArticle || weekData.sundayArticle || 'Visit jw.org for latest articles'}</p><a href={weekData.sundayArticleUrl || "https://www.jw.org/en/library/magazines/"} target="_blank" rel="noopener noreferrer" className="wt-link"><em>Visit jw.org for latest Watchtower study articles</em></a></div>
+            <h3 className="section-heading sunday-heading">{"\ud83d\udcd6"} {t('weekendMeeting')}</h3>
+            <div className="sunday-article-box"><p><strong>{t('wtStudyArticle')}</strong> {sundayArticle || weekData.sundayArticle || t('visitJwOrg')}</p><a href={weekData.sundayArticleUrl || "https://www.jw.org/en/library/magazines/"} target="_blank" rel="noopener noreferrer" className="wt-link"><em>{t('visitJwOrgWt')}</em></a></div>
             {SUNDAY_CHECKLIST.map(item => (<label key={item.key} className="check-row"><input type="checkbox" checked={!!sundayChecks[item.key]} onChange={() => toggleSundayCheck(item.key)} /><span className={sundayChecks[item.key] ? 'done' : ''}>{t(item.tKey)}</span></label>))}
           </section>
-          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">Key Scriptures:</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference and link" aria-label="Copy reference and link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder="Write your prepared comments for the Watchtower study here..." minHeight={180} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (2)<button className={`copy-btn ${copiedId === 'sundayComments2' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments2, 'sundayComments2')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments2' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments2} onChange={setSundayComments2} placeholder="Write more prepared comments here..." minHeight={180} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare (3)<button className={`copy-btn ${copiedId === 'sundayComments3' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments3, 'sundayComments3')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments3' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments3} onChange={setSundayComments3} placeholder="Write additional prepared comments here..." minHeight={180} /></section>
-          <button className="print-btn" onClick={() => window.print()}>Print Meeting Preparation</button>
+          {weekData.sundayScriptures && weekData.sundayScriptures.length > 0 && (<section className="card"><h3 className="section-heading notes-heading">{t('keyScripturesLabel')}</h3><ul className="scripture-list">{weekData.sundayScriptures.map(s => (<li key={s.ref}><a href={s.url} target="_blank" rel="noopener noreferrer" className="scripture-link">{s.ref}</a><button className={`copy-btn ${copiedId === 'sc-'+s.ref ? 'copied' : ''}`} onClick={() => copyToClipboard(s.ref + ' ' + s.url, 'sc-'+s.ref)} title="Copy reference and link" aria-label="Copy reference and link">{copiedId === 'sc-'+s.ref ? '\u2705' : '\ud83d\udccb'}</button></li>))}</ul></section>)}
+          <section className="card"><h3 className="section-heading notes-heading">{t('myComments')}<button className={`copy-btn ${copiedId === 'sundayComments' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments, 'sundayComments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments} onChange={setSundayComments} placeholder={t('wtCommentsPlaceholder')} minHeight={180} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">{t('myComments2')}<button className={`copy-btn ${copiedId === 'sundayComments2' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments2, 'sundayComments2')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments2' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments2} onChange={setSundayComments2} placeholder={t('moreCommentsPlaceholder')} minHeight={180} /></section>
+          <section className="card"><h3 className="section-heading notes-heading">{t('myComments3')}<button className={`copy-btn ${copiedId === 'sundayComments3' ? 'copied' : ''}`} onClick={() => copyToClipboard(sundayComments3, 'sundayComments3')} title="Copy comments" aria-label="Copy comments">{copiedId === 'sundayComments3' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={sundayComments3} onChange={setSundayComments3} placeholder={t('additionalCommentsPlaceholder')} minHeight={180} /></section>
+          <button className="print-btn" onClick={() => window.print()}>{t('printMeetingPrep')}</button>
         </div>
       )}
             {tab === 'todos' && (
   <div className="todo-tab">
     <section className="card">
-      <h3 className="section-heading">{"\u2705"} To-Do List</h3>
+      <h3 className="section-heading">{"\u2705"} {t('todoList')}</h3>
 
       <div className="todo-input-row">
         <input
@@ -862,7 +862,7 @@ const loadJournal = useCallback(async () => {
         <div className="todo-stats">
           <span>{todoDoneCount} {t('completed')}</span>
           <button className="clear-done-btn" onClick={clearCompleted}>
-            Clear completed
+            {t('clearCompleted')}
           </button>
         </div>
       )}
@@ -870,10 +870,10 @@ const loadJournal = useCallback(async () => {
       {filteredTodos.length === 0 && (
         <p className="todo-empty">
           {todoFilter === 'all'
-            ? 'No tasks yet. Add one above!'
+            ? t('noTasks')
             : todoFilter === 'active'
-            ? 'All tasks completed!'
-            : 'No completed tasks.'}
+            ? t('allCompleted')
+            : t('noCompleted')}
         </p>
       )}
 
@@ -996,7 +996,7 @@ const loadJournal = useCallback(async () => {
       <RichNoteEditor
         value={todoJournalText}
         onChange={setTodoJournalText}
-        placeholder="Write your thoughts, End of day reflections, notes, and thoughts..."
+        placeholder={t('todoJournalPlaceholder')}
         minHeight={200}
       />
     </section>
