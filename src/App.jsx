@@ -593,6 +593,7 @@ const loadJournal = useCallback(async () => {
             <button className="settings-btn" onClick={() => setShowMenu(!showMenu)} aria-label="Settings">{"\u2699\ufe0f"}</button>
             {showMenu && <div className="settings-dropdown">
               {onSignOut && <button onClick={() => { onSignOut(); setShowMenu(false) }}>Sign Out</button>}
+                              <button onClick={() => { setLocale(locale === 'en' ? 'es' : 'en'); setShowMenu(false) }} className="settings-menu-item">{locale === 'en' ? 'ES' : 'EN'}</button>
               {onSignIn && <button onClick={() => { onSignIn(); setShowMenu(false) }}>Sign In</button>}
             </div>}
           </div>
