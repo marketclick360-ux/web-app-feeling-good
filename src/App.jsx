@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 import RichNoteEditor from './RichNoteEditor'
+import translations from './i18n'
 /* --------- helpers --------- */
 function mondayOf(date) {
   const d = new Date(date)
@@ -152,6 +153,12 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' 
   )
 }
 export default function App({ userId, onSignOut, onSignIn }) {
+    const [locale, setLocale] = useState(() => {
+    if (typeof window === 'undefined') return 'en'
+    return window.localStorage.getItem('eps-locale') || 'en'
+  })
+  const t = (key) => (translations[locale] && translations[locale][key]) || translations.en[key] || key
+    useEffect(() => { window.localStorage.setItem('eps-locale', locale); document.documentElement.lang = locale }, [locale])
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const weekLabel = formatRange(weekStart)
   const weekKey = toISO(weekStart)
@@ -644,22 +651,6 @@ const loadJournal = useCallback(async () => {
               </div>
             )}
           </section>
-          
-                  <section className="card encouragement-card">
-  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
-  {encouragement ? (
-    <>
-      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
-      <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
-      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
-    </>
-  ) : (
-    <>
-      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
-      <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
-    </>
-  )}
-</section>
 <section className="card">
                 <h3 className="section-heading morning-heading" onClick={() => setShowMorning(!showMorning)} style={{cursor:'pointer'}}>
                                   {showMorning ? '\u25BC' : '\u25B6'} {"\u2600\ufe0f"} Morning Routine
@@ -678,6 +669,38 @@ const loadJournal = useCallback(async () => {
                         </>
                                       )}
         </section>
+                  
+                  <section className="card encouragement-card">
+  <h3 className="section-heading">{"\u2728"} Encouragement</h3>
+  {encouragement ? (
+    <>
+      <p className="encouragement-verse"><em>{encouragement.text}</em></p>
+      <p className="encouragement-ref">{"\u2014"} {encouragement.reference}</p>
+      <a href={encouragement.wolUrl} target="_blank" rel="noopener noreferrer" className="workbook-link">Read on JW.org →</a>
+    </>
+  ) : (
+    <>
+      <p className="encouragement-verse"><em>"Trust in Jehovah with all your heart, and do not rely on your own understanding."</em></p>
+      <p className="encouragement-ref">{"\u2014"} Proverbs 3:5</p>
+    </>
+  )}
+</section>
+
+          <section className="card">
+            <h3 className="section-heading" onClick={() => setShowJournal(!showJournal)} style={{cursor:'pointer'}}>
+              {showJournal ? '\u25BC' : '\u25B6'} {"\u270D\uFE0F"} Morning Journal
+            </h3>
+            {showJournal && (
+              <>
+                <RichNoteEditor
+                  value={journalText}
+                  onChange={setJournalText}
+                  placeholder="Write your morning thoughts, reflections, and spiritual observations..."
+                  minHeight={150}
+                />
+              </>
+            )}
+          </section>
 
                 <section className="card">
           <h3 className="section-heading evening-heading" onClick={() => setShowEvening(!showEvening)} style={{cursor:'pointer'}}>
