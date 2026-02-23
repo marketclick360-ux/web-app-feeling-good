@@ -403,8 +403,8 @@ const loadJournal = useCallback(async () => {
       return
     }
     pushToast('\u2713 Saved', 'ok')
+        setSyncStatus('Saved')
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
-      setSyncStatus('Saved')
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
     const loadTodoJournal = useCallback(async () => {
     if (!userId) {
