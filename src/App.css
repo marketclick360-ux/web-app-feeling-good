@@ -914,7 +914,6 @@ textarea:focus {
 
 .rne-content {
   min-height: 150px;
-  max-height: 400px;
   overflow-y: auto;
 }
 /* Fix for pasted text color in dark mode — allow font color picks */
@@ -953,15 +952,32 @@ textarea:focus {
 }
 
 .rich-note-resizer {
-  height: 8px;
+  height: 14px;
   cursor: row-resize;
-  background: transparent;
-    min-height: 24px;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 0 0 14px 14px;
   touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
-
-.rich-note-resizer:hover {
+.rich-note-resizer::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
   background: rgba(148, 163, 184, 0.4);
+  border-radius: 2px;
+}
+.rich-note-resizer:hover,
+.rich-note-resizer:active {
+  background: rgba(148, 163, 184, 0.3);
+}
+.rich-note-resizer:active::after {
+  background: rgba(129, 140, 248, 0.7);
 }
 
 /* -- Image Modal -- */
@@ -1488,6 +1504,20 @@ body {
 
 .light-theme .rich-note-placeholder {
   color: rgba(100,116,139,0.5);
+}
+
+.light-theme .rich-note-resizer {
+  background: rgba(0, 0, 0, 0.06);
+}
+.light-theme .rich-note-resizer::after {
+  background: rgba(0, 0, 0, 0.2);
+}
+.light-theme .rich-note-resizer:hover,
+.light-theme .rich-note-resizer:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+.light-theme .rich-note-resizer:active::after {
+  background: rgba(99, 102, 241, 0.6);
 }
 
 .light-theme .footer {
