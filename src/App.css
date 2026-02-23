@@ -3079,3 +3079,91 @@ button:active {
 .light-theme .sync-status-bar {
   color: rgba(0,0,0,0.5);
 }
+
+/* --- Apple Pencil Drawing Canvas --- */
+.rne-draw-panel {
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  margin: 6px 0;
+  padding: 8px;
+  background: rgba(30,27,58,0.95);
+}
+.rne-draw-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 8px;
+}
+.rne-draw-canvas {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.rne-draw-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+}
+.rne-draw-btn {
+  background: rgba(255,255,255,0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rne-draw-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+.rne-btn-active {
+  background: rgba(129,140,248,0.35) !important;
+  border-color: #818cf8 !important;
+}
+.rne-draw-insert {
+  background: rgba(74,222,128,0.25);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 600;
+}
+.rne-draw-insert:hover {
+  background: rgba(74,222,128,0.4);
+}
+.rne-draw-cancel {
+  color: rgba(255,255,255,0.5);
+}
+.active-swatch {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+  transform: scale(1.2);
+}
+.light-theme .rne-draw-panel {
+  background: rgba(245,245,250,0.98);
+  border-color: rgba(0,0,0,0.12);
+}
+.light-theme .rne-draw-tools {
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+.light-theme .rne-draw-btn {
+  background: rgba(0,0,0,0.06);
+  color: #1e293b;
+  border-color: rgba(0,0,0,0.12);
+}
+.light-theme .rne-draw-btn:hover {
+  background: rgba(0,0,0,0.12);
+}
+.light-theme .rne-draw-insert {
+  background: rgba(34,197,94,0.15);
+  border-color: #22c55e;
+  color: #16a34a;
+}
