@@ -328,6 +328,7 @@ if (error) {
       return
     }
     pushToast('\u2713 Saved', 'ok')
+        setSyncStatus('Saved')
   }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 const loadJournal = useCallback(async () => {
@@ -403,6 +404,7 @@ const loadJournal = useCallback(async () => {
     }
     pushToast('\u2713 Saved', 'ok')
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
+      setSyncStatus('Saved')
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
     const loadTodoJournal = useCallback(async () => {
     if (!userId) {
