@@ -234,6 +234,10 @@ const [encouragement, setEncouragement] = useState(null)
       setToasts(prev => prev.filter(t => t.id !== id))
     }, tone === 'ok' ? 1500 : 4200)
   }, [])
+
+    /* --- localStorage fallback for guest / offline --- */
+  const saveLocal = (key, data) => { try { window.localStorage.setItem('eps-' + key, JSON.stringify(data)) } catch(e) {} }
+  const loadLocal = (key) => { try { const v = window.localStorage.getItem('eps-' + key); return v ? JSON.parse(v) : null } catch(e) { return null } }
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
   useEffect(() => {
@@ -244,7 +248,25 @@ const [encouragement, setEncouragement] = useState(null)
       .catch(() => {})
   }, [weekKey])
   const loadWeek = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      const wd = apiWeekData || DEFAULT_WEEK
+      const local = loadLocal('week-' + weekKey)
+      if (local) {
+        setTheme(local.theme || wd.theme || ''); setBibleReading(local.bible_reading || wd.bibleReading || '')
+        setScriptures(local.scriptures || ''); setComments(local.comments || '')
+        setTreasuresComments(local.treasures_comments || ''); setTreasuresComments2(local.treasures_comments_2 || '')
+        setNotes(local.notes || ''); setChecks(local.checks || {})
+        setSundayChecks(local.sunday_checks || {}); setSundayComments(local.sunday_comments || '')
+        setSundayComments2(local.sunday_comments_2 || ''); setSundayComments3(local.sunday_comments_3 || '')
+        setSundayArticle(local.sunday_article || wd.sundayArticle || '')
+      } else {
+        setTheme(wd.theme || ''); setBibleReading(wd.bibleReading || '')
+        setScriptures(''); setComments(''); setTreasuresComments(''); setTreasuresComments2('')
+        setNotes(''); setChecks({}); setSundayChecks({}); setSundayComments('')
+        setSundayComments2(''); setSundayComments3(''); setSundayArticle(wd.sundayArticle || '')
+      }
+      weekLoaded.current = true; return
+    }
     const wd = apiWeekData || DEFAULT_WEEK
 const { data, error } = await supabase
   .from('weeks')
@@ -285,7 +307,9 @@ if (error) {
   weekLoaded.current = true; }, [weekKey, apiWeekData, userId, pushToast])
   useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
   const saveWeek = useCallback(async () => {
-    if (!userId) return
+    const weekPayload = { theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }
+    saveLocal('week-' + weekKey, weekPayload)
+    if (!userId) { setSyncStatus('Saved (local)'); return }
     if (!weekLoaded.current) return
     if (!isOnline) {
       setSyncStatus('Offline')
@@ -307,7 +331,19 @@ if (error) {
   }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 const loadJournal = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      const local = loadLocal('journal-' + journalDate)
+      if (local) {
+        setJournalText(local.journal_text || ''); setJournalTasks(local.tasks || {})
+        setJournalNotes(local.notes || ''); setMorningChecks(local.morning_checks || {})
+        setEveningChecks(local.evening_checks || {}); setMorningGoals(local.morning_goals || '')
+        setEveningGoals(local.evening_goals || '')
+      } else {
+        setJournalText(''); setJournalTasks({}); setJournalNotes('')
+        setMorningChecks({}); setEveningChecks({}); setMorningGoals(''); setEveningGoals('')
+      }
+      journalLoaded.current = true; return
+    }
   const { data, error } = await supabase
     .from('journal_entries')
     .select('*')
@@ -347,7 +383,9 @@ const loadJournal = useCallback(async () => {
 }, [journalDate, userId, pushToast])
   useEffect(() => { journalLoaded.current = false; loadJournal() }, [loadJournal])
   const saveJournal = useCallback(async () => {
-    if (!userId) return
+    const journalPayload = { journal_text: journalText, tasks: journalTasks, notes: journalNotes, morning_checks: morningChecks, evening_checks: eveningChecks, morning_goals: morningGoals, evening_goals: eveningGoals }
+    saveLocal('journal-' + journalDate, journalPayload)
+    if (!userId) { setSyncStatus('Saved (local)'); return }
     if (!journalLoaded.current) return
     if (!isOnline) {
       setSyncStatus('Offline')
@@ -367,25 +405,29 @@ const loadJournal = useCallback(async () => {
   }, [journalDate, journalText, journalTasks, journalNotes, morningChecks, eveningChecks, morningGoals, eveningGoals, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveJournal, 800); return () => clearTimeout(t) }, [saveJournal])
     const loadTodoJournal = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      const local = loadLocal('todoJournal-' + todayStr())
+      if (local) setTodoJournalText(local.todo_journal_text || '')
+      else setTodoJournalText('')
+      todoJournalLoaded.current = true; return
+    }
     const todayDate = todayStr()
     const { data } = await supabase.from('journal_entries').select('todo_journal_text').eq('entry_date', todayDate).eq('user_id', userId).maybeSingle()
     if (data) { setTodoJournalText(data.todo_journal_text || '') } else { if (!todoJournalLoaded.current) setTodoJournalText('') }
     todoJournalLoaded.current = true
   }, [userId])
   useEffect(() => { todoJournalLoaded.current = false; loadTodoJournal() }, [loadTodoJournal])
-    const saveTodoJournal = useCallback(async () => {
-    if (!userId) return
+  const saveTodoJournal = useCallback(async () => {
+    saveLocal('todoJournal-' + todayStr(), { todo_journal_text: todoJournalText })
+    if (!userId) { setSyncStatus('Saved (local)'); return }
     if (!todoJournalLoaded.current) return
-    if (!isOnline) return
+    if (!isOnline) { setSyncStatus('Offline'); return }
+    setSyncStatus('Saving...')
     const todayDate = todayStr()
-    const { data: existing } = await supabase.from('journal_entries').select('entry_date').eq('entry_date', todayDate).eq('user_id', userId).maybeSingle()
-    if (existing) {
-      await supabase.from('journal_entries').update({ todo_journal_text: todoJournalText }).eq('entry_date', todayDate).eq('user_id', userId)
-    } else {
-      await supabase.from('journal_entries').upsert({ entry_date: todayDate, user_id: userId, todo_journal_text: todoJournalText }, { onConflict: 'entry_date,user_id' })
-    }
-  }, [todoJournalText, userId, isOnline])
+    const { error } = await supabase.from('journal_entries').upsert({ entry_date: todayDate, user_id: userId, todo_journal_text: todoJournalText }, { onConflict: 'entry_date,user_id' })
+    if (error) { setSyncStatus('Sync error'); pushToast('Could not save todo journal.', 'error'); return }
+    setSyncStatus('Saved')
+  }, [todoJournalText, userId, isOnline, pushToast])
   useEffect(() => { const t = setTimeout(saveTodoJournal, 800); return () => clearTimeout(t) }, [saveTodoJournal])
   const loadTodos = useCallback(async () => {
     if (!userId) return
@@ -1003,6 +1045,7 @@ const loadJournal = useCallback(async () => {
     </section>
   </div>
 )}
+        {userId && <div className="sync-status-bar" aria-live="polite"><span className={`sync-dot ${syncStatus === 'Saved' ? 'ok' : syncStatus === 'Saving...' ? 'saving' : 'err'}`} />{syncStatus}{!isOnline && ' (offline)'}</div>}
       <footer className="footer"><p>Eat Pray Study {"\u00a9"} 2026</p>
       </footer>
     </div>

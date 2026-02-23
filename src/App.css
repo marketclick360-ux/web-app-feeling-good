@@ -3021,3 +3021,31 @@ button:active {
 .light-theme .rne-toolbar-sep {
   background: rgba(0,0,0,0.12);
 }
+
+/* --- Sync status bar --- */
+.sync-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.03em;
+}
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.sync-dot.ok { background: #22c55e; }
+.sync-dot.saving { background: #facc15; animation: pulse-dot 1s infinite; }
+.sync-dot.err { background: #ef4444; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.light-theme .sync-status-bar {
+  color: rgba(0,0,0,0.5);
+}
