@@ -163,6 +163,7 @@ export default function App({ userId, onSignOut, onSignIn }) {
   const weekLabel = formatRange(weekStart, t('dateLocale'))
   const weekKey = toISO(weekStart)
   const [apiWeekData, setApiWeekData] = useState(null)
+    const [apiLoading, setApiLoading] = useState(true)
   const _raw = apiWeekData || DEFAULT_WEEK; const weekData = { ...DEFAULT_WEEK, ..._raw, sections: { treasures: (_raw.sections?.treasures ?? DEFAULT_WEEK.sections.treasures), living: (_raw.sections?.living ?? DEFAULT_WEEK.sections.living) } }
   const prevWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }
   const nextWeek = () => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }
@@ -242,12 +243,15 @@ const [encouragement, setEncouragement] = useState(null)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
   useEffect(() => {
     setApiWeekData(null)
+        setApiLoading(true)
     fetch(`/api/meeting-data?week=${weekKey}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setApiWeekData(data) })
       .catch(() => {})
+          .finally(() => setApiLoading(false))
   }, [weekKey])
   const loadWeek = useCallback(async () => {
+        if (apiLoading) return
     if (!userId) {
       const wd = apiWeekData || DEFAULT_WEEK
       const local = loadLocal('week-' + weekKey)
@@ -304,13 +308,14 @@ if (error) {
     setSundayArticle(wd.sundayArticle || '');
   }
 }
-  weekLoaded.current = true; }, [weekKey, apiWeekData, userId, pushToast])
+  weekLoaded.current = true; }, [weekKey, apiWeekData, apiLoading, userId, pushToast])
   useEffect(() => { weekLoaded.current = false; loadWeek() }, [loadWeek])
   const saveWeek = useCallback(async () => {
     const weekPayload = { theme, bible_reading: bibleReading, scriptures, comments, treasures_comments: treasuresComments, treasures_comments_2: treasuresComments2, notes, checks, sunday_checks: sundayChecks, sunday_comments: sundayComments, sunday_comments_2: sundayComments2, sunday_comments_3: sundayComments3, sunday_article: sundayArticle }
     saveLocal('week-' + weekKey, weekPayload)
     if (!userId) { setSyncStatus('Saved (local)'); return }
     if (!weekLoaded.current) return
+        if (apiLoading) return
     if (!isOnline) {
       setSyncStatus('Offline')
       return
@@ -329,7 +334,7 @@ if (error) {
     }
     pushToast('\u2713 Saved', 'ok')
         setSyncStatus('Saved')
-  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId, isOnline, pushToast])
+  }, [weekKey, theme, bibleReading, scriptures, comments, treasuresComments, treasuresComments2, notes, checks, sundayChecks, sundayComments, sundayComments2, sundayComments3, sundayArticle, userId, isOnline, apiLoading, pushToast])
   useEffect(() => { const t = setTimeout(saveWeek, 800); return () => clearTimeout(t) }, [saveWeek])
 const loadJournal = useCallback(async () => {
     if (!userId) {
