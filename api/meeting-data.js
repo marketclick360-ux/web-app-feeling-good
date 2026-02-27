@@ -1,7 +1,129 @@
 import https from 'https'
 // Server-side cached meeting data (updated periodically)
 const WEEKLY_MEETINGS = {
-  '2026-02-09': {
+    '2025-12-29': {
+    theme: 'Enemies of God\'s People Do Not Escape Punishment',
+    bibleReading: 'Isaiah 14-16',
+    song: 'Song 63 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/november-december-2025-mwb/Life-and-Ministry-Meeting-Schedule-for-December-29-2025-January-4-2026/',
+    sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-october-2025/',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Enemies of God\'s People Do Not Escape Punishment" (10 min.) — Isa 14:13-15, 22, 23' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 14:1, 2' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 16:1-14' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 48-49' }
+      ]
+    }
+  },
+  '2026-01-05': {
+    theme: 'The Share of Those Pillaging Us',
+    bibleReading: 'Isaiah 17-20',
+    song: 'Song 153 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-5-11-2026/',
+    sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-november-2025/',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "The Share of Those Pillaging Us" (10 min.) — Isa 17:12-14' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 20:2' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 19:1-12' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 "Remember the Rock of Your Fortress" (10 min.)' },
+        { id: 'talk2', text: '📌 Make Time Every Day to Learn From Jehovah\'s Friends (5 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 50-51' }
+      ]
+    }
+  },
+  '2026-01-12': {
+    theme: 'Lessons From Shebna\'s Downfall',
+    bibleReading: 'Isaiah 21-23',
+    song: 'Song 120 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-12-18-2026/',
+    sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-november-2025/',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Lessons From Shebna\'s Downfall" (10 min.) — Isa 22:15-19' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 21:1' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 23:1-14' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 52-53' }
+      ]
+    }
+  },
+  '2026-01-19': {
+    theme: 'This Is Our God!',
+    bibleReading: 'Isaiah 24-27',
+    song: 'Song 159 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-19-25-2026/',
+    sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-november-2025/',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "This Is Our God!" (10 min.) — Isa 25:6-9' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 24:2' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 25:1-9' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 Fully Lean On Jehovah When Preparing for Medical or Surgical Care (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 54-55' }
+      ]
+    }
+  },
+  '2026-01-26': {
+    theme: 'Honor Jehovah With Your Lips and Your Heart',
+    bibleReading: 'Isaiah 28-29',
+    song: 'Song 28 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-January-26-February-1-2026/',
+    sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-november-2025/',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Honor Jehovah With Your Lips and Your Heart" (10 min.) — Isa 29:13' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 29:1' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 29:13-24' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 "I Always Do the Things Pleasing to Him" (8 min.)' },
+        { id: 'local_needs2', text: '📌 Local Needs (7 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 56-57' }
+      ]
+    }
+  },
+  '2026-02-02': {
+    theme: 'Find Refuge Under Jehovah\'s Wings',
+    bibleReading: 'Isaiah 30-32',
+    song: 'Song 8 and Prayer',
+    workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/january-february-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-February-2-8-2026/',
+    sundayArticle: '',
+    sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-december-2025/',
+    sundayScriptures: [],
+    sections: {
+      treasures: [
+        { id: 'talk', text: '🎤 Talk: "Find Refuge Under Jehovah\'s Wings" (10 min.) — Isa 31:5; 32:1, 2, 16-18' },
+        { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 30:20' },
+        { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 31:1-9' }
+      ],
+      living: [
+        { id: 'local_needs', text: '📌 "The Result of True Righteousness Will Be Peace" (15 min.)' },
+        { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 58-59' }
+      ]
+    }
+  },
+'2026-02-09': {
     theme: 'He Is the Stability of Your Times',
     bibleReading: 'Isaiah 33-35',
     song: 'Song 3 and Prayer',
