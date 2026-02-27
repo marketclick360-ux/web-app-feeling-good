@@ -355,7 +355,190 @@ const WEEKLY_MEETINGS = {
         { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 80-81' }
       ]
     }
-  }
+  },
+    '2026-05-04': {
+        theme: 'Fully Experience Jehovah\'s Blessing',
+        bibleReading: 'Isaiah 58-59',
+        song: 'Song 21 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-May-4-10-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-march-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "Fully Experience Jehovah\'s Blessing" (10 min.) — Isa 58:7-9, 13, 14; 59:1' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 59:11' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 59:1-12' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 "Follow the Course of Hospitality" (15 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 82-83' }
+            ]
+        }
+    },
+    '2026-05-11': {
+        theme: '"Arise, O Woman, Shed Light"',
+        bibleReading: 'Isaiah 60-61',
+        song: 'Song 146 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-May-11-17-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-march-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "Arise, O Woman, Shed Light" (10 min.) — Isa 60:1, 2' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 61:1' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 61:1-9' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 84-85' }
+            ]
+        }
+    },
+    '2026-05-18': {
+        theme: 'The Loving and Compassionate Potter',
+        bibleReading: 'Isaiah 62-64',
+        song: 'Song 44 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-May-18-24-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-march-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "The Loving and Compassionate Potter" (10 min.) — Isa 63:9; 64:8' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 63:10' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 64:4-12' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Disaster Preparedness—Expect the Unexpected (15 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 86-87' }
+            ]
+        }
+    },
+    '2026-05-25': {
+        theme: 'We Love Our Spiritual Paradise!',
+        bibleReading: 'Isaiah 65-66',
+        song: 'Song 24 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-May-25-31-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-march-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "We Love Our Spiritual Paradise!" (10 min.) — Isa 65:13, 14-17, 25' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Isa 66:24' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Isaiah 65:17-25' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Are You Missing Out? (15 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 88-89' }
+            ]
+        }
+    },
+    '2026-06-01': {
+        theme: 'Do Not Be Afraid . . . for "I Am With You"',
+        bibleReading: 'Jeremiah 1-3',
+        song: 'Song 84 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-June-1-7-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-april-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "Do Not Be Afraid . . . for I Am With You" (10 min.) — Jer 1:6, 8, 9' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Jer 2:28' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Jeremiah 3:14-25' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Be Bold Like Jeremiah (6 min.)' },
+                { id: 'talk2', text: '📌 "Make a Defense . . . With a Mild Temper and Deep Respect" (9 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 90-91' }
+            ]
+        }
+    },
+    '2026-06-08': {
+        theme: 'Learn From Judah\'s Spiritual Sickness',
+        bibleReading: 'Jeremiah 4-6',
+        song: 'Song 56 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-June-8-14-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-april-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "Learn From Judah\'s Spiritual Sickness" (10 min.) — Jer 4:4, 14; 5:31; 6:17-19' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Jer 4:10' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Jeremiah 5:1-11' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Protect Your Heart From Misinformation (8 min.)' },
+                { id: 'local_needs2', text: '📌 Local Needs (7 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 92-93' }
+            ]
+        }
+    },
+    '2026-06-15': {
+        theme: 'They Treated Jehovah\'s Temple With Contempt',
+        bibleReading: 'Jeremiah 7-8',
+        song: 'Song 152 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-June-15-21-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-april-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "They Treated Jehovah\'s Temple With Contempt" (10 min.) — Jer 7:4, 8-14' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Jer 8:22' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Jeremiah 8:4-13' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 How We Can Show Appreciation for Our Kingdom Halls (5 min.)' },
+                { id: 'talk2', text: '📌 How Your Donations Are Used—Maintaining Our Kingdom Halls (10 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 94-95' }
+            ]
+        }
+    },
+    '2026-06-22': {
+        theme: 'What Will You Boast About?',
+        bibleReading: 'Jeremiah 9-10',
+        song: 'Song 5 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-June-22-28-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-april-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "What Will You Boast About?" (10 min.) — Jer 9:23, 24' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Jer 10:21' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Jeremiah 9:13-24' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Avoid Deception, and Follow the Kingdom (15 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 96-97' }
+            ]
+        }
+    },
+    '2026-06-29': {
+        theme: 'How to "Run a Race Against Horses"',
+        bibleReading: 'Jeremiah 11-12',
+        song: 'Song 106 and Prayer',
+        workbookUrl: 'https://www.jw.org/en/library/jw-meeting-workbook/may-june-2026-mwb/Life-and-Ministry-Meeting-Schedule-for-June-29-July-5-2026/',
+        sundayArticle: '',
+        sundayArticleUrl: 'https://www.jw.org/en/library/magazines/watchtower-study-april-2026/',
+        sundayScriptures: [],
+        sections: {
+            treasures: [
+                { id: 'talk', text: '🎤 Talk: "How to Run a Race Against Horses" (10 min.) — Jer 11:21; 12:5' },
+                { id: 'gems', text: '🔍 Spiritual Gems (10 min.) — Jer 12:1, 3' },
+                { id: 'reading', text: '📖 Bible Reading (4 min.) — Jeremiah 12:1-11' }
+            ],
+            living: [
+                { id: 'local_needs', text: '📌 Local Needs (15 min.)' },
+                { id: 'cbs', text: '📕 Congregation Bible Study (30 min.) — lfb lessons 98-99' }
+            ]
+        }
+    }
 }
 
 const DEFAULT_WEEK = {
