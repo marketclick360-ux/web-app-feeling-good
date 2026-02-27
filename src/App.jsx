@@ -256,13 +256,13 @@ const [encouragement, setEncouragement] = useState(null)
       const wd = apiWeekData || DEFAULT_WEEK
       const local = loadLocal('week-' + weekKey)
       if (local) {
-        setTheme(local.theme || wd.theme || ''); setBibleReading(local.bible_reading || wd.bibleReading || '')
+        setTheme(wd.theme || local.theme || ''); setBibleReading(wd.bibleReading || local.bible_reading || '')
         setScriptures(local.scriptures || ''); setComments(local.comments || '')
         setTreasuresComments(local.treasures_comments || ''); setTreasuresComments2(local.treasures_comments_2 || '')
         setNotes(local.notes || ''); setChecks(local.checks || {})
         setSundayChecks(local.sunday_checks || {}); setSundayComments(local.sunday_comments || '')
         setSundayComments2(local.sunday_comments_2 || ''); setSundayComments3(local.sunday_comments_3 || '')
-        setSundayArticle(local.sunday_article || wd.sundayArticle || '')
+        setSundayArticle(wd.sundayArticle || local.sunday_article || '')
       } else {
         setTheme(wd.theme || ''); setBibleReading(wd.bibleReading || '')
         setScriptures(''); setComments(''); setTreasuresComments(''); setTreasuresComments2('')
@@ -285,11 +285,11 @@ if (error) {
   return
 }
     if (data) {
-      setTheme(data.theme || wd.theme || ''); setBibleReading(data.bible_reading || wd.bibleReading || '')
+      setTheme(wd.theme || data.theme || ''); setBibleReading(wd.bibleReading || data.bible_reading || '')
       setScriptures(data.scriptures || ''); setComments(data.comments || ''); setTreasuresComments(data.treasures_comments || '')
       setTreasuresComments2(data.treasures_comments_2 || '')
       setNotes(data.notes || ''); setChecks(data.checks || {}); setSundayChecks(data.sunday_checks || {})
-      setSundayComments(data.sunday_comments || ''); setSundayComments2(data.sunday_comments_2 || ''); setSundayComments3(data.sunday_comments_3 || ''); setSundayArticle(data.sunday_article || wd.sundayArticle || '')
+      setSundayComments(data.sunday_comments || ''); setSundayComments2(data.sunday_comments_2 || ''); setSundayComments3(data.sunday_comments_3 || ''); setSundayArticle(wd.sundayArticle || data.sunday_article || '')
     } else {
   // Only initialize defaults on first load to prevent overwriting saved data
   if (!weekLoaded.current) {
