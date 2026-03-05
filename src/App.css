@@ -2807,3 +2807,10 @@ button:active {
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
+
+/* Fix: Strip background from pasted content in rich note editors */
+.rich-note-editor * {
+  background-color: transparent !important;
+  background: transparent !important;
+}
