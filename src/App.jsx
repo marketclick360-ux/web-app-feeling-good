@@ -202,7 +202,7 @@ const [encouragement, setEncouragement] = useState(null)
     })
   const [newTodo, setNewTodo] = useState('')
   const [newTodoPriority, setNewTodoPriority] = useState('medium')
-  const [newTodoDue, setNewTodoDue] = useState('')
+  const [newTodoDue, setNewTodoDue] = useState(() => todayStr())
   const [newTodoCategory, setNewTodoCategory] = useState('general')
   const [todoFilter, setTodoFilter] = useState('all')
     const [editingTodoId, setEditingTodoId] = useState(null)
@@ -365,10 +365,10 @@ const loadJournal = useCallback(async () => {
   }, [userId, pushToast])
   useEffect(() => { loadTodos() }, [loadTodos])
   const addTodo = async () => {
-    if (!userId) return
+        if (!userId) { pushToast('Please sign in to add tasks.', 'error'); return }
     if (!newTodo.trim()) return
     const ins = { text: newTodo.trim(), user_id: userId, priority: newTodoPriority, category: newTodoCategory }
-    if (newTodoDue) ins.due_date = newTodoDue
+        ins.due_date = newTodoDue || todayStr()
     const { data, error } = await supabase.from('todo_items').insert(ins).select().single()
     if (error) {
       pushToast('Could not add task.', 'error')
@@ -376,7 +376,7 @@ const loadJournal = useCallback(async () => {
     }
     if (data) setTodos(prev => [...prev, data])
     setNewTodo('')
-    setNewTodoDue('')
+        setNewTodoDue(todayStr())
     setNewTodoPriority('medium')
     setNewTodoCategory('general')
   }
