@@ -622,6 +622,29 @@ const loadJournal = useCallback(async () => {
       window.removeEventListener('offline', onOffline)
     }
   }, [pushToast])
+
+    /* --- Cross-device sync: reload data when user returns to the app --- */
+  useEffect(() => {
+    if (!userId) return
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        loadJournal()
+        loadWeek()
+        loadTodos()
+        loadTodoJournal()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    const poll = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadTodos()
+      }
+    }, 30000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(poll)
+    }
+  }, [userId, loadJournal, loadWeek, loadTodos, loadTodoJournal])
   useEffect(() => {
     if (tab) window.localStorage.setItem('eps-active-tab', tab)
   }, [tab])
