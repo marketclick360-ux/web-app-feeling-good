@@ -22,10 +22,21 @@ export default function AuthGate({ children }) {
       if (data.session) {
         const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession()
         if (refreshErr || !refreshed.session) {
-          console.warn('Session expired, clearing stale session')
-          await supabase.auth.signOut()
-          setSession(null)
+          // Refresh failed — but don't sign out immediately.
+          // Use the existing session if its access token hasn't expired yet.
+          const expiresAt = data.session.expires_at
+          const now = Math.floor(Date.now() / 1000)
+          if (expiresAt && now < expiresAt) {
+            console.warn('Session refresh failed, but token still valid — keeping session')
+            setSession(data.session)
+          } else {
+            console.warn('Session expired and refresh failed — clearing session')
+            await supabase.auth.signOut()
+            setSession(null)
+          }
         } else {
+          setSession(refreshed.session)
+        }
           setSession(refreshed.session)
         }
       } else {
