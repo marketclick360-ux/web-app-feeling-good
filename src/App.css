@@ -165,30 +165,17 @@ body.light-theme::after {
   font-style: italic;
 }
 /* -- Floating Glass Tab Bar -- */
-.tab-row {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%) translateZ(0);
-  display: flex;
-  gap: 4px;
-  padding: 6px;
-  background: rgba(30,30,50,0.65);
-  backdrop-filter: blur(50px) saturate(200%);
-  -webkit-backdrop-filter: blur(50px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 22px;
-  z-index: 100;
-  justify-content: center;
-  max-width: calc(100% - 32px);
-  width: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
-  right: auto;
-  will-change: transform;
+.nav-grid {
+    display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
   
-.tab-row::-webkit-scrollbar { height: 0; }
+.nav-grid::-webkit-scrollbar { height: 0; }
 
 .tab {
   padding: 10px 16px;
@@ -1023,7 +1010,7 @@ textarea, textarea *, input[type="text"], input[type="date"] { color: #e2e8f0 !i
   .greeting-card { padding: 20px 16px; }
   .greeting-title { font-size: 1.2rem; }
   .progress-grid { gap: 24px; }
-  .tab-row {
+  .nav-grid {
     bottom: 12px;
     padding: 5px;
     border-radius: 18px;
@@ -1052,7 +1039,7 @@ textarea, textarea *, input[type="text"], input[type="date"] { color: #e2e8f0 !i
 /* iOS safe areas */
 @supports (padding: env(safe-area-inset-bottom)) {
   .app-scroll { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
-  .tab-row { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .nav-grid { bottom: calc(16px + env(safe-area-inset-bottom)); }
 }
 
 
@@ -1083,7 +1070,7 @@ body {
   .rich-note-editor img { max-height: none !important; page-break-inside: avoid; }
   .rich-note-toolbar { display: none !important; }
   .image-modal { display: none !important; }
-  .tab-row { display: none !important; }
+  .nav-grid { display: none !important; }
   }
 
   /* -- Scripture List (Sunday tab) -- */
@@ -1131,7 +1118,7 @@ body {
     max-width: 100%;
     padding: 20px 20px 120px;
   }
-  .tab-row {
+  .nav-grid {
     max-width: 480px;
   }
   .card {
@@ -1145,7 +1132,7 @@ body {
     max-width: 100%;
     padding: 16px 12px 120px;
   }
-  .tab-row {
+  .nav-grid {
     max-width: calc(100% - 24px);
     gap: 2px;
     padding: 4px;
@@ -1224,7 +1211,7 @@ body {
   border-color: rgba(99,102,241,0.5);
 }
 
-.light-theme .tab-row {
+.light-theme .nav-grid {
   background: rgba(255,255,255,0.9);
   border-color: rgba(0,0,0,0.1);
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -1645,7 +1632,7 @@ textarea,
     font-size: 0.95rem;
   }
 
-  .tab-row {
+  .nav-grid {
     bottom: 20px;
     max-width: 520px;
     padding: 8px;
@@ -2120,7 +2107,7 @@ textarea,
 }
 
 /* Enhanced floating tab bar - visionOS style */
-.tab-row {
+.nav-grid {
   background: rgba(20,20,35,0.7);
   backdrop-filter: blur(50px) saturate(200%) brightness(1.1);
   -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.1);
@@ -2529,7 +2516,7 @@ body.zoomed-viewport .app::before {
   display: none !important;
 }
 
-body.zoomed-viewport .tab-row {
+body.zoomed-viewport .nav-grid {
   left: max(12px, env(safe-area-inset-left)) !important;
   right: max(12px, env(safe-area-inset-right)) !important;
   transform: none !important;
@@ -2542,7 +2529,7 @@ body.zoomed-viewport .tab-row {
 
 body.zoomed-viewport .card,
 body.zoomed-viewport .header,
-body.zoomed-viewport .tab-row,
+body.zoomed-viewport .nav-grid,
 body.zoomed-viewport .rich-note-toolbar {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -2550,7 +2537,7 @@ body.zoomed-viewport .rich-note-toolbar {
 
 /* Avoid tab bar covering fields while typing on touch devices */
 @media (hover: none) and (pointer: coarse) {
-  body.keyboard-open .tab-row {
+  body.keyboard-open .nav-grid {
     opacity: 0;
     pointer-events: none;
     transform: translateY(24px);
@@ -2662,14 +2649,14 @@ body.zoomed-viewport .rich-note-toolbar {
    - Subtle transitions
    ========================================= */
 
-.tab-row {
+.nav-grid {
   gap: 4px;
   padding: 6px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 12px;
 }
 
-.tab-row button {
+.nav-grid button {
   padding: 8px 14px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -2679,22 +2666,22 @@ body.zoomed-viewport .rich-note-toolbar {
   background: transparent;
 }
 
-.tab-row button.active,
-.tab-row button[class*="active"] {
+.nav-grid button.active,
+.nav-grid button[class*="active"] {
   background: rgba(129, 140, 248, 0.2);
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
-.tab-row button:not(.active):hover {
+.nav-grid button:not(.active):hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
 /* Light theme tabs */
-body.light-theme .tab-row {
+body.light-theme .nav-grid {
   background: rgba(0, 0, 0, 0.05);
 }
 
-body.light-theme .tab-row button.active {
+body.light-theme .nav-grid button.active {
   background: rgba(99, 102, 241, 0.15);
 }
 
