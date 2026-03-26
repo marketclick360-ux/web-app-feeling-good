@@ -552,7 +552,7 @@ const loadJournal = useCallback(async () => {
   ]
   return (
     <div className={`app ${colorMode}`}>
-      <nav className="tab-row" aria-label="Primary tabs">
+      <nav className="nav-grid" aria-label="Primary tabs">
         {TABS.map(t => (<button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)} aria-label={`Open ${t.name} tab`} aria-current={tab === t.id ? 'page' : undefined}><span className="tab-icon">{t.icon}</span><span className="tab-name">{t.name}</span></button>))}
       </nav>
             <button className="theme-toggle" onClick={() => setColorMode(colorMode === '' ? 'light-theme' : '')} aria-label={colorMode === '' ? 'Switch to light mode' : 'Switch to dark mode'} title="Toggle light/dark mode">{colorMode === '' ? '\u2600\ufe0f' : '\ud83c\udf19'}</button>
