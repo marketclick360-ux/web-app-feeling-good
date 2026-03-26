@@ -306,12 +306,14 @@ const handleEditorClick = useCallback((e) => {
         contentEditable
         spellCheck={true}
         autoCorrect="on"
+                inputMode="text"
         autoCapitalize="sentences"
+                data-gramm="false"
         onInput={handleInput}
         onPaste={handlePaste}
         onClick={handleEditorClick}
         data-placeholder={placeholder}
-        style={{ minHeight: height }}
+                style={{ minHeight: height, touchAction: 'manipulation', WebkitUserSelect: 'text' }}
       />
 
       <div className="rich-note-resizer"
