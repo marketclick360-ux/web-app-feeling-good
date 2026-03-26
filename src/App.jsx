@@ -50,7 +50,7 @@ const SUNDAY_CHECKLIST = [
   { key: 'prepare_comments',  label: 'Prepare 3–4 comments showing application to pioneer life' },
 ]
 const SECTION_LABELS = [
-  { key: 'treasures', label: '💎 TREASURES FROM GOD'S WORD', color: '#5b6abf' },
+    { key: 'treasures', label: "💎 TREASURES FROM GOD'S WORD", color: '#5b6abf' },
   { key: 'living',    label: '💚 LIVING AS CHRISTIANS',       color: '#b5463c' },
 ]
 const WEEKLY_MEETINGS = {
