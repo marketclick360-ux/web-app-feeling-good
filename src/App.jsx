@@ -143,14 +143,23 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' 
   const radius = (size - strokeWidth) / 2
   const circumference = radius * 2 * Math.PI
   const strokeDashoffset = circumference - (progress / 100) * circumference
+  const isComplete = progress >= 100
   return (
-    <svg width={size} height={size} className="progress-ring">
+    <svg width={size} height={size} className="progress-ring"
+      style={{ filter: isComplete ? `drop-shadow(0 0 8px ${color}cc)` : 'none', transition: 'filter 0.6s ease' }}>
       <circle stroke="rgba(255,255,255,0.1)" strokeWidth={strokeWidth} fill="transparent" r={radius} cx={size / 2} cy={size / 2} />
       <circle stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" fill="transparent" r={radius} cx={size / 2} cy={size / 2}
         style={{ strokeDasharray: circumference, strokeDashoffset, transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 0.5s ease' }} />
       <text x="50%" y="50%" textAnchor="middle" dy=".3em" fill="white" fontSize="14" fontWeight="600">{Math.round(progress)}%</text>
     </svg>
   )
+}
+function loadStreak() {
+  try { return JSON.parse(localStorage.getItem('eps-streak') || '{"count":0,"lastDate":""}') }
+  catch { return { count: 0, lastDate: '' } }
+}
+function saveStreak(count, dateStr) {
+  localStorage.setItem('eps-streak', JSON.stringify({ count, lastDate: dateStr }))
 }
 export default function App({ userId, onSignOut, onSignIn }) {
     const [locale, setLocale] = useState(() => {
@@ -216,6 +225,10 @@ const [encouragement, setEncouragement] = useState(null)
     const [editingTodoId, setEditingTodoId] = useState(null)
   const [editingTodoText, setEditingTodoText] = useState('')
   const [syncStatus, setSyncStatus] = useState('Saved')
+  const [streak, setStreak] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    return loadStreak().count
+  })
       const [showMenu, setShowMenu] = useState(false); const settingsRef = useRef(null); useEffect(() => { const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowMenu(false) }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler) }, [])
     const [showEvening, setShowEvening] = useState(false)
         const [showMorning, setShowMorning] = useState(false)
@@ -241,6 +254,17 @@ const [encouragement, setEncouragement] = useState(null)
   const loadLocal = (key) => { try { const v = window.localStorage.getItem('eps-' + key); return v ? JSON.parse(v) : null } catch(e) { return null } }
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
+  const morningCompleteToday = morningProgress === 100 && isToday
+  useEffect(() => {
+    if (!morningCompleteToday) return
+    const s = loadStreak()
+    if (s.lastDate === todayStr()) return
+    const d = new Date(todayStr() + 'T12:00')
+    d.setDate(d.getDate() - 1)
+    const newCount = s.lastDate === toISO(d) ? s.count + 1 : 1
+    saveStreak(newCount, todayStr())
+    setStreak(newCount)
+  }, [morningCompleteToday])
   useEffect(() => {
     setApiWeekData(null)
         setApiLoading(true)
@@ -682,6 +706,22 @@ const loadJournal = useCallback(async () => {
           <section className="card greeting-card">
             <h2 className="greeting-title">{getGreeting(t)}</h2>
             <p className="greeting-date">{displayDate}</p>
+            <div className="progress-grid">
+              <div className="progress-item">
+                <ProgressRing progress={morningProgress} color="#fbbf24" />
+                <span className="progress-label">{t('morning')}</span>
+              </div>
+              <div className="progress-item">
+                <ProgressRing progress={eveningProgress} color="#818cf8" />
+                <span className="progress-label">{t('evening')}</span>
+              </div>
+            </div>
+            {streak > 0 && (
+              <div className="streak-badge">
+                <span>🔥</span>
+                <span className="streak-count">{streak} day{streak !== 1 ? 's' : ''}</span>
+              </div>
+            )}
           </section>
           <div className="home-grid">
             {TABS.map(t => (
@@ -706,7 +746,36 @@ const loadJournal = useCallback(async () => {
         <section className="card greeting-card">
           <h2 className="greeting-title">{getGreeting(t)}</h2>
           <p className="greeting-date">{displayDate}</p>
+          <div className="progress-grid">
+            <div className="progress-item">
+              <ProgressRing progress={morningProgress} color="#fbbf24" />
+              <span className="progress-label">{t('morning')}</span>
+            </div>
+            <div className="progress-item">
+              <ProgressRing progress={eveningProgress} color="#818cf8" />
+              <span className="progress-label">{t('evening')}</span>
+            </div>
+          </div>
+          {streak > 0 && (
+            <div className="streak-badge">
+              <span>🔥</span>
+              <span className="streak-count">{streak} day{streak !== 1 ? 's' : ''}</span>
+            </div>
+          )}
         </section>
+        {morningCompleteToday && (
+          <section className="card morning-complete-banner">
+            <div className="complete-banner-inner">
+              <span className="complete-banner-icon">✨</span>
+              <div>
+                <h3 className="complete-banner-title">{t('morningRoutine')} Complete!</h3>
+                <p className="complete-banner-text">
+                  {streak > 1 ? `You're on a ${streak}-day streak — keep the momentum going!` : 'All morning goals done. Well done!'}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
                     <section className="card daily-spiritual-food-card">
             <h3 className="section-heading morning-heading" onClick={() => setShowSpiritualFood(!showSpiritualFood)} style={{cursor:'pointer'}}>{showSpiritualFood ? '\u25BC' : '\u25B6'} {t('dailySpiritualFood')}</h3>
             {showSpiritualFood && (<>
