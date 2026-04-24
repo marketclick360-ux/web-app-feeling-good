@@ -37,8 +37,6 @@ export default function AuthGate({ children }) {
         } else {
           setSession(refreshed.session)
         }
-          setSession(refreshed.session)
-        }
       } else {
         setSession(null)
       }
