@@ -138,6 +138,32 @@ const DEFAULT_WEEK = {
     living: [{ id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' }, { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.)' }]
   }
 }
+const DAILY_PROMPTS = [
+  'What is one quality of Jehovah you want to reflect in your ministry today?',
+  'What scripture from your Bible reading has encouraged you most recently?',
+  'Who in your territory or congregation could use an encouraging call today?',
+  'What are you trusting Jehovah with this week?',
+  'How did a recent conversation in the ministry go, and what could you improve?',
+  'What does your pioneer service mean to you personally right now?',
+  'Which aspect of your spiritual routine brings you the most peace?',
+  'What goal from last week did you make progress on?',
+  'How has Jehovah answered one of your prayers recently?',
+  'What part of the upcoming meeting are you most looking forward to?',
+  'What scripture would you share with someone going through a hard time?',
+  'How are you cultivating a quality from the fruit of the spirit this month?',
+  'What would make today\'s field service experience meaningful?',
+  'What have you learned about Jehovah from your personal study lately?',
+  'How can you make your prayer more specific and heartfelt today?',
+  'What challenge in the ministry are you trusting Jehovah to help with?',
+  'Which meeting comment touched your heart most recently?',
+  'What is something about Jehovah\'s organization that you\'re grateful for?',
+]
+function getDailyPrompt() {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now - start) / 86400000)
+  return DAILY_PROMPTS[dayOfYear % DAILY_PROMPTS.length]
+}
 function loadStreak() {
   try { return JSON.parse(localStorage.getItem('eps-streak') || '{"count":0,"lastDate":""}') }
   catch { return { count: 0, lastDate: '' } }
@@ -221,6 +247,8 @@ const [encouragement, setEncouragement] = useState(null)
     if (typeof window === 'undefined') return 0
     return loadStreak().count
   })
+  const [collapsedSections, setCollapsedSections] = useState({})
+  const toggleSection = (key) => setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }))
   const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -634,6 +662,12 @@ const loadJournal = useCallback(async () => {
             </div>
           </section>
         )}
+        {isToday && (
+          <section className="card daily-prompt-card">
+            <h3 className="section-heading morning-heading">\ud83d\udcad Today's Reflection</h3>
+            <p className="daily-prompt-text">{getDailyPrompt()}</p>
+          </section>
+        )}
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <div className="day-nav">
@@ -711,36 +745,65 @@ const loadJournal = useCallback(async () => {
             <label>Bible Reading {bibleReading && <a href={`https://wol.jw.org/en/wol/l/r1/lp-e?q=${encodeURIComponent(bibleReading)}`} target="_blank" rel="noopener noreferrer" className="bible-link">📖</a>}<input type="text" value={bibleReading} onChange={e => setBibleReading(e.target.value)} placeholder={weekData.bibleReading || 'e.g. Isaiah 31:1-9'} /></label>
           </section>
           {SECTION_LABELS.map(section => (
-            <section key={section.key} className="card">
-              <h3 className="section-heading" style={{ borderLeftColor: section.color }}>{section.label}</h3>
-              {(weekData.sections[section.key] ?? []).map(item => (<div key={item.id} className="meeting-part-item"><span>{item.text}</span><button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text" aria-label="Copy text">{copiedId === item.id ? '\u2705' : '\ud83d\udccb'}</button></div>))}
-              {section.key === 'treasures' && (<div className="treasures-comments"><h4 className="treasures-comments-title">{"\ud83d\udcdd"} My Bible Reading & Spiritual Gems Notes<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures' ? '\u2705' : '\ud83d\udccb'}</button></h4><RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} /></div>)}
-            {section.key === 'treasures' && (
-  <div className="treasures-comments">
-    <h4 className="treasures-comments-title">
-      {"📝"} My Bible Reading & Spiritual Gems Notes (2)
-      <button
-        className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`}
-        onClick={() => copyToClipboard(treasuresComments2, 'treasures2')}
-        title="Copy notes"
-        aria-label="Copy notes"
-      >
-        {copiedId === 'treasures2' ? '✅' : '📋'}
-      </button>
-    </h4>
-    <RichNoteEditor
-      value={treasuresComments2}
-      onChange={setTreasuresComments2}
-      placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..."
-      minHeight={150}
-    />
-  </div>
-)}
+            <section key={section.key} className="card collapsible-card">
+              <div className="collapsible-header" onClick={() => toggleSection('prep-' + section.key)}>
+                <h3 className="section-heading" style={{ borderLeftColor: section.color, marginBottom: 0 }}>{section.label}</h3>
+                <span className={`chevron ${collapsedSections['prep-' + section.key] ? 'collapsed' : ''}`}>⌄</span>
+              </div>
+              {!collapsedSections['prep-' + section.key] && (
+                <div className="section-body">
+                  {(weekData.sections[section.key] ?? []).map(item => (
+                    <div key={item.id} className="meeting-part-item">
+                      <span>{item.text}</span>
+                      <button className={`copy-btn ${copiedId === item.id ? 'copied' : ''}`} onClick={() => copyToClipboard(item.text, item.id)} title="Copy text" aria-label="Copy text">{copiedId === item.id ? '✅' : '📋'}</button>
+                    </div>
+                  ))}
+                  {section.key === 'treasures' && (
+                    <div className="treasures-comments">
+                      <h4 className="treasures-comments-title">📝 My Notes (1)<button className={`copy-btn ${copiedId === 'treasures' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments, 'treasures')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures' ? '✅' : '📋'}</button></h4>
+                      <RichNoteEditor value={treasuresComments} onChange={setTreasuresComments} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} />
+                    </div>
+                  )}
+                  {section.key === 'treasures' && (
+                    <div className="treasures-comments">
+                      <h4 className="treasures-comments-title">📝 My Notes (2)<button className={`copy-btn ${copiedId === 'treasures2' ? 'copied' : ''}`} onClick={() => copyToClipboard(treasuresComments2, 'treasures2')} title="Copy notes" aria-label="Copy notes">{copiedId === 'treasures2' ? '✅' : '📋'}</button></h4>
+                      <RichNoteEditor value={treasuresComments2} onChange={setTreasuresComments2} placeholder="Write your Bible reading highlights, spiritual gems, and prepared comments..." minHeight={150} />
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
           ))}
-          <section className="card"><h3 className="section-heading notes-heading">Key Scriptures & References<button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={() => copyToClipboard(scriptures, 'scriptures')} title="Copy scriptures" aria-label="Copy scriptures">{copiedId === 'scriptures' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></section>
-          <section className="card"><h3 className="section-heading notes-heading">My Comments to Prepare<button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={() => copyToClipboard(comments, 'comments')} title="Copy comments" aria-label="Copy comments">{copiedId === 'comments' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={comments} onChange={setComments} placeholder="Write your prepared comments for the meeting..." minHeight={150} /></section>
-          <section className="card"><h3 className="section-heading notes-heading">Personal Study Notes<button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={() => copyToClipboard(notes, 'notes')} title="Copy notes" aria-label="Copy notes">{copiedId === 'notes' ? '\u2705' : '\ud83d\udccb'}</button></h3><RichNoteEditor value={notes} onChange={setNotes} placeholder="What stood out to you this week?" /></section>
+          <section className="card collapsible-card">
+            <div className="collapsible-header" onClick={() => toggleSection('prep-scriptures')}>
+              <h3 className="section-heading notes-heading" style={{ marginBottom: 0 }}>Key Scriptures & References</h3>
+              <div className="collapsible-actions">
+                <button className={`copy-btn ${copiedId === 'scriptures' ? 'copied' : ''}`} onClick={e => { e.stopPropagation(); copyToClipboard(scriptures, 'scriptures') }} title="Copy" aria-label="Copy">{copiedId === 'scriptures' ? '✅' : '📋'}</button>
+                <span className={`chevron ${collapsedSections['prep-scriptures'] ? 'collapsed' : ''}`}>⌄</span>
+              </div>
+            </div>
+            {!collapsedSections['prep-scriptures'] && <div className="section-body"><RichNoteEditor value={scriptures} onChange={setScriptures} placeholder="Paste references and JW.org links here..." /></div>}
+          </section>
+          <section className="card collapsible-card">
+            <div className="collapsible-header" onClick={() => toggleSection('prep-comments')}>
+              <h3 className="section-heading notes-heading" style={{ marginBottom: 0 }}>My Comments to Prepare</h3>
+              <div className="collapsible-actions">
+                <button className={`copy-btn ${copiedId === 'comments' ? 'copied' : ''}`} onClick={e => { e.stopPropagation(); copyToClipboard(comments, 'comments') }} title="Copy" aria-label="Copy">{copiedId === 'comments' ? '✅' : '📋'}</button>
+                <span className={`chevron ${collapsedSections['prep-comments'] ? 'collapsed' : ''}`}>⌄</span>
+              </div>
+            </div>
+            {!collapsedSections['prep-comments'] && <div className="section-body"><RichNoteEditor value={comments} onChange={setComments} placeholder="Write your prepared comments for the meeting..." minHeight={150} /></div>}
+          </section>
+          <section className="card collapsible-card">
+            <div className="collapsible-header" onClick={() => toggleSection('prep-notes')}>
+              <h3 className="section-heading notes-heading" style={{ marginBottom: 0 }}>Personal Study Notes</h3>
+              <div className="collapsible-actions">
+                <button className={`copy-btn ${copiedId === 'notes' ? 'copied' : ''}`} onClick={e => { e.stopPropagation(); copyToClipboard(notes, 'notes') }} title="Copy" aria-label="Copy">{copiedId === 'notes' ? '✅' : '📋'}</button>
+                <span className={`chevron ${collapsedSections['prep-notes'] ? 'collapsed' : ''}`}>⌄</span>
+              </div>
+            </div>
+            {!collapsedSections['prep-notes'] && <div className="section-body"><RichNoteEditor value={notes} onChange={setNotes} placeholder="What stood out to you this week?" /></div>}
+          </section>
         </div>
       )}
       {tab === 'sunday' && (

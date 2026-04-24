@@ -2868,3 +2868,188 @@ button:active {
   color: #94a3b8;
   line-height: 1.45;
 }
+
+/* ══════════════════════════════════════════
+   TIER 1 IMPROVEMENTS
+   ══════════════════════════════════════════ */
+
+/* ── Bottom nav bar ── */
+.nav-grid {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: unset !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-around !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding: 6px 8px !important;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom)) !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+  border-left: none !important;
+  border-right: none !important;
+  background: rgba(8, 8, 20, 0.88) !important;
+  backdrop-filter: blur(30px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+  box-shadow: 0 -1px 0 rgba(255,255,255,0.06), 0 -8px 32px rgba(0,0,0,0.3) !important;
+  z-index: 100 !important;
+}
+
+.tab {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 8px 4px !important;
+  border-radius: 14px !important;
+  min-height: 52px !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  color: rgba(255,255,255,0.4) !important;
+  transition: color 0.2s ease, background 0.2s ease !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.tab.active {
+  color: #a5b4fc !important;
+  background: rgba(129,140,248,0.12) !important;
+  box-shadow: none !important;
+  border: none !important;
+  animation: none !important;
+}
+
+.tab-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  display: block;
+}
+
+.tab-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ── Content padding adjustments for bottom nav ── */
+.morning-tab,
+.prep-tab,
+.sunday-tab,
+.todo-tab {
+  padding-top: 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.app {
+  padding-bottom: 0 !important;
+}
+
+/* ── Light theme bottom nav ── */
+body.light-theme .nav-grid {
+  background: rgba(248, 249, 252, 0.92) !important;
+  border-top-color: rgba(0,0,0,0.08) !important;
+}
+
+body.light-theme .tab {
+  color: rgba(0,0,0,0.35) !important;
+}
+
+body.light-theme .tab.active {
+  color: #4f46e5 !important;
+  background: rgba(99,102,241,0.1) !important;
+}
+
+/* ── Collapsible sections ── */
+.collapsible-card {
+  padding-bottom: 0;
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding-bottom: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.collapsible-header:hover .chevron {
+  opacity: 1;
+}
+
+.collapsible-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chevron {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.35);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s;
+  display: inline-block;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.section-body {
+  padding-bottom: 6px;
+  animation: sectionExpand 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes sectionExpand {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Daily reflection prompt ── */
+.daily-prompt-card {
+  background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,146,60,0.06));
+  border-color: rgba(251,191,36,0.18);
+}
+
+.daily-prompt-text {
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  line-height: 1.6;
+  font-style: italic;
+  font-family: 'Source Serif 4', Georgia, serif;
+  padding: 8px 0 4px;
+}
+
+/* ── Mobile: safe areas & touch targets ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .nav-grid {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  .morning-tab,
+  .prep-tab,
+  .sunday-tab,
+  .todo-tab {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .tab { min-height: 54px !important; }
+  .collapsible-header { min-height: 48px; }
+  .day-nav-btn { min-height: 44px; min-width: 44px; }
+  .check-row { min-height: 46px; }
+  .workbook-btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+}
