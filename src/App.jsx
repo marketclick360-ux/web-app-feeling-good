@@ -138,12 +138,21 @@ const DEFAULT_WEEK = {
     living: [{ id: 'local_needs', text: '\ud83d\udccc Local Needs (15 min.)' }, { id: 'cbs', text: '\ud83d\udcd5 Congregation Bible Study (30 min.)' }]
   }
 }
+function loadStreak() {
+  try { return JSON.parse(localStorage.getItem('eps-streak') || '{"count":0,"lastDate":""}') }
+  catch { return { count: 0, lastDate: '' } }
+}
+function saveStreak(count, dateStr) {
+  localStorage.setItem('eps-streak', JSON.stringify({ count, lastDate: dateStr }))
+}
 function ProgressRing({ progress, size = 60, strokeWidth = 6, color = '#818cf8' }) {
   const radius = (size - strokeWidth) / 2
   const circumference = radius * 2 * Math.PI
   const strokeDashoffset = circumference - (progress / 100) * circumference
+  const isComplete = progress >= 100
   return (
-    <svg width={size} height={size} className="progress-ring">
+    <svg width={size} height={size} className="progress-ring"
+      style={{ filter: isComplete ? `drop-shadow(0 0 8px ${color}cc)` : 'none', transition: 'filter 0.6s ease' }}>
       <circle stroke="rgba(255,255,255,0.1)" strokeWidth={strokeWidth} fill="transparent" r={radius} cx={size / 2} cy={size / 2} />
       <circle stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" fill="transparent" r={radius} cx={size / 2} cy={size / 2}
         style={{ strokeDasharray: circumference, strokeDashoffset, transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 0.5s ease' }} />
@@ -208,6 +217,10 @@ const [encouragement, setEncouragement] = useState(null)
     const [editingTodoId, setEditingTodoId] = useState(null)
   const [editingTodoText, setEditingTodoText] = useState('')
   const [syncStatus, setSyncStatus] = useState('Saved')
+  const [streak, setStreak] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    return loadStreak().count
+  })
   const [isOnline, setIsOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine))
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -224,6 +237,18 @@ const [encouragement, setEncouragement] = useState(null)
   }, [])
   const morningProgress = Math.round((Object.values(morningChecks).filter(Boolean).length / MORNING_ROUTINE.length) * 100)
   const eveningProgress = Math.round((Object.values(eveningChecks).filter(Boolean).length / EVENING_ROUTINE.length) * 100)
+  const morningCompleteToday = morningProgress === 100 && journalDate === todayStr()
+  useEffect(() => {
+    if (!morningCompleteToday) return
+    const s = loadStreak()
+    if (s.lastDate === todayStr()) return
+    const d = new Date(todayStr() + 'T12:00')
+    d.setDate(d.getDate() - 1)
+    const yesterday = toISO(d)
+    const newCount = s.lastDate === yesterday ? s.count + 1 : 1
+    saveStreak(newCount, todayStr())
+    setStreak(newCount)
+  }, [morningCompleteToday])
   useEffect(() => {
     setApiWeekData(null)
     fetch(`/api/meeting-data?week=${weekKey}`)
@@ -587,7 +612,28 @@ const loadJournal = useCallback(async () => {
               <span className="progress-label">Evening</span>
             </div>
           </div>
+          {streak > 0 && (
+            <div className="streak-badge">
+              <span>🔥</span>
+              <span className="streak-count">{streak} day{streak !== 1 ? 's' : ''}</span>
+            </div>
+          )}
         </section>
+        {morningCompleteToday && (
+          <section className="card morning-complete-banner">
+            <div className="complete-banner-inner">
+              <span className="complete-banner-icon">✨</span>
+              <div>
+                <h3 className="complete-banner-title">Morning Routine Complete!</h3>
+                <p className="complete-banner-text">
+                  {streak > 1
+                    ? `You're on a ${streak}-day streak — keep the momentum going!`
+                    : 'All morning goals done. Well done!'}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
           <section className="card">
             <h3 className="section-heading morning-heading">{"\u2600\ufe0f"} Morning Routine</h3>
             <div className="day-nav">
