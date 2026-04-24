@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pioneer-tracker-v1';
+const CACHE_NAME = 'pioneer-tracker-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
