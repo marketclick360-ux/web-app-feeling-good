@@ -1,0 +1,16 @@
+# Schwab auth token — NEVER commit this, treat it like a password
+token.json
+
+# Environment variables — contains your app key and secret
+.env
+
+# Backtest output files — regenerated on each run
+backtest_results.csv
+options_results.csv
+equity_curve.csv
+backtest_summary.txt
+signals_today.csv
+
+# Python
+__pycache__/
+*.pyc

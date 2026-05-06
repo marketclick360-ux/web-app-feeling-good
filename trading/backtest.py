@@ -12,13 +12,15 @@ Risk objective: minimise drawdown first, then maximise Sharpe.
 """
 import os, math, datetime
 import pandas as pd
-import yfinance as yf
 from dotenv import load_dotenv
+from schwab_client import fetch_history, get_account_balance
 
 load_dotenv()
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-ACCOUNT_SIZE       = float(os.getenv("ACCOUNT_SIZE", 1673.00))
+# Auto-read account size from Schwab if not set in .env
+_env_size    = os.getenv("ACCOUNT_SIZE")
+ACCOUNT_SIZE = float(_env_size) if _env_size else (get_account_balance() or 1673.00)
 YEARS_BACK         = 7
 SLIPPAGE           = 0.03     # $ per share, both sides
 OPTION_SLIP        = 0.05     # $ per share on options premium
@@ -53,20 +55,7 @@ REGIME_ETFS = {
 }
 
 
-# ─── Data ─────────────────────────────────────────────────────────────────────
-def fetch_history(symbol, extra_days=300):
-    try:
-        end   = datetime.date.today()
-        start = end - datetime.timedelta(days=365 * YEARS_BACK + extra_days)
-        df    = yf.Ticker(symbol).history(start=start, end=end, interval="1d")
-        if df is None or df.empty or len(df) < 250:
-            return None
-        df.columns = [c.lower() for c in df.columns]
-        cols = [c for c in ["open", "high", "low", "close", "volume"] if c in df.columns]
-        return df[cols].copy()
-    except Exception as e:
-        print(f"  [fetch error] {symbol}: {e}")
-        return None
+# fetch_history() is imported from schwab_client — no local definition needed.
 
 
 # ─── Indicators ───────────────────────────────────────────────────────────────
@@ -307,8 +296,8 @@ def build_dalio_regime():
     Inflation proxy: TLT 60-day ROC  (negative = rising inflation → bonds fall)
     Returns dict: date → regime string (one of four quadrants).
     """
-    spy_df = fetch_history("SPY", extra_days=300)
-    tlt_df = fetch_history("TLT", extra_days=300)
+    spy_df = fetch_history("SPY", years=YEARS_BACK, extra_days=300)
+    tlt_df = fetch_history("TLT", years=YEARS_BACK, extra_days=300)
     if spy_df is None or tlt_df is None:
         return {}
 
@@ -358,7 +347,7 @@ def size_riskparity(equity, atr, price):
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_spy_regime():
     """date → bool: True = SPY above 200-day SMA (macro bull market)."""
-    df = fetch_history("SPY", extra_days=300)
+    df = fetch_history("SPY", years=YEARS_BACK, extra_days=300)
     if df is None:
         return {}
     df = compute_indicators(df)
@@ -443,7 +432,7 @@ def price_option(S, direction, vol, dte=40, otm_pct=0.02):
 # SINGLE-SYMBOL BACKTEST
 # ═══════════════════════════════════════════════════════════════════════════════
 def backtest_symbol(symbol, spy_regime, dalio_regime, equity_ref):
-    df = fetch_history(symbol)
+    df = fetch_history(symbol, years=YEARS_BACK, extra_days=300)
     if df is None:
         return [], []
     df = compute_indicators(df)
@@ -636,12 +625,10 @@ def calc_metrics(pnls, equity_series, account_size):
 
 
 def buy_and_hold_spy(equity):
-    end   = datetime.date.today()
-    start = end - datetime.timedelta(days=365 * YEARS_BACK)
-    df    = yf.Ticker("SPY").history(start=start, end=end)
+    df = fetch_history("SPY", years=YEARS_BACK, extra_days=0)
     if df is None or df.empty:
         return {}
-    sp, ep = float(df["Close"].iloc[0]), float(df["Close"].iloc[-1])
+    sp, ep = float(df["close"].iloc[0]), float(df["close"].iloc[-1])
     sh     = int(equity / sp)
     return {
         "pnl":          round((ep - sp) * sh, 2),

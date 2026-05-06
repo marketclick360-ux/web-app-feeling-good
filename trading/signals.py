@@ -5,12 +5,13 @@ Output: a table of ETFs with ENTER / WATCH / AVOID ratings.
 """
 import os, math, datetime
 import pandas as pd
-import yfinance as yf
 from dotenv import load_dotenv
+from schwab_client import fetch_history, fetch_quote, get_account_balance
 
 load_dotenv()
 
-ACCOUNT_SIZE       = float(os.getenv("ACCOUNT_SIZE", 1673.00))
+_env_size    = os.getenv("ACCOUNT_SIZE")
+ACCOUNT_SIZE = float(_env_size) if _env_size else (get_account_balance() or 1673.00)
 RISK_FREE_RATE     = 0.045
 TARGET_VOL_CONTRIB = 0.007
 MAX_POS_PCT        = 0.20
@@ -36,20 +37,11 @@ REGIME_ETFS = {
 SIGNAL_FILE = "signals_today.csv"
 
 
-# ─── Fetch + indicators (last 300 bars is enough for signals) ─────────────────
+# fetch_history() and fetch_quote() are imported from schwab_client.
+# Alias for backward-compat with internal calls that used fetch(symbol)
 def fetch(symbol, days=300):
-    try:
-        end   = datetime.date.today()
-        start = end - datetime.timedelta(days=days)
-        df    = yf.Ticker(symbol).history(start=start, end=end, interval="1d")
-        if df is None or df.empty or len(df) < 60:
-            return None
-        df.columns = [c.lower() for c in df.columns]
-        cols = [c for c in ["open", "high", "low", "close", "volume"] if c in df.columns]
-        return df[cols].copy()
-    except Exception as e:
-        print(f"  [fetch error] {symbol}: {e}")
-        return None
+    years = max(days // 365, 1)
+    return fetch_history(symbol, years=years, extra_days=days % 365)
 
 
 def indicators(df):
@@ -155,8 +147,8 @@ def livermore_ok(prev, prev_prev):
 
 # ─── Dalio regime ─────────────────────────────────────────────────────────────
 def get_dalio_regime():
-    spy_df = fetch("SPY")
-    tlt_df = fetch("TLT")
+    spy_df = fetch_history("SPY", years=1, extra_days=120)
+    tlt_df = fetch_history("TLT", years=1, extra_days=120)
     if spy_df is None or tlt_df is None:
         return "UNKNOWN"
     spy_roc = float(spy_df["close"].pct_change(60).iloc[-1])
@@ -191,7 +183,7 @@ def call_premium(price, vol):
 
 # ─── SPY macro check ──────────────────────────────────────────────────────────
 def spy_is_bullish():
-    df = fetch("SPY")
+    df = fetch_history("SPY", years=2, extra_days=60)
     if df is None:
         return False
     df = indicators(df)
