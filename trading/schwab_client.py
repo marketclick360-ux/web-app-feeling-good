@@ -1,159 +1,150 @@
 """
-Schwab API data client — replaces yfinance in backtest.py and signals.py.
+Schwab API client — direct HTTP, no schwab-py auth dependency.
 
 FIRST-TIME SETUP:
-  1. pip install schwab-py
+  1. pip3 install pandas python-dotenv
   2. Copy .env.example to .env and fill in SCHWAB_APP_KEY / SCHWAB_APP_SECRET
-  3. Make sure SCHWAB_CALLBACK_URL matches what you set in developer.schwab.com
-  4. Run any script — a browser tab will open asking you to log in to Schwab.
-     Approve it, and the token is saved to token.json automatically.
-  5. Every future run is silent (token refreshes automatically).
+  3. Run:  python3 setup_auth.py   (one-time login, saves token.json)
+  4. Run:  python3 backtest.py
 
-NEVER commit token.json or .env — they are in .gitignore.
+NEVER commit token.json or .env — they are gitignored.
 """
-import os, math, datetime
+import os, json, time, math, base64, urllib.request, urllib.parse
 import pandas as pd
 from dotenv import load_dotenv
 
 load_dotenv()
 
-APP_KEY      = os.getenv("SCHWAB_APP_KEY", "")
-APP_SECRET   = os.getenv("SCHWAB_APP_SECRET", "")
-CALLBACK_URL = os.getenv("SCHWAB_CALLBACK_URL", "https://127.0.0.1")
-TOKEN_PATH   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "token.json")
+APP_KEY    = os.getenv("SCHWAB_APP_KEY", "")
+APP_SECRET = os.getenv("SCHWAB_APP_SECRET", "")
+CALLBACK   = os.getenv("SCHWAB_CALLBACK_URL", "https://127.0.0.1")
+TOKEN_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "token.json")
 
-_client = None
+BASE_MARKET = "https://api.schwabapi.com/marketdata/v1"
+BASE_TRADER = "https://api.schwabapi.com/trader/v1"
+TOKEN_URL   = "https://api.schwabapi.com/v1/oauth/token"
 
 
-def _make_client():
-    """Create and return an authenticated Schwab client."""
-    if not APP_KEY or not APP_SECRET:
+# ─── Token management ─────────────────────────────────────────────────────────
+def _load_token():
+    if not os.path.exists(TOKEN_PATH):
         raise SystemExit(
-            "\n  Missing Schwab credentials.\n"
-            "  Copy trading/.env.example to trading/.env and fill in:\n"
-            "    SCHWAB_APP_KEY=...\n"
-            "    SCHWAB_APP_SECRET=...\n"
+            "\n  No token.json found.\n"
+            "  Run this first:  python3 setup_auth.py\n"
         )
-    try:
-        import schwab
-    except ImportError:
-        raise SystemExit(
-            "\n  schwab-py not installed. Run:\n"
-            "    pip install schwab-py\n"
-        )
+    with open(TOKEN_PATH) as f:
+        return json.load(f)
 
-    # Try loading saved token first (avoids re-auth on every run)
-    if os.path.exists(TOKEN_PATH):
-        try:
-            print("  Loading saved Schwab token...")
-            client = schwab.auth.client_from_token_file(
-                token_path=TOKEN_PATH,
-                api_key=APP_KEY,
-                app_secret=APP_SECRET,
-            )
-            print("  Schwab connected ✓")
-            return client
-        except Exception:
-            print("  Saved token expired — re-authenticating...")
 
-    # Manual flow: no web driver needed
-    print("\n" + "=" * 60)
-    print("  SCHWAB AUTH — one-time setup")
-    print("  1. Copy the URL below and open it in your browser")
-    print("  2. Log in to Schwab and click Allow")
-    print("  3. You will see a page that says 'can't be reached' — that's OK")
-    print("  4. Copy the FULL URL from the browser address bar")
-    print("  5. Paste it here in Terminal and press Enter")
-    print("=" * 60 + "\n")
+def _save_token(token):
+    with open(TOKEN_PATH, "w") as f:
+        json.dump(token, f, indent=2)
 
-    client = schwab.auth.client_from_manual_flow(
-        api_key=APP_KEY,
-        app_secret=APP_SECRET,
-        callback_url=CALLBACK_URL,
-        token_path=TOKEN_PATH,
+
+def _refresh(token):
+    creds = base64.b64encode(f"{APP_KEY}:{APP_SECRET}".encode()).decode()
+    body  = urllib.parse.urlencode({
+        "grant_type":    "refresh_token",
+        "refresh_token": token["refresh_token"],
+    }).encode()
+    req = urllib.request.Request(
+        TOKEN_URL, data=body,
+        headers={
+            "Authorization": f"Basic {creds}",
+            "Content-Type":  "application/x-www-form-urlencoded",
+        }
     )
-    print("  Schwab connected ✓")
-    return client
+    with urllib.request.urlopen(req) as r:
+        new = json.loads(r.read())
+    new["expires_at"] = time.time() + new.get("expires_in", 1800)
+    if "refresh_token" not in new:
+        new["refresh_token"] = token["refresh_token"]
+    _save_token(new)
+    return new
 
 
-def get_client():
-    """Return cached authenticated client, creating it on first call."""
-    global _client
-    if _client is None:
-        _client = _make_client()
-    return _client
+def _access_token():
+    token = _load_token()
+    if time.time() >= token.get("expires_at", 0) - 300:
+        try:
+            token = _refresh(token)
+        except Exception as e:
+            raise SystemExit(
+                f"\n  Token expired and refresh failed: {e}\n"
+                "  Run:  python3 setup_auth.py\n"
+            )
+    return token["access_token"]
 
 
-# ─── Price history ────────────────────────────────────────────────────────────
+def _get(url, params=None):
+    if params:
+        url = url + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(
+        url, headers={"Authorization": f"Bearer {_access_token()}"}
+    )
+    try:
+        with urllib.request.urlopen(req) as r:
+            return r.status, json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return e.code, {}
+    except Exception:
+        return 0, {}
+
+
+# ─── Public API ───────────────────────────────────────────────────────────────
 def fetch_history(symbol, years=7, extra_days=300):
     """
-    Fetch daily OHLCV history from Schwab.
-    Returns a pandas DataFrame indexed by date with columns:
-      open, high, low, close, volume
-    Returns None on any failure.
-
-    Drop-in replacement for the yfinance fetch_history() used in backtest.py
-    and signals.py — same output format, same None-on-failure contract.
+    Fetch daily OHLCV history. Returns DataFrame or None on failure.
+    Columns: open, high, low, close, volume  (lowercase).
     """
     try:
-        from schwab.client import Client
-        c = get_client()
-
-        # Request 10 years so we always have enough warmup data
-        resp = c.get_price_history_every_day(
-            symbol,
-            period_type=Client.PriceHistory.PeriodType.YEAR,
-            period=Client.PriceHistory.Period.TEN_YEARS,
-            need_extended_hours_data=False,
+        status, data = _get(
+            f"{BASE_MARKET}/pricehistory",
+            params={
+                "symbol":               symbol,
+                "periodType":           "year",
+                "period":               10,
+                "frequencyType":        "daily",
+                "frequency":            1,
+                "needExtendedHoursData": "false",
+            }
         )
-
-        if resp.status_code != 200:
-            print(f"  [schwab] {symbol}: HTTP {resp.status_code}")
+        if status != 200:
+            print(f"  [schwab] {symbol}: HTTP {status}")
             return None
 
-        candles = resp.json().get("candles", [])
+        candles = data.get("candles", [])
         if not candles:
             print(f"  [schwab] {symbol}: empty response")
             return None
 
         df = pd.DataFrame(candles)
-
-        # Schwab returns Unix ms timestamps
         df["datetime"] = pd.to_datetime(df["datetime"], unit="ms", utc=True)
         df = df.set_index("datetime")
         df.index = df.index.tz_convert("America/New_York").normalize()
-
         df = df[["open", "high", "low", "close", "volume"]].copy()
 
-        # Trim to the requested lookback window
-        cutoff = pd.Timestamp.now(tz="America/New_York") - pd.Timedelta(
-            days=365 * years + extra_days
-        )
+        cutoff = (pd.Timestamp.now(tz="America/New_York")
+                  - pd.Timedelta(days=365 * years + extra_days))
         df = df[df.index >= cutoff]
 
         if len(df) < 50:
-            print(f"  [schwab] {symbol}: insufficient data ({len(df)} bars)")
+            print(f"  [schwab] {symbol}: insufficient data ({len(df)} rows)")
             return None
 
         return df
-
     except Exception as e:
         print(f"  [schwab] {symbol}: {e}")
         return None
 
 
-# ─── Live quote ───────────────────────────────────────────────────────────────
 def fetch_quote(symbol):
-    """
-    Return current quote dict: {last, bid, ask, volume}.
-    Returns empty dict on failure.
-    """
+    """Return {last, bid, ask, volume} or empty dict."""
     try:
-        c    = get_client()
-        resp = c.get_quote(symbol)
-        if resp.status_code != 200:
+        status, data = _get(f"{BASE_MARKET}/{symbol}/quotes")
+        if status != 200:
             return {}
-        q = resp.json().get(symbol, {}).get("quote", {})
+        q = data.get(symbol, {}).get("quote", {})
         return {
             "last":   q.get("lastPrice", 0),
             "bid":    q.get("bidPrice", 0),
@@ -165,21 +156,14 @@ def fetch_quote(symbol):
         return {}
 
 
-# ─── Account balance ──────────────────────────────────────────────────────────
 def get_account_balance():
-    """
-    Read liquidation value from the first linked Schwab account.
-    Returns float or None on failure.
-    Used to auto-populate ACCOUNT_SIZE instead of reading from .env.
-    """
+    """Return account liquidation value as float, or None."""
     try:
-        c    = get_client()
-        resp = c.get_accounts()
-        if resp.status_code != 200:
+        status, data = _get(f"{BASE_TRADER}/accounts")
+        if status != 200:
             return None
-        for acct in resp.json():
-            bal = (acct.get("securitiesAccount", {})
-                      .get("currentBalances", {}))
+        for acct in data:
+            bal = acct.get("securitiesAccount", {}).get("currentBalances", {})
             liquid = bal.get("liquidationValue") or bal.get("cashBalance", 0)
             if liquid and liquid > 0:
                 return float(liquid)
@@ -187,3 +171,8 @@ def get_account_balance():
     except Exception as e:
         print(f"  [account] {e}")
         return None
+
+
+def get_client():
+    """Compatibility shim — not needed with direct HTTP approach."""
+    return None
