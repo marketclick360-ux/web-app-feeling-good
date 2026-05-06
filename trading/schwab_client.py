@@ -5,8 +5,8 @@ FIRST-TIME SETUP:
   1. pip install schwab-py
   2. Copy .env.example to .env and fill in SCHWAB_APP_KEY / SCHWAB_APP_SECRET
   3. Make sure SCHWAB_CALLBACK_URL matches what you set in developer.schwab.com
-  4. Run any script — a browser tab will open asking you to log in to Schwab.
-     Approve it, and the token is saved to token.json automatically.
+  4. Run any script — follow the on-screen instructions to log in to Schwab.
+     The token is saved to token.json automatically.
   5. Every future run is silent (token refreshes automatically).
 
 NEVER commit token.json or .env — they are in .gitignore.
@@ -42,14 +42,37 @@ def _make_client():
             "    pip install schwab-py\n"
         )
 
-    print("  Connecting to Schwab API...")
-    client = schwab.auth.easy_client(
+    # Try loading saved token first (avoids re-auth on every run)
+    if os.path.exists(TOKEN_PATH):
+        try:
+            print("  Loading saved Schwab token...")
+            client = schwab.auth.client_from_token_file(
+                token_path=TOKEN_PATH,
+                api_key=APP_KEY,
+                app_secret=APP_SECRET,
+            )
+            print("  Schwab connected ✓")
+            return client
+        except Exception:
+            print("  Saved token expired — re-authenticating...")
+
+    # Manual flow: no web driver needed
+    print("\n" + "=" * 60)
+    print("  SCHWAB AUTH — one-time setup")
+    print("  1. Copy the URL below and open it in your browser")
+    print("  2. Log in to Schwab and click Allow")
+    print("  3. You will see a page that says 'can\'t be reached' — that's OK")
+    print("  4. Copy the FULL URL from the browser address bar")
+    print("  5. Paste it here in Terminal and press Enter")
+    print("=" * 60 + "\n")
+
+    client = schwab.auth.client_from_manual_flow(
         api_key=APP_KEY,
         app_secret=APP_SECRET,
         callback_url=CALLBACK_URL,
         token_path=TOKEN_PATH,
     )
-    print("  Schwab connected OK")
+    print("  Schwab connected ✓")
     return client
 
 
@@ -61,17 +84,22 @@ def get_client():
     return _client
 
 
+# ─── Price history ─────────────────────────────────────────────────────────────────────────────────
 def fetch_history(symbol, years=7, extra_days=300):
     """
     Fetch daily OHLCV history from Schwab.
     Returns a pandas DataFrame indexed by date with columns:
       open, high, low, close, volume
     Returns None on any failure.
+
+    Drop-in replacement for the yfinance fetch_history() used in backtest.py
+    and signals.py — same output format, same None-on-failure contract.
     """
     try:
         from schwab.client import Client
         c = get_client()
 
+        # Request 10 years so we always have enough warmup data
         resp = c.get_price_history_every_day(
             symbol,
             period_type=Client.PriceHistory.PeriodType.YEAR,
@@ -89,11 +117,15 @@ def fetch_history(symbol, years=7, extra_days=300):
             return None
 
         df = pd.DataFrame(candles)
+
+        # Schwab returns Unix ms timestamps
         df["datetime"] = pd.to_datetime(df["datetime"], unit="ms", utc=True)
         df = df.set_index("datetime")
         df.index = df.index.tz_convert("America/New_York").normalize()
+
         df = df[["open", "high", "low", "close", "volume"]].copy()
 
+        # Trim to the requested lookback window
         cutoff = pd.Timestamp.now(tz="America/New_York") - pd.Timedelta(
             days=365 * years + extra_days
         )
@@ -110,8 +142,12 @@ def fetch_history(symbol, years=7, extra_days=300):
         return None
 
 
+# ─── Live quote ────────────────────────────────────────────────────────────────────────────────────
 def fetch_quote(symbol):
-    """Return current quote dict: {last, bid, ask, volume}."""
+    """
+    Return current quote dict: {last, bid, ask, volume}.
+    Returns empty dict on failure.
+    """
     try:
         c    = get_client()
         resp = c.get_quote(symbol)
@@ -129,8 +165,13 @@ def fetch_quote(symbol):
         return {}
 
 
+# ─── Account balance ──────────────────────────────────────────────────────────────────────────────────
 def get_account_balance():
-    """Read liquidation value from live Schwab account."""
+    """
+    Read liquidation value from the first linked Schwab account.
+    Returns float or None on failure.
+    Used to auto-populate ACCOUNT_SIZE instead of reading from .env.
+    """
     try:
         c    = get_client()
         resp = c.get_accounts()
