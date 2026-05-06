@@ -42,8 +42,31 @@ def _make_client():
             "    pip install schwab-py\n"
         )
 
-    print("  Connecting to Schwab API...")
-    client = schwab.auth.easy_client(
+    # Try loading saved token first (avoids re-auth on every run)
+    if os.path.exists(TOKEN_PATH):
+        try:
+            print("  Loading saved Schwab token...")
+            client = schwab.auth.client_from_token_file(
+                token_path=TOKEN_PATH,
+                api_key=APP_KEY,
+                app_secret=APP_SECRET,
+            )
+            print("  Schwab connected ✓")
+            return client
+        except Exception:
+            print("  Saved token expired — re-authenticating...")
+
+    # Manual flow: no web driver needed
+    print("\n" + "=" * 60)
+    print("  SCHWAB AUTH — one-time setup")
+    print("  1. Copy the URL below and open it in your browser")
+    print("  2. Log in to Schwab and click Allow")
+    print("  3. You will see a page that says 'can't be reached' — that's OK")
+    print("  4. Copy the FULL URL from the browser address bar")
+    print("  5. Paste it here in Terminal and press Enter")
+    print("=" * 60 + "\n")
+
+    client = schwab.auth.client_from_manual_flow(
         api_key=APP_KEY,
         app_secret=APP_SECRET,
         callback_url=CALLBACK_URL,
