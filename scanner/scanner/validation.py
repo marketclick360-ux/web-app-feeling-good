@@ -19,6 +19,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from . import params
+
 LABEL_REJECTED = "REJECTED"
 LABEL_INCONCLUSIVE = "STATISTICALLY INCONCLUSIVE"
 LABEL_TENTATIVE = "TENTATIVE — FOR PAPER OBSERVATION ONLY"
@@ -55,12 +57,13 @@ def evaluate(e: Evidence) -> Verdict:
     reasons, warnings = [], []
 
     # ---- HARD REJECTIONS ----
-    if e.planned_target_r < 3.0:
-        reasons.append(f"planned target {e.planned_target_r:.2f}R < 3R")
+    # NOTE: there is intentionally no minimum-R requirement. A high planned R
+    # is neither required nor sufficient; expectancy/PF/robustness decide.
     if e.oos_expectancy_r <= 0:
         reasons.append(f"OOS expectancy {e.oos_expectancy_r:.3f}R not positive")
-    if e.oos_profit_factor < 1.30:
-        reasons.append(f"OOS profit factor {e.oos_profit_factor:.2f} < 1.30")
+    if e.oos_profit_factor < params.MIN_PROFIT_FACTOR:
+        reasons.append(f"OOS profit factor {e.oos_profit_factor:.2f} "
+                       f"< {params.MIN_PROFIT_FACTOR}")
     if not e.concentration_passes:
         reasons.append("fails concentration test (edge driven by few trades/names)")
     if not e.placebo_passes:
@@ -76,8 +79,8 @@ def evaluate(e: Evidence) -> Verdict:
     if e.oos_expectancy_ci_low <= 0:
         warnings.append("95% CI for expectancy includes zero")
         return Verdict(LABEL_INCONCLUSIVE, reasons, warnings)
-    if e.n_oos_trades < 100:
-        warnings.append(f"only {e.n_oos_trades} OOS trades (< 100)")
+    if e.n_oos_trades < params.MIN_OOS_TRADES:
+        warnings.append(f"only {e.n_oos_trades} OOS trades (< {params.MIN_OOS_TRADES})")
         return Verdict(LABEL_INCONCLUSIVE, reasons, warnings)
     if e.pbo is not None and e.pbo > 0.5:
         warnings.append(f"PBO {e.pbo:.2f} > 0.50 (overfitting risk)")
@@ -87,8 +90,9 @@ def evaluate(e: Evidence) -> Verdict:
     if e.oos_win_rate <= 0.50:
         warnings.append(f"OOS win rate {e.oos_win_rate:.1%} <= 50% "
                         "(payoff distribution must justify expectancy)")
-    if e.n_oos_trades < 300:
-        warnings.append(f"{e.n_oos_trades} OOS trades (< 300 preferred)")
+    if e.n_oos_trades < params.PREFERRED_OOS_TRADES:
+        warnings.append(f"{e.n_oos_trades} OOS trades "
+                        f"(< {params.PREFERRED_OOS_TRADES} preferred)")
     if e.regime_positive_fraction < 0.6:
         warnings.append("positive in fewer than 60% of tested regimes")
     if not e.param_stable:

@@ -74,9 +74,12 @@ class BacktestEngine:
         stop, target = sig.stop, sig.target
         raw_entry = float(bars["open"].iloc[fill_pos])
         entry_fill = self.cost.effective_entry(raw_entry, is_long)
-        last_pos = min(fill_pos + sig.time_stop_bars, len(bars) - 1)
+        n = len(bars)
+        # stop/target are evaluated on the entry bar and each holding bar:
+        # bars fill_pos .. fill_pos + time_stop_bars - 1  (time_stop_bars bars).
+        eval_last = min(fill_pos + sig.time_stop_bars - 1, n - 1)
 
-        for pos in range(fill_pos, last_pos + 1):
+        for pos in range(fill_pos, eval_last + 1):
             bar = bars.iloc[pos]
             o, h, l = float(bar["open"]), float(bar["high"]), float(bar["low"])
 
@@ -92,23 +95,23 @@ class BacktestEngine:
                 if o <= target:
                     return entry_fill, self.cost.effective_exit(o, is_long), pos, "gap_target"
 
-            # --- intrabar touches (skip entry bar's pre-open already handled) ---
+            # --- intrabar touches ---
             if is_long:
                 stop_hit, tgt_hit = l <= stop, h >= target
             else:
                 stop_hit, tgt_hit = h >= stop, l <= target
 
-            if stop_hit and tgt_hit:
-                # conservative: assume stop filled first
-                return entry_fill, self.cost.effective_exit(stop, is_long), pos, "stop"
-            if stop_hit:
+            if stop_hit:  # conservative: stop assumed first when both touch
                 return entry_fill, self.cost.effective_exit(stop, is_long), pos, "stop"
             if tgt_hit:
                 return entry_fill, self.cost.effective_exit(target, is_long), pos, "target"
 
-        # time stop -> exit at last allowed bar close
-        exit_raw = float(bars["close"].iloc[last_pos])
-        return entry_fill, self.cost.effective_exit(exit_raw, is_long), last_pos, "time"
+        # time stop -> exit at the OPEN of the first bar after the max holding period
+        ts_pos = fill_pos + sig.time_stop_bars
+        if ts_pos < n:
+            exit_raw = float(bars["open"].iloc[ts_pos])
+            return entry_fill, self.cost.effective_exit(exit_raw, is_long), ts_pos, "time"
+        return None  # not enough future data to complete the trade -> excluded
 
     # -- portfolio run -----------------------------------------------------
     def run(self,
@@ -148,7 +151,10 @@ class BacktestEngine:
                 if not ok:
                     continue  # skipped/missed due to risk limits
 
-            entry_fill, exit_fill, exit_pos, reason = self._simulate_exit(bars, fill_pos, sig)
+            resolved = self._simulate_exit(bars, fill_pos, sig)
+            if resolved is None:
+                continue  # incomplete trade (data ended) -> completed trades only
+            entry_fill, exit_fill, exit_pos, reason = resolved
             is_long = sig.direction is Direction.LONG
             gross = (exit_fill - entry_fill) * shares * (1 if is_long else -1)
             commissions = self.cost.commission(shares) * 2

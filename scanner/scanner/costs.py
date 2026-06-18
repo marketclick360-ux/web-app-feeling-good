@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from . import params
+
 
 @dataclass
 class CostModel:
@@ -21,14 +23,14 @@ class CostModel:
     min_commission: float = 1.0            # per order
     sec_taf_bps: float = 0.02              # regulatory fees on sells (bps of notional)
     spread_bps: float = 2.0                # half-spread paid on each side (bps)
-    slippage_bps: float = 3.0              # market-impact + latency (bps) per side
+    slippage_frac: float = 0.0010          # slippage PER SIDE as fraction of price
     delay_bars: int = 1                    # fill delay: signal bar t -> fill at t+delay open
-    cost_multiplier: float = 1.0           # global stress knob
+    cost_multiplier: float = 1.0           # global stress knob (kept for ad-hoc stress)
 
     def per_side_price_cost(self, price: float) -> float:
         """Price degradation per share from spread + slippage (one side)."""
-        bps = (self.spread_bps + self.slippage_bps) * self.cost_multiplier
-        return price * bps / 10_000.0
+        spread = self.spread_bps / 10_000.0
+        return price * (spread + self.slippage_frac) * self.cost_multiplier
 
     def commission(self, shares: int) -> float:
         c = max(self.min_commission, shares * self.commission_per_share)
@@ -49,4 +51,13 @@ class CostModel:
         return ref_price - adj if is_long else ref_price + adj
 
 
-DEFAULT_COSTS = CostModel()
+def scenario_costs(scenario: str) -> CostModel:
+    """Return a CostModel for one of the named slippage scenarios
+    ('low' 0.05% / 'normal' 0.10% / 'stressed' 0.25% per side)."""
+    if scenario not in params.COST_SCENARIOS:
+        raise ValueError(f"unknown cost scenario {scenario!r}")
+    return CostModel(slippage_frac=params.COST_SCENARIOS[scenario])
+
+
+DEFAULT_COSTS = scenario_costs("normal")
+

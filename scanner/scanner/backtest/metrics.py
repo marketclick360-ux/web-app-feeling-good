@@ -37,12 +37,13 @@ def summary(trades) -> Dict[str, float]:
     gross_loss = -losses.sum()
     profit_factor = gross_win / gross_loss if gross_loss > 0 else np.inf
 
+    total_pnl = float(df["pnl_dollars"].sum())
     return {
         "n_trades": int(n),
-        "win_rate": float((r > 0).mean()),
-        "expectancy_r": float(r.mean()),
+        "win_rate": float((r > 0).mean()),               # net profit > 0 after costs
+        "expectancy_r": float(r.mean()),                 # mean R multiple
         "median_r": float(np.median(r)),
-        "profit_factor": float(profit_factor),
+        "profit_factor": float(profit_factor),           # gross profit / gross loss
         "avg_winner_r": float(wins.mean()) if len(wins) else 0.0,
         "avg_loser_r": float(losses.mean()) if len(losses) else 0.0,
         "planned_target_r": float(df["planned_r_multiple"].mean()),
@@ -53,8 +54,28 @@ def summary(trades) -> Dict[str, float]:
         "worst_loss_r": float(r.min()),
         "pct_target_exits": float((df["exit_reason"] == "target").mean()),
         "pct_time_exits": float((df["exit_reason"] == "time").mean()),
-        "total_pnl": float(df["pnl_dollars"].sum()),
+        "gross_profit": float(df.loc[df["realized_r"] > 0, "pnl_dollars"].sum()),
+        "gross_loss": float(-df.loc[df["realized_r"] <= 0, "pnl_dollars"].sum()),
+        "total_pnl": total_pnl,
+        "expectancy_currency": total_pnl / n,            # avg $ profit per trade
     }
+
+
+def equity_curve(trades, starting_equity: float = 100_000.0) -> np.ndarray:
+    """Cumulative equity after costs, in chronological signal-time order."""
+    df = _as_frame(trades)
+    if df.empty:
+        return np.array([starting_equity])
+    ordered = df.sort_values("signal_time")["pnl_dollars"].to_numpy()
+    return starting_equity + np.cumsum(ordered)
+
+
+def max_drawdown_pct(trades, starting_equity: float = 100_000.0) -> float:
+    """Largest peak-to-trough drawdown of the equity curve, as a fraction."""
+    eq = equity_curve(trades, starting_equity)
+    peak = np.maximum.accumulate(eq)
+    dd = (peak - eq) / peak
+    return float(dd.max()) if len(dd) else 0.0
 
 
 def max_drawdown_r(r: np.ndarray) -> float:

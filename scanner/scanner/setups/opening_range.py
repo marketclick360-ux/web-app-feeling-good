@@ -33,7 +33,7 @@ class OpeningRangeBreakout(Setup):
             "or_bars": 2,           # bars composing the opening range
             "vol_ratio_min": 1.2,
             "stop_mode": "or_opposite",  # stop at opposite side of opening range
-            "planned_r": 3.0,
+            "planned_r": 2.0,
         }
 
     def generate(self, df, regime, symbol, context: Optional[dict] = None) -> list:

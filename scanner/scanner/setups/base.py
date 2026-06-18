@@ -67,7 +67,11 @@ class Setup(ABC):
 
     name: str = "abstract"
     hypothesis: str = ""
-    min_planned_r: float = 3.0
+    # Each setup's OBJECTIVE target rule is expressed as a reward-to-risk
+    # multiple chosen to fit the hypothesis. There is deliberately NO universal
+    # 3R minimum — acceptance is decided by expectancy/profit-factor/robustness,
+    # not by manufacturing a 3R target.
+    target_r: float = 2.0
     direction_modes = (Direction.LONG, Direction.SHORT)
 
     #: parameters exposed for sensitivity analysis (name -> value)
@@ -97,7 +101,7 @@ class Setup(ABC):
     # -- shared helpers ----------------------------------------------------
     def _planned_target(self, entry: float, stop: float, direction: Direction,
                         r: Optional[float] = None) -> float:
-        r = r or self.min_planned_r
+        r = r if r is not None else self.target_r
         risk = abs(entry - stop)
         return entry + r * risk if direction is Direction.LONG else entry - r * risk
 

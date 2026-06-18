@@ -32,11 +32,22 @@ Distinctions maintained throughout:
 
 ## 2. Universe & data
 
-- U.S.-listed common stocks and unlevered ETFs.
-- Liquidity: trailing-20-session average daily dollar volume ≥ $10M.
-- Excluded: price < $5 (penny), leveraged/inverse ETFs (separate test only),
-  and — when a calendar is supplied — names within 10 trading days before
-  earnings.
+Configurable parameters (`scanner/params.py`) — one source of truth:
+`MIN_PRICE = $10`, `MIN_AVG_DOLLAR_VOLUME = $20M`, `EARNINGS_EXCLUSION_DAYS = 10`,
+`MIN_PROFIT_FACTOR = 1.30`.
+
+- U.S.-listed common stocks and unlevered ETFs (no OTC, no leveraged/inverse).
+- Liquidity: trailing-20-session average daily dollar volume ≥ `MIN_AVG_DOLLAR_VOLUME`.
+- Excluded: price < `MIN_PRICE`, leveraged/inverse ETFs (separate test only),
+  and — when a calendar is supplied — names within `EARNINGS_EXCLUSION_DAYS`
+  trading days of earnings.
+- **Document in every report**: exact OHLCV source, exact corporate-actions
+  source (splits, cash/stock/special dividends, spin-offs, mergers, symbol
+  changes), the single adjustment methodology used, the daily-close
+  timestamp/timezone (default 16:00 America/New_York), and whether results are
+  **price-return** or **total-return**. The same convention must be applied to
+  all prices, indicators, stops, targets, and metrics so results are
+  reproducible by an independent researcher.
 - Adjusted OHLCV (splits/dividends). Survivorship-bias-free when the adapter
   supports delisted tickers (Polygon, or a CSV `delistings.csv`); otherwise
   survivorship bias is disclosed as a limitation.
@@ -50,19 +61,26 @@ For each family: hypothesis · regime filter · entry · stop · planned ≥3R t
 · time stop · invalidation. Full parameter defaults live in each module under
 `scanner/setups/`.
 
-| Setup | Hypothesis | Entry (closed bar → next open) | Stop | Target | Time stop |
-|-------|-----------|-------------------------------|------|--------|-----------|
-| `trend_pullback` | Pullbacks to a rising/falling EMA20 inside an ADX trend are continuations | Trend (close vs 50/200SMA, ADX≥20) + low within 0.5·ATR of EMA20 + RSI cooled, close reclaims EMA20 | entry ∓ 1.5·ATR | 3R | 10 bars |
-| `vcp_breakout` | Low-bandwidth coil + volume break precedes expansion | BB bandwidth in bottom quintile, close beyond prior-20 extreme, volume ≥1.5× | other side of coil / 1.2·ATR | 3R | 10 bars |
-| `volume_breakout` | Volume-expansion break of a tested 55-bar boundary marks absorption | close > prior-55 high, volume ≥1.7× | just inside broken level | 3R | 10 bars |
-| `relative_strength_breakout` | New RS highs vs SPY + price breakout capture cross-sectional momentum | RS line new 60-bar high **and** price > prior-20 high | entry − 1.5·ATR | 3R | 10 bars |
-| `mean_reversion` | Oversold flush within a confirmed uptrend reverts | close > rising 200SMA and RSI(2) ≤ 10 | entry − 2.5·ATR | 3R | 5 bars |
-| `opening_range_breakout` | Break of session opening range initiates the day's move | close beyond first-N-bar OR with volume | opposite side of OR | 3R | end of session |
+Default daily-swing research set (the five spec families). Each target is an
+**objective ATR-based R multiple fitting the hypothesis — there is no forced
+3R minimum.**
 
-A **planned 3R target is not the average winner.** Time stops, gap exits, and
-the conservative same-bar rule mean realized winners are frequently < 3R; the
-metrics report planned-target-R, average winner R, average loser R, and net
-expectancy separately so the two are never conflated.
+| Setup | Hypothesis | Entry (closed bar → next open) | Stop | Target rule | Time stop |
+|-------|-----------|-------------------------------|------|-------------|-----------|
+| `trend_pullback` | Pullbacks to the EMA20 inside an ADX trend are continuations | Trend (close vs 50/200SMA, ADX≥20) + low within 0.5·ATR of EMA20 + RSI cooled, close reclaims EMA20 | entry ∓ 1.5·ATR | 2.0R | 10 bars |
+| `vcp_breakout` | Low-bandwidth coil + volume break precedes expansion | BB bandwidth in bottom quintile, close beyond prior-20 extreme, volume ≥1.5× | other side of coil / 1.2·ATR | 2.5R | 10 bars |
+| `relative_strength_breakout` | New RS highs vs SPY + price breakout capture cross-sectional momentum | RS line new 60-bar high **and** price > prior-20 high | entry − 1.5·ATR | 2.5R | 10 bars |
+| `ma_pullback` | Touch-and-hold of the 10/20-day MA in a strong trend is continuation | Trend (close vs 50/200SMA, ADX≥20) + bar low ≤ MA ≤ close | entry ∓ 1.5·ATR | 2.0R | 10 bars |
+| `sector_leader_continuation` | Leaders of leading sectors continue | RS-vs-sector ETF new 40-bar high + sector ETF > its 200SMA + price > prior-10 high + close > 50SMA | entry − 1.5·ATR | 2.5R | 10 bars |
+
+Also available (not default): `volume_breakout`, `mean_reversion` (1.5R),
+`opening_range_breakout` (intraday).
+
+The **planned target R is not the average winner.** Time stops, gap exits, and
+the conservative same-bar rule mean realized winners are frequently below the
+planned target; metrics report planned-target-R, average winner R, average
+loser R, profit factor, and net expectancy separately so the two are never
+conflated.
 
 ## 4. Execution & cost model
 
@@ -77,8 +95,10 @@ expectancy separately so the two are never conflated.
   finer-resolution data is supplied.
 - **Missed fills**: signals with no available fill bar, or blocked by portfolio
   risk limits, are dropped (not silently filled).
-- **Cost stress**: the full backtest is re-run at 1.75× costs; an edge that
-  does not survive is rejected.
+- **Three slippage scenarios**, applied per side to entries and exits:
+  low 0.05%, normal 0.10%, stressed 0.25%. The full backtest is run under each;
+  acceptance is judged on the **stressed** scenario — an edge that does not
+  survive it (positive expectancy **and** PF ≥ `MIN_PROFIT_FACTOR`) is rejected.
 - Reported: planned loss vs actual simulated loss, and the frequency/severity
   of losses worse than −1R (`gap_tail_rate`, `worst_loss_r`).
 
@@ -108,9 +128,11 @@ expectancy separately so the two are never conflated.
 ## 6. Acceptance / rejection rules
 
 A setup reaches **ROBUST — ELIGIBLE FOR FORWARD OBSERVATION ONLY** only when
-*all* gates hold (planned ≥3R; OOS expectancy>0; PF≥1.30; win>50% or payoff
-justifies; ≥100 OOS trades; CI-low>0; passes concentration, placebo, and cost
-stress; holdout not negative; parameter-stable; PBO not high). Soft failures →
+*all* gates hold — **note there is no minimum-R requirement**: OOS expectancy>0;
+PF ≥ `MIN_PROFIT_FACTOR`; profitable under the stressed cost scenario;
+win>50% or payoff distribution justifies positive expectancy; ≥100 OOS trades;
+CI-low>0; passes concentration and placebo tests; holdout not negative;
+parameter-stable; PBO not high. Soft failures →
 **TENTATIVE — FOR PAPER OBSERVATION ONLY**. CI-low≤0 or thin sample →
 **STATISTICALLY INCONCLUSIVE**. Hard failures → **REJECTED**.
 

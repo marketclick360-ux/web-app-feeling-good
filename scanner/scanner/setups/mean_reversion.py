@@ -34,7 +34,7 @@ class MeanReversion(Setup):
             "rsi_len": 2,
             "rsi_oversold": 10.0,
             "atr_stop_mult": 2.5,   # wide stop for noise -> small risk-per-share denom
-            "planned_r": 3.0,
+            "planned_r": 1.5,
         }
 
     def generate(self, df, regime, symbol, context: Optional[dict] = None) -> list:

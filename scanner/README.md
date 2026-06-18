@@ -77,27 +77,49 @@ any row as a live signal.
 | `scanner/pipeline.py` | Orchestration (`research`, `live_signals`) |
 | `scanner/cli.py` | CLI + data-integrity header |
 
+## Configurable parameters (`scanner/params.py`)
+
+One source of truth, referenced everywhere: `MIN_PRICE = $10`,
+`MIN_AVG_DOLLAR_VOLUME = $20M`, `EARNINGS_EXCLUSION_DAYS = 10`,
+`MIN_PROFIT_FACTOR = 1.30`, and the three slippage scenarios
+(`low 0.05% / normal 0.10% / stressed 0.25%` per side; acceptance is judged on
+**stressed**).
+
 ## Setup families
 
-1. `trend_pullback` — pullback to a rising/falling EMA inside an ADX trend
-2. `vcp_breakout` — volatility-contraction (low Bollinger bandwidth) + volume break
-3. `volume_breakout` — volume-confirmed break of a 55-bar boundary
-4. `relative_strength_breakout` — RS-line new high vs SPY **and** price breakout
-5. `mean_reversion` — RSI(2) flush within a confirmed uptrend (long-only)
-6. `opening_range_breakout` — intraday ORB (requires intraday data)
+Default daily-swing research set (the five spec families):
+
+1. `trend_pullback` — pullback to the EMA20 (RSI cooled) inside an ADX trend
+2. `vcp_breakout` — volatility contraction (low Bollinger bandwidth) + volume break
+3. `relative_strength_breakout` — RS-line new high vs SPY **and** price breakout
+4. `ma_pullback` — touch-and-hold of the 10/20-day MA in a strong ADX trend
+5. `sector_leader_continuation` — RS-vs-sector new high + sector ETF uptrend + breakout
+
+Also available (not in the default set): `volume_breakout`, `mean_reversion`,
+and `opening_range_breakout` (intraday only).
+
+## No forced reward-to-risk target
+
+There is **no minimum-R requirement**. Forcing a >50% win rate at a fixed 3R
+target is an extremely high hurdle that invites curve-fitting, so each setup
+defines its own objective target rule (an ATR-based R multiple fitting its
+hypothesis) and acceptance is decided by expectancy, profit factor, and
+robustness — never by manufacturing a 3R target.
 
 ## Acceptance gates (all must hold for ROBUST)
 
-- Planned target ≥ 3R
-- OOS net expectancy > 0 after costs; profit factor ≥ 1.30
+- OOS net expectancy > 0 after costs; profit factor ≥ `MIN_PROFIT_FACTOR` (1.30)
+- Profitable under the **stressed** (0.25%/side) cost scenario
 - OOS win rate > 50% **or** payoff distribution justifies positive expectancy
 - ≥ 100 OOS trades (300+ preferred)
 - 95% CI lower bound for expectancy > 0 (else `STATISTICALLY INCONCLUSIVE`)
 - Not driven by one ticker/sector/year/winner/regime (concentration test)
 - Survives placebo test (special condition adds value over a matched control)
-- Survives cost/slippage stress
 - Holdout positive or honestly labeled inconclusive
 - Parameter-stable; PBO not high
+
+The scanner is rewarded for **rejecting** weak ideas, not for producing trades:
+`NO QUALIFYING SETUPS TODAY` is a successful outcome.
 
 Labels: `REJECTED` · `STATISTICALLY INCONCLUSIVE` · `TENTATIVE — FOR PAPER
 OBSERVATION ONLY` · `ROBUST — ELIGIBLE FOR FORWARD OBSERVATION ONLY`.

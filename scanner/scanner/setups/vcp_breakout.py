@@ -29,7 +29,7 @@ class VCPBreakout(Setup):
             "bw_pctile_max": 0.20,
             "vol_ratio_min": 1.5,
             "atr_stop_mult": 1.2,
-            "planned_r": 3.0,
+            "planned_r": 2.5,
             "require_trend": True,   # only break in direction of 200SMA
         }
 

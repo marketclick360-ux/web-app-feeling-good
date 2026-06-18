@@ -13,7 +13,7 @@ def _bars(rows):
 
 # zero-cost engine so we can assert exact level mechanics
 ENGINE = BacktestEngine(cost=CostModel(commission_per_share=0, min_commission=0,
-                                       sec_taf_bps=0, spread_bps=0, slippage_bps=0,
+                                       sec_taf_bps=0, spread_bps=0, slippage_frac=0,
                                        delay_bars=1))
 
 
@@ -61,12 +61,21 @@ def test_same_bar_stop_and_target_is_conservative():
     assert abs(exit_ - 99) < 1e-9
 
 
-def test_time_stop_exit_at_last_bar_close():
+def test_time_stop_exit_at_open_after_max_hold():
+    # entry bar 1; max hold 2 bars (bars 1,2); time stop exits at OPEN of bar 3
     bars = _bars([[100]*4 + [1e6]] + [[100, 101, 99.5, 100.5, 1e6]] * 5)
-    sig = _sig(100, 95, 130, bars=2)  # never reached; exits on time
+    sig = _sig(100, 95, 130, bars=2)  # stop/target never reached; exits on time
     _, exit_, pos, reason = ENGINE._simulate_exit(bars, fill_pos=1, sig=sig)
     assert reason == "time"
-    assert pos == 1 + 2  # fill_pos + time_stop_bars
+    assert pos == 1 + 2                 # fill_pos + time_stop_bars
+    assert abs(exit_ - bars["open"].iloc[3]) < 1e-9   # exit at that bar's OPEN
+
+
+def test_incomplete_trade_excluded_when_data_ends():
+    # not enough future bars to reach the time stop -> trade is dropped
+    bars = _bars([[100]*4 + [1e6]] * 3)   # only 3 bars
+    sig = _sig(100, 95, 130, bars=5)      # needs bar 1+5=6 which doesn't exist
+    assert ENGINE._simulate_exit(bars, fill_pos=1, sig=sig) is None
 
 
 def test_full_run_realized_r_sign():

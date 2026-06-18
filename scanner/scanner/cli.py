@@ -18,7 +18,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from . import DISCLAIMER
+from . import DISCLAIMER, params
 from .data import get_adapter
 from .pipeline import (PipelineConfig, research, live_signals, SetupResult, SECTOR_MAP)
 from .rank import SetupEvidence, build_table, to_markdown
@@ -28,16 +28,33 @@ from .validation import LABEL_TENTATIVE, LABEL_ROBUST
 
 ELIGIBLE = {LABEL_TENTATIVE, LABEL_ROBUST}
 
+# Documented adjustment methodology per source (price-return convention).
+ADJUSTMENT_INFO = {
+    "polygon": ("Polygon.io aggregates with adjusted=true (split-adjusted); "
+                "price-return (dividends NOT reinvested)"),
+    "csv": ("as supplied by local files — assumed fully split/dividend adjusted; "
+            "treatment must be documented by the file producer"),
+    "synthetic": "synthetic series — NOT real, no corporate actions",
+}
+
 
 def _print_header(source: str, universe_n: int, data_ts: str, real: bool):
     print("=" * 78)
     print("  RULE-BASED MARKET SCANNER — liquid U.S. stocks & ETFs")
     print("=" * 78)
     print(f"  Data source        : {source}")
+    print(f"  OHLCV adjustment   : {ADJUSTMENT_INFO.get(source, 'unknown')}")
+    print(f"  Corporate actions  : splits/dividends per source above; consistent "
+          f"convention applied throughout")
     print(f"  Universe source    : default liquid watchlist (filtered)")
+    print(f"  Universe filters   : price>=${params.MIN_PRICE:.0f}, "
+          f"ADV>=${params.MIN_AVG_DOLLAR_VOLUME/1e6:.0f}M, no leveraged/OTC, "
+          f"earnings±{params.EARNINGS_EXCLUSION_DAYS}d when calendar available")
     print(f"  Candidates scanned : {universe_n}")
     print(f"  Data timestamp     : {data_ts}")
-    print(f"  Timezone / session : UTC, regular session, completed bars only")
+    print(f"  Signal close       : {params.SIGNAL_CLOSE}")
+    print(f"  Execution rule     : {params.EXECUTION_RULE}")
+    print(f"  Timezone / session : UTC index, completed bars only")
     print(f"  Live data verified : {'YES' if real else 'NO — synthetic/offline'}")
     print("-" * 78)
     if not real:
@@ -78,10 +95,16 @@ def _print_research(results: Dict[str, SetupResult]):
         print(f"    OOS: n={r.oos.get('n_trades',0)} "
               f"win={r.oos.get('win_rate',0):.1%} "
               f"exp={r.oos.get('expectancy_r',0):.3f}R "
+              f"(${r.oos.get('expectancy_currency',0):.0f}/trade) "
               f"PF={r.oos.get('profit_factor',0):.2f} "
               f"avg_win={r.oos.get('avg_winner_r',0):.2f}R "
               f"avg_loss={r.oos.get('avg_loser_r',0):.2f}R "
-              f"planned_target={r.oos.get('planned_target_r',0):.1f}R")
+              f"planned_target={r.oos.get('planned_target_r',0):.2f}R")
+        if r.cost_scenarios:
+            cs = " | ".join(
+                f"{k}: exp={v.get('expectancy_r',0):.3f}R PF={v.get('profit_factor',0):.2f}"
+                for k, v in r.cost_scenarios.items())
+            print(f"    Cost scenarios (slippage/side): {cs}")
         ci = r.boot.get("iid", {}).get("expectancy_r", {})
         if ci:
             print(f"    Expectancy 95% CI: [{ci.get('ci_low'):.3f}, {ci.get('ci_high'):.3f}]R")
@@ -172,12 +195,12 @@ def _run(source: str, n_symbols: int, fast: bool):
               "cleared validation, or no validated family has a fresh signal on "
               "the most recent completed bar.")
     else:
-        print("\n### Top 3 (by Setup Quality Score)")
+        print("\n### Top 3 (by historical OOS expectancy)")
         for _, row in table.head(3).iterrows():
-            print(f"  - {row['Ticker']} {row['Direction']} via {row['Setup Name']}: "
+            print(f"  - {row['Ticker']} {row['Direction']} via {row['Setup']}: "
                   f"entry {row['Entry']} stop {row['Stop']} target {row['Target']} "
-                  f"({row['Planned R:R']}); status: {row['Forward-Observation Status']}; "
-                  f"invalidation: {row['Key Invalidation Condition']}")
+                  f"(R:R {row['R:R']}); exp {row['Historical Expectancy']}, "
+                  f"PF {row['Profit Factor']}, win {row['Historical Win Rate']}")
 
     _print_risk_controls(cfg.risk)
     print(f"\n(See RESEARCH_REPORT.md for full methodology. {len(results)} families "

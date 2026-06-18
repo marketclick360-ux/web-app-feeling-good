@@ -19,6 +19,7 @@ from typing import Iterable, List, Optional
 import pandas as pd
 
 from .data.base import DataAdapter
+from . import params
 
 # A non-exhaustive blocklist of common leveraged / inverse ETFs. For production
 # use, source this from the provider's reference data. Leveraged ETFs are
@@ -32,8 +33,8 @@ LEVERAGED_ETFS = {
 
 @dataclass
 class UniverseConfig:
-    min_adv_dollar: float = 10_000_000.0
-    min_price: float = 5.0
+    min_adv_dollar: float = params.MIN_AVG_DOLLAR_VOLUME   # $20M
+    min_price: float = params.MIN_PRICE                    # $10
     adv_window: int = 20
     allow_leveraged: bool = False
     candidates: List[str] = field(default_factory=list)

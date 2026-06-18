@@ -31,12 +31,13 @@ from .backtest.engine import BacktestEngine
 from .backtest.overfitting import deflated_sharpe_ratio, pbo_cscv
 from .backtest.placebo import random_date_placebo
 from .backtest.walkforward import time_splits, walk_forward
-from .costs import CostModel, DEFAULT_COSTS
+from .costs import CostModel, DEFAULT_COSTS, scenario_costs
 from .rank import SetupEvidence, build_table
 from .setups.base import Setup, Signal
-from .setups.registry import ALL_SETUPS, INTRADAY_ONLY
+from .setups.registry import ALL_SETUPS, INTRADAY_ONLY, DEFAULT_RESEARCH_SETUPS
 from .sizing import RiskConfig
 from .validation import Evidence, evaluate
+from . import params
 
 # Minimal sector map for the default universe (concentration/sector tests).
 SECTOR_MAP = {
@@ -56,17 +57,41 @@ SECTOR_MAP = {
     "EEM": "Intl", "EFA": "Intl", "ARKK": "Sector", "IBB": "Sector",
 }
 
+# Sector label -> sector ETF, for relative-strength-vs-sector setups.
+SECTOR_ETF = {
+    "Tech": "XLK", "Comm": "XLC", "Discretionary": "XLY", "Staples": "XLP",
+    "Financials": "XLF", "Energy": "XLE", "Health": "XLV",
+    "Industrials": "XLI",
+}
+
+
+def _sector_close_map(adapter: DataAdapter, symbols, cfg, as_of):
+    """symbol -> sector ETF close series (for sector_leader_continuation)."""
+    needed = {SECTOR_ETF[SECTOR_MAP.get(s.upper(), "")]
+              for s in symbols if SECTOR_MAP.get(s.upper(), "") in SECTOR_ETF}
+    start = as_of - pd.Timedelta(days=int(cfg.years * 365.25) + 300)
+    etf_close = {}
+    for etf in needed:
+        df = adapter.get_bars(etf, "1d", start=start, end=as_of, as_of=as_of).df
+        if len(df) > 250:
+            etf_close[etf] = df["close"]
+    out = {}
+    for s in symbols:
+        etf = SECTOR_ETF.get(SECTOR_MAP.get(s.upper(), ""))
+        if etf and etf in etf_close:
+            out[s.upper()] = etf_close[etf]
+    return out
+
 
 @dataclass
 class PipelineConfig:
     benchmark: str = "SPY"
     years: int = 10
-    cost: CostModel = field(default_factory=lambda: DEFAULT_COSTS)
+    cost: CostModel = field(default_factory=lambda: DEFAULT_COSTS)  # 'normal' scenario
     risk: RiskConfig = field(default_factory=RiskConfig)
     n_boot: int = 2000
     param_perturb: tuple = (0.8, 0.9, 1.1, 1.2)  # multiplicative param sweeps
     placebo_runs: int = 100
-    cost_stress_mult: float = 1.75               # slippage/spread stress factor
 
 
 @dataclass
@@ -82,6 +107,7 @@ class SetupResult:
     placebo: dict
     concentration: dict
     overfitting: dict
+    cost_scenarios: dict = field(default_factory=dict)
     oos_trades: list = field(default_factory=list)
 
 
@@ -147,7 +173,7 @@ def research(adapter: DataAdapter, symbols: List[str],
              as_of: Optional[pd.Timestamp] = None) -> Dict[str, SetupResult]:
     cfg = cfg or PipelineConfig()
     as_of = as_of or pd.Timestamp.now("UTC").normalize()
-    setup_names = setup_names or [n for n in ALL_SETUPS if n not in INTRADAY_ONLY]
+    setup_names = setup_names or list(DEFAULT_RESEARCH_SETUPS)
 
     frames, atr_lookup = _load_universe_frames(adapter, symbols, cfg, as_of)
     # benchmark + regime
@@ -156,7 +182,8 @@ def research(adapter: DataAdapter, symbols: List[str],
                                  end=as_of, as_of=as_of).df
     bench = ind.enrich_daily(bench_raw)
     reg_df = regime_mod.classify(bench_raw)
-    context = {"benchmark": bench}
+    context = {"benchmark": bench,
+               "sector_close": _sector_close_map(adapter, list(frames), cfg, as_of)}
     regime_by_sym = {sym: reg_df["regime"].reindex(df.index).ffill().fillna("UNKNOWN")
                      for sym, df in frames.items()}
 
@@ -181,13 +208,16 @@ def research(adapter: DataAdapter, symbols: List[str],
         plac = random_date_placebo(oos_t, bars_by_symbol, engine, atr_lookup,
                                    n_runs=cfg.placebo_runs)
 
-        # cost-stress re-run
-        stressed_cost = CostModel(**{**cfg.cost.__dict__,
-                                     "cost_multiplier": cfg.cost_stress_mult})
-        st_trades, _, _ = _backtest_setup(setup, frames, regime_by_sym, context, cfg,
-                                          cost=stressed_cost)
-        _, st_oos, _ = time_splits(st_trades)
-        cost_survives = metrics.summary(st_oos).get("expectancy_r", -1) > 0
+        # three slippage scenarios (low/normal/stressed); acceptance on stressed
+        cost_scenarios = {}
+        for scen in params.COST_SCENARIOS:
+            sc_trades, _, _ = _backtest_setup(setup, frames, regime_by_sym, context,
+                                              cfg, cost=scenario_costs(scen))
+            _, sc_oos, _ = time_splits(sc_trades)
+            cost_scenarios[scen] = metrics.summary(sc_oos)
+        st = cost_scenarios[params.ACCEPTANCE_SCENARIO]
+        cost_survives = (st.get("expectancy_r", -1) > 0
+                         and st.get("profit_factor", 0) >= params.MIN_PROFIT_FACTOR)
 
         param_exps, configs, perf_rows = _param_sensitivity(
             setup_cls, frames, regime_by_sym, context, cfg)
@@ -233,7 +263,7 @@ def research(adapter: DataAdapter, symbols: List[str],
             oos_expectancy_r=oos.get("expectancy_r", -1.0),
             oos_profit_factor=oos.get("profit_factor", 0.0),
             oos_expectancy_ci_low=ci_low if ci_low == ci_low else -1.0,
-            planned_target_r=oos.get("planned_target_r", setup.min_planned_r),
+            planned_target_r=oos.get("planned_target_r", setup.target_r),
             holdout_expectancy_r=hold.get("expectancy_r") if hold.get("n_trades") else None,
             regime_positive_fraction=regime_pos_frac,
             param_stable=param_stable,
@@ -249,7 +279,8 @@ def research(adapter: DataAdapter, symbols: List[str],
         results[name] = SetupResult(
             name=name, verdict=verdict, quality=qual, dev=dev, oos=oos,
             holdout=hold, walk=walk, boot=boot, placebo=plac,
-            concentration=conc, overfitting=overfit, oos_trades=oos_t)
+            concentration=conc, overfitting=overfit,
+            cost_scenarios=cost_scenarios, oos_trades=oos_t)
     return results
 
 
@@ -262,7 +293,8 @@ def live_signals(adapter: DataAdapter, symbols: List[str], setup_names: List[str
     bench_raw = adapter.get_bars(cfg.benchmark, "1d",
                                  start=as_of - pd.Timedelta(days=int(cfg.years*365.25)+260),
                                  end=as_of, as_of=as_of).df
-    context = {"benchmark": ind.enrich_daily(bench_raw)}
+    context = {"benchmark": ind.enrich_daily(bench_raw),
+               "sector_close": _sector_close_map(adapter, list(frames), cfg, as_of)}
     reg_df = regime_mod.classify(bench_raw)
 
     out: List[Signal] = []
