@@ -1,0 +1,6 @@
+pandas>=2.0
+numpy>=1.24
+PyYAML>=6.0
+# Optional, only needed for the Polygon data adapter (live/historical data):
+#   pip install requests
+requests>=2.28

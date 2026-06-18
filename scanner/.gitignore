@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.polygon_cache/
+.pytest_cache/
+*.csv
+!tests/**/*.csv
+.env
+data/

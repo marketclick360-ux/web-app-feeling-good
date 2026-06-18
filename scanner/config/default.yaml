@@ -1,0 +1,46 @@
+# Default scanner configuration.
+# Values here mirror the dataclass defaults in code; this file documents them
+# in one place and can be loaded by custom drivers.
+
+data:
+  source: synthetic        # synthetic | csv | polygon
+  benchmark: SPY
+  years: 10
+  resolution_trend: 1d
+  resolution_entry: ["1h", "15m"]   # intraday families only
+
+universe:
+  min_adv_dollar: 10000000           # $10M average daily dollar volume
+  min_price: 5.0                     # exclude penny stocks
+  adv_window: 20
+  allow_leveraged: false             # leveraged/inverse ETFs excluded by default
+  exclude_within_days_before_earnings: 10
+
+costs:                               # estimates for liquid US equities/ETFs
+  commission_per_share: 0.005
+  min_commission: 1.0
+  sec_taf_bps: 0.02
+  spread_bps: 2.0
+  slippage_bps: 3.0
+  delay_bars: 1                      # signal bar t -> fill at t+1 open
+  cost_stress_multiplier: 1.75       # robustness stress factor
+
+risk:                                # MODERATE profile (user-selected)
+  risk_per_trade_pct: 0.01           # 1.0% (band 0.25%–1.0%)
+  max_total_open_risk_pct: 0.06      # 6%
+  max_stressed_open_risk_pct: 0.09   # 9% after gap-tail multiplier
+  gap_tail_multiplier: 1.5
+  max_sector_risk_pct: 0.08          # 8%
+  max_positions: 8
+  daily_loss_limit_r: 3.0
+  weekly_loss_limit_r: 6.0
+
+validation:
+  splits: {development: 0.5, out_of_sample: 0.3, holdout: 0.2}
+  min_oos_trades: 100
+  preferred_oos_trades: 300
+  min_profit_factor: 1.30
+  min_planned_r: 3.0
+  bootstrap_iterations: 2000
+  placebo_runs: 100
+  acceptance_requires_all_gates: true
