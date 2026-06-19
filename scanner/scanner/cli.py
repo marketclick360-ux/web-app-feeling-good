@@ -478,7 +478,8 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
           f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
 
 
-def _run_review(source, years, in_path, out_path, since=None, only_setup=None):
+def _run_review(source, years, in_path, out_path, since=None, only_setup=None,
+                by="setup"):
     import os
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
@@ -534,40 +535,55 @@ def _run_review(source, years, in_path, out_path, since=None, only_setup=None):
     print(f"  Exits: target {s['pct_target_exits']:.0%} | time {s['pct_time_exits']:.0%} | "
           f"gap-tail(<-1R) {s['gap_tail_rate']:.0%}")
 
-    print("\n  By setup family:")
-    print(f"  {'setup':<24} {'fired':>5} {'closed':>6} {'W':>4} {'L':>4} {'W:L':>5} "
-          f"{'win%':>5} {'exp(R)':>8} {'PF':>6}")
-    print("  " + "-" * 76)
-    fam_rows = []
-    for name, g in df.groupby("setup"):
+    # group key on the trades frame
+    dfk = df.copy()
+    if by == "month":
+        dfk["_k"] = pd.to_datetime(dfk["entry_time"]).dt.strftime("%Y-%m")
+    elif by == "year":
+        dfk["_k"] = dfk["year"].astype(str)
+    else:
+        dfk["_k"] = dfk[by].astype(str)
+    # fired counts (journal) for the same key
+    fired = {}
+    for r in rows:
+        if by == "setup":
+            k = str(r.get("setup", "?"))
+        elif by == "symbol":
+            k = str(r.get("symbol", "?")).upper()
+        elif by == "regime":
+            k = str(r.get("regime", "?"))
+        elif by == "year":
+            k = str(r.get("date", ""))[:4]
+        elif by == "month":
+            k = str(r.get("date", ""))[:7]
+        else:
+            k = str(r.get(by, "?"))
+        fired[k] = fired.get(k, 0) + 1
+
+    print(f"\n  By {by}:")
+    print(f"  {by:<24} {'fired':>5} {'closed':>6} {'W':>4} {'L':>4} {'W:L':>5} "
+          f"{'win%':>5} {'exp(R)':>8} {'PF':>6} {'hold':>5}")
+    print("  " + "-" * 84)
+    grp_rows = []
+    for k, g in dfk.groupby("_k"):
         w = int((g["realized_r"] > 0).sum())
         l = int((g["realized_r"] <= 0).sum())
         gw = float(g.loc[g["realized_r"] > 0, "realized_r"].sum())
         gl = float(-g.loc[g["realized_r"] <= 0, "realized_r"].sum())
         pf = gw / gl if gl > 0 else float("inf")
-        win_hold = float(g.loc[g["realized_r"] > 0, "bars_held"].mean()) if w else float("nan")
-        loss_hold = float(g.loc[g["realized_r"] <= 0, "bars_held"].mean()) if l else float("nan")
-        fam_rows.append({"setup": name, "fired": journal_counts.get(name, len(g)),
-                         "closed": len(g), "w": w, "l": l,
-                         "wl": (w / l if l else float("inf")),
-                         "win": w / len(g), "exp": float(g["realized_r"].mean()), "pf": pf,
-                         "hold": float(g["bars_held"].mean()),
-                         "win_hold": win_hold, "loss_hold": loss_hold})
-    fam_rows.sort(key=lambda x: -x["exp"])
-    for r in fam_rows:
+        grp_rows.append({"k": k, "fired": fired.get(str(k), len(g)), "closed": len(g),
+                         "w": w, "l": l, "wl": (w / l if l else float("inf")),
+                         "win": w / len(g), "exp": float(g["realized_r"].mean()),
+                         "pf": pf, "hold": float(g["bars_held"].mean())})
+    grp_rows.sort(key=lambda x: -x["exp"])
+    for r in grp_rows:
         wl = f"{r['wl']:.2f}" if r["l"] else "∞"
         pf = f"{r['pf']:.2f}" if r["pf"] != float("inf") else "∞"
-        print(f"  {r['setup']:<24} {r['fired']:>5} {r['closed']:>6} {r['w']:>4} {r['l']:>4} "
-              f"{wl:>5} {r['win']:>5.0%} {r['exp']:>8.3f} {pf:>6}")
-
-    # hold-time table (trading days)
-    print("\n  Hold time by family (trading days, max 10):")
-    print(f"  {'setup':<24} {'avg':>5} {'if WIN':>7} {'if loss/exit':>13}")
-    print("  " + "-" * 52)
-    for r in fam_rows:
-        wh = f"{r['win_hold']:.1f}" if r["win_hold"] == r["win_hold"] else "—"
-        lh = f"{r['loss_hold']:.1f}" if r["loss_hold"] == r["loss_hold"] else "—"
-        print(f"  {r['setup']:<24} {r['hold']:>5.1f} {wh:>7} {lh:>13}")
+        print(f"  {str(r['k']):<24} {r['fired']:>5} {r['closed']:>6} {r['w']:>4} {r['l']:>4} "
+              f"{wl:>5} {r['win']:>5.0%} {r['exp']:>8.3f} {pf:>6} {r['hold']:>5.1f}")
+    if by != "setup":
+        print(f"  (grouped by {by}; small per-group samples are unreliable — "
+              "a high past win% is hindsight, not a prediction.)")
 
     # optional per-trade detail for one family: tickers, dates, days, result
     if only_setup:
@@ -594,6 +610,208 @@ def _run_review(source, years, in_path, out_path, since=None, only_setup=None):
           "resolved at 3R/stop/time. Hold = trading days in the trade.")
     print("  Reminder: a small/medium closed sample is STATISTICALLY INCONCLUSIVE. "
           "Aim for 100+ per family. Hypothetical, not advice.")
+
+
+# --------------------------------------------------------------------------
+# Concentration analysis: is a setup a broad edge, or one ticker / one rally?
+# --------------------------------------------------------------------------
+
+def _grp_stats(g):
+    """Core metrics for a group of closed trades (a DataFrame with realized_r)."""
+    n = len(g)
+    if n == 0:
+        return dict(n=0, total_r=0.0, exp=0.0, win=0.0, pf=float("nan"),
+                    best=0.0, worst=0.0)
+    r = g["realized_r"].astype(float)
+    gw = float(r[r > 0].sum())
+    gl = float(-r[r <= 0].sum())
+    return dict(
+        n=n,
+        total_r=float(r.sum()),
+        exp=float(r.mean()),
+        win=float((r > 0).mean()),
+        pf=(gw / gl) if gl > 0 else float("inf"),
+        best=float(r.max()),
+        worst=float(r.min()),
+    )
+
+
+def _pf_str(pf):
+    if pf != pf:        # NaN
+        return "n/a"
+    return "∞" if pf == float("inf") else f"{pf:.2f}"
+
+
+def _run_concentration(source, years, in_path, out_path, since=None,
+                       setups=None, min_oos=100):
+    """Per-ticker contribution + drop-one / drop-best / drop-period tests.
+
+    Analysis only — does NOT change strategy rules. Answers: is the edge broad,
+    or carried by a single ticker (e.g. SLV) or a single hot period?
+    """
+    import os
+    real = source in ("polygon", "csv", "schwab", "stooq")
+    cfg = PipelineConfig()
+    cfg.years = years
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    if not os.path.exists(in_path):
+        print(f"No journal found at {in_path}. Run `log` first.")
+        return
+    rows = pd.read_csv(in_path).to_dict("records")
+    if since:
+        rows = [r for r in rows if str(r.get("date", "")) >= since]
+
+    print("=" * 78)
+    print("  CONCENTRATION ANALYSIS — is the edge broad, or one ticker / one rally?")
+    print("=" * 78)
+    print(f"  Journal: {in_path}   Source: {source}   Live data: {'YES' if real else 'NO'}")
+    print("  Analysis only. No strategy changes. HYPOTHETICAL 3R outcomes.")
+    print("=" * 78)
+
+    trades = evaluate_logged_signals(adapter, rows, cfg, as_of)
+    if not trades:
+        print("\n  No CLOSED paper trades yet (candidates still open / too recent).")
+        return
+    df = trades_to_frame(trades)
+    df["symbol"] = df["symbol"].astype(str).str.upper()
+    _et = pd.to_datetime(df["entry_time"], utc=True).dt.tz_localize(None)
+    df["_month"] = _et.dt.strftime("%Y-%m")
+    df["_q"] = _et.dt.to_period("Q").astype(str)
+    df["year"] = df["year"].astype(int)
+
+    fams = setups or sorted(df["setup"].unique())
+    report_rows = []
+
+    for fam in fams:
+        fam_df = df[df["setup"] == fam].copy()
+        base = _grp_stats(fam_df)
+        if base["n"] == 0:
+            print(f"\n  {fam}: no closed trades.")
+            continue
+
+        print("\n" + "=" * 78)
+        print(f"  SETUP: {fam}")
+        print("=" * 78)
+        print(f"  Closed trades {base['n']} | total {base['total_r']:+.2f}R | "
+              f"exp {base['exp']:+.3f}R | win {base['win']:.0%} | "
+              f"PF {_pf_str(base['pf'])}")
+        if base["n"] < min_oos:
+            print(f"  ⚠ n={base['n']} < {min_oos} → STATISTICALLY INCONCLUSIVE "
+                  "(promising at best, not validated).")
+
+        # --- per-ticker contribution table ---
+        print("\n  Per-ticker contribution (sorted by total R):")
+        print(f"  {'tkr':<6} {'n':>3} {'totR':>8} {'avgR':>7} {'win%':>5} "
+              f"{'PF':>6} {'best':>6} {'worst':>6} {'%profit':>8}")
+        print("  " + "-" * 64)
+        pos_total = float(fam_df.loc[fam_df["realized_r"] > 0, "realized_r"].sum())
+        tkr_stats = {}
+        for tkr, g in fam_df.groupby("symbol"):
+            st = _grp_stats(g)
+            tkr_stats[tkr] = st
+        for tkr, st in sorted(tkr_stats.items(), key=lambda kv: -kv[1]["total_r"]):
+            share = (max(st["total_r"], 0.0) / pos_total * 100) if pos_total > 0 else 0.0
+            print(f"  {tkr:<6} {st['n']:>3} {st['total_r']:>+8.2f} {st['exp']:>+7.2f} "
+                  f"{st['win']:>5.0%} {_pf_str(st['pf']):>6} {st['best']:>+6.2f} "
+                  f"{st['worst']:>+6.2f} {share:>7.0f}%")
+            report_rows.append(dict(
+                setup=fam, dimension="ticker", key=tkr, n=st["n"],
+                total_r=round(st["total_r"], 3), avg_r=round(st["exp"], 3),
+                win_rate=round(st["win"], 3), profit_factor=_pf_str(st["pf"]),
+                largest_winner=round(st["best"], 3), largest_loser=round(st["worst"], 3),
+                pct_of_profit=round(share, 1)))
+
+        # --- drop-one-ticker tests ---
+        print("\n  Drop-one-ticker (remove each ticker, recompute the rest):")
+        print(f"  {'remove':<8} {'n':>3} {'exp(R)':>8} {'win%':>5} {'PF':>6}  flag")
+        print("  " + "-" * 50)
+        weakened = []
+        for tkr in sorted(tkr_stats, key=lambda t: -tkr_stats[t]["total_r"]):
+            rest = fam_df[fam_df["symbol"] != tkr]
+            st = _grp_stats(rest)
+            flag = ""
+            if st["exp"] <= 0:
+                flag = "EXP→≤0"
+                weakened.append(tkr)
+            elif base["exp"] > 0 and st["exp"] < 0.5 * base["exp"]:
+                flag = "halved"
+                weakened.append(tkr)
+            print(f"  {tkr:<8} {st['n']:>3} {st['exp']:>+8.3f} {st['win']:>5.0%} "
+                  f"{_pf_str(st['pf']):>6}  {flag}")
+            report_rows.append(dict(
+                setup=fam, dimension="drop_ticker", key=tkr, n=st["n"],
+                total_r=round(st["total_r"], 3), avg_r=round(st["exp"], 3),
+                win_rate=round(st["win"], 3), profit_factor=_pf_str(st["pf"]),
+                largest_winner="", largest_loser="", pct_of_profit=""))
+
+        # --- drop-best-ticker test ---
+        best_tkr = max(tkr_stats, key=lambda t: tkr_stats[t]["total_r"])
+        rest = fam_df[fam_df["symbol"] != best_tkr]
+        db = _grp_stats(rest)
+        best_share = (max(tkr_stats[best_tkr]["total_r"], 0.0) / pos_total * 100) \
+            if pos_total > 0 else 0.0
+        print(f"\n  Drop-BEST-ticker ({best_tkr}, {best_share:.0f}% of profit): "
+              f"exp {base['exp']:+.3f}R → {db['exp']:+.3f}R  "
+              f"(n {base['n']}→{db['n']}, PF {_pf_str(base['pf'])}→{_pf_str(db['pf'])})")
+
+        # --- drop-best-period tests ---
+        period_collapse = False
+        for label, col in (("month", "_month"), ("quarter", "_q"), ("year", "year")):
+            sums = fam_df.groupby(col)["realized_r"].sum()
+            if sums.empty:
+                continue
+            best_k = sums.idxmax()
+            dp = _grp_stats(fam_df[fam_df[col] != best_k])
+            note = ""
+            if base["exp"] > 0 and dp["exp"] <= 0:
+                note = "  ← EXP→≤0 without this period"
+                period_collapse = True
+            print(f"  Drop-best-{label:<7} ({best_k}): exp {base['exp']:+.3f}R → "
+                  f"{dp['exp']:+.3f}R (n→{dp['n']}){note}")
+            report_rows.append(dict(
+                setup=fam, dimension=f"drop_{label}", key=str(best_k), n=dp["n"],
+                total_r=round(dp["total_r"], 3), avg_r=round(dp["exp"], 3),
+                win_rate=round(dp["win"], 3), profit_factor=_pf_str(dp["pf"]),
+                largest_winner="", largest_loser="", pct_of_profit=""))
+
+        # --- verdict ---
+        n_tickers = len(tkr_stats)
+        if base["exp"] <= 0:
+            verdict = (f"NO EDGE — base expectancy {base['exp']:+.3f}R is ≤0 before "
+                       "any concentration test. Nothing to keep.")
+        elif db["exp"] <= 0:
+            verdict = (f"REJECTED — CONCENTRATION-DRIVEN: removing {best_tkr} "
+                       f"turns expectancy {db['exp']:+.3f}R (≤0).")
+        elif best_share >= 50:
+            verdict = (f"CONCENTRATION-DRIVEN: {best_tkr} alone is {best_share:.0f}% "
+                       f"of profit (survives at {db['exp']:+.3f}R but fragile).")
+        elif period_collapse:
+            verdict = ("CONCENTRATION-DRIVEN (time): one period carries it — "
+                       "expectancy turns ≤0 without the best month/quarter/year.")
+        elif n_tickers >= 5 and db["exp"] > 0:
+            verdict = (f"DIVERSIFIED — survives dropping {best_tkr} at "
+                       f"{db['exp']:+.3f}R across {n_tickers} tickers. "
+                       "TENTATIVE CANDIDATE — needs longer OOS / forward paper.")
+        else:
+            verdict = (f"INCONCLUSIVE — survives drop-best at {db['exp']:+.3f}R but "
+                       f"only {n_tickers} tickers; keep paper-tracking.")
+        if base["n"] < min_oos:
+            verdict += f"  (n={base['n']}<{min_oos}: STATISTICALLY INCONCLUSIVE.)"
+        print(f"\n  VERDICT: {verdict}")
+        report_rows.append(dict(
+            setup=fam, dimension="VERDICT", key=verdict, n=base["n"],
+            total_r=round(base["total_r"], 3), avg_r=round(base["exp"], 3),
+            win_rate=round(base["win"], 3), profit_factor=_pf_str(base["pf"]),
+            largest_winner=best_tkr, largest_loser="",
+            pct_of_profit=round(best_share, 1)))
+
+    if out_path and report_rows:
+        pd.DataFrame(report_rows).to_csv(out_path, index=False)
+        print(f"\n  Concentration report written: {out_path}")
+    print("\n  Analysis only — no strategy rules changed. 0% live risk until "
+          "concentration, placebo, cost stress, AND forward paper all pass.")
 
 
 def main(argv: List[str] = None):
@@ -651,6 +869,25 @@ def main(argv: List[str] = None):
                     help="only review signals on/after this date, e.g. 2026-01-01 (YTD)")
     pr.add_argument("--setup", default=None, dest="only_setup",
                     help="list individual trades (ticker/dates/days/result) for one family")
+    pr.add_argument("--by", default="setup",
+                    choices=["setup", "symbol", "regime", "year", "month", "direction"],
+                    help="break outcomes down by this dimension (default: setup)")
+
+    pc = sub.add_parser("concentration",
+                        help="is a setup a broad edge, or one ticker / one rally?")
+    pc.add_argument("--source", default="synthetic",
+                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+    pc.add_argument("--years", type=int, default=12)
+    pc.add_argument("--in", default="signal_log.csv", dest="in_path",
+                    help="journal CSV to analyze")
+    pc.add_argument("--out", default="concentration_report.csv", dest="out_path",
+                    help="concentration report CSV to write")
+    pc.add_argument("--since", default=None,
+                    help="only analyze signals on/after this date, e.g. 2026-01-01")
+    pc.add_argument("--setup", action="append", dest="setups", default=None,
+                    help="restrict to a setup family (repeatable); default: all")
+    pc.add_argument("--min-oos", type=int, default=100, dest="min_oos",
+                    help="minimum closed trades to consider validated (default 100)")
 
     args = ap.parse_args(argv)
     if args.cmd == "edge":
@@ -659,7 +896,11 @@ def main(argv: List[str] = None):
         return
     if args.cmd == "review":
         _run_review(args.source, args.years, args.in_path, args.out_path,
-                    args.since, args.only_setup)
+                    args.since, args.only_setup, args.by)
+        return
+    if args.cmd == "concentration":
+        _run_concentration(args.source, args.years, args.in_path, args.out_path,
+                           args.since, args.setups, args.min_oos)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
