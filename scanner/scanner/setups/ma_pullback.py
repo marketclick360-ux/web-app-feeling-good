@@ -29,7 +29,7 @@ class MAPullback(Setup):
             "ma_len": 20,           # 10 or 20
             "adx_min": 20.0,
             "atr_stop_mult": 1.5,
-            "planned_r": 2.0,
+            "planned_r": 3.0,
         }
 
     def generate(self, df, regime, symbol, context: Optional[dict] = None) -> list:

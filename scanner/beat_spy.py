@@ -185,10 +185,38 @@ def main():
     ap.add_argument("--bond-div-yield", type=float, default=0.03, dest="bond_div_yield")
     ap.add_argument("--cost-bps", type=float, default=5.0, dest="cost_bps",
                     help="per-switch cost (spread+slippage+commission), bps")
+    ap.add_argument("--signal", action="store_true",
+                    help="just print today's 200-day timing signal (monthly check)")
     args = ap.parse_args()
 
     adapter = get_adapter(args.source)
     as_of = pd.Timestamp.now("UTC").normalize()
+
+    if args.signal:
+        eq = load(adapter, args.equity, max(args.years, 2), as_of)
+        if eq is None:
+            raise SystemExit(f"No data for {args.equity} from {args.source}.")
+        close = float(eq["close"].iloc[-1])
+        sma200 = float(eq["close"].rolling(200).mean().iloc[-1])
+        pct = (close / sma200 - 1) * 100
+        in_mkt = close > sma200
+        print("=" * 60)
+        print(f"  200-DAY TIMING SIGNAL — {args.equity}")
+        print(f"  as of last close {eq.index[-1].date()}")
+        print("=" * 60)
+        print(f"  Close:        ${close:,.2f}")
+        print(f"  200-day avg:  ${sma200:,.2f}")
+        print(f"  Distance:     {pct:+.1f}%  ({'ABOVE' if in_mkt else 'BELOW'})")
+        print("-" * 60)
+        if in_mkt:
+            print(f"  ✅ SIGNAL: IN THE MARKET — hold {args.equity}")
+        else:
+            print(f"  🛑 SIGNAL: OUT — hold cash / T-bill ETF (e.g. SGOV)")
+        print("-" * 60)
+        print("  Check once a month. Only act when the signal FLIPS.")
+        print("  (Paper-trade first. This estimates history, not the future.)")
+        return
+
     eq = load(adapter, args.equity, args.years, as_of)
     if eq is None:
         raise SystemExit(f"No data for {args.equity} from {args.source}.")

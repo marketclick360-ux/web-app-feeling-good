@@ -108,6 +108,7 @@ class SetupResult:
     concentration: dict
     overfitting: dict
     cost_scenarios: dict = field(default_factory=dict)
+    target_sweep: dict = field(default_factory=dict)
     oos_trades: list = field(default_factory=list)
 
 
@@ -200,27 +201,41 @@ def research(adapter: DataAdapter, symbols: List[str],
                           metrics.summary(hold_t))
         walk = walk_forward(trades)
 
-        boot = {"iid": iid_bootstrap(oos_t, n_boot=cfg.n_boot),
-                "block": block_bootstrap_expectancy(oos_t, n_boot=cfg.n_boot),
-                "mc_drawdown": monte_carlo_drawdown(oos_t)}
+        # With zero OOS trades there is nothing to test — do NOT run placebo /
+        # concentration / bootstrap / cost / overfitting claims on an empty set.
+        has_sample = len(oos_t) > 0
+        if has_sample:
+            boot = {"iid": iid_bootstrap(oos_t, n_boot=cfg.n_boot),
+                    "block": block_bootstrap_expectancy(oos_t, n_boot=cfg.n_boot),
+                    "mc_drawdown": monte_carlo_drawdown(oos_t)}
+            conc = run_concentration(oos_t)
+            plac = random_date_placebo(oos_t, bars_by_symbol, engine, atr_lookup,
+                                       n_runs=cfg.placebo_runs)
+            cost_scenarios = {}
+            for scen in params.COST_SCENARIOS:
+                sc_trades, _, _ = _backtest_setup(setup, frames, regime_by_sym, context,
+                                                  cfg, cost=scenario_costs(scen))
+                _, sc_oos, _ = time_splits(sc_trades)
+                cost_scenarios[scen] = metrics.summary(sc_oos)
+            st = cost_scenarios[params.ACCEPTANCE_SCENARIO]
+            cost_survives = (st.get("expectancy_r", -1) > 0
+                             and st.get("profit_factor", 0) >= params.MIN_PROFIT_FACTOR)
+            param_exps, configs, perf_rows = _param_sensitivity(
+                setup_cls, frames, regime_by_sym, context, cfg)
+        else:
+            boot, conc, plac, cost_scenarios = {}, {}, {}, {}
+            cost_survives = False
+            param_exps, configs, perf_rows = [], [], []
 
-        conc = run_concentration(oos_t)
-        plac = random_date_placebo(oos_t, bars_by_symbol, engine, atr_lookup,
-                                   n_runs=cfg.placebo_runs)
-
-        # three slippage scenarios (low/normal/stressed); acceptance on stressed
-        cost_scenarios = {}
-        for scen in params.COST_SCENARIOS:
-            sc_trades, _, _ = _backtest_setup(setup, frames, regime_by_sym, context,
-                                              cfg, cost=scenario_costs(scen))
-            _, sc_oos, _ = time_splits(sc_trades)
-            cost_scenarios[scen] = metrics.summary(sc_oos)
-        st = cost_scenarios[params.ACCEPTANCE_SCENARIO]
-        cost_survives = (st.get("expectancy_r", -1) > 0
-                         and st.get("profit_factor", 0) >= params.MIN_PROFIT_FACTOR)
-
-        param_exps, configs, perf_rows = _param_sensitivity(
-            setup_cls, frames, regime_by_sym, context, cfg)
+        # target-R sweep: test 2.0R / 2.5R / 3.0R for transparency (research only;
+        # acceptance still requires the 3R variant to pass every gate).
+        target_sweep = {}
+        if has_sample:
+            for r_mult in (2.0, 2.5, 3.0):
+                sw_trades, _, _ = _backtest_setup(setup_cls(planned_r=r_mult),
+                                                  frames, regime_by_sym, context, cfg)
+                _, sw_oos, _ = time_splits(sw_trades)
+                target_sweep[r_mult] = metrics.summary(sw_oos)
         param_stable = bool(param_exps and np.mean(param_exps) > 0
                             and (np.std(param_exps) / (abs(np.mean(param_exps)) + 1e-9)) < 1.0)
 
@@ -239,8 +254,7 @@ def research(adapter: DataAdapter, symbols: List[str],
                            if not reg_bd.empty else 0.0)
 
         # quality score
-        ci_low = boot["iid"].get("expectancy_r", {}).get("ci_low", float("nan")) \
-            if boot["iid"] else float("nan")
+        ci_low = boot.get("iid", {}).get("expectancy_r", {}).get("ci_low", float("nan"))
         q_inputs = quality_mod.QualityInputs(
             oos_expectancy_r=oos.get("expectancy_r", float("nan")),
             oos_expectancy_ci_low=ci_low,
@@ -280,7 +294,8 @@ def research(adapter: DataAdapter, symbols: List[str],
             name=name, verdict=verdict, quality=qual, dev=dev, oos=oos,
             holdout=hold, walk=walk, boot=boot, placebo=plac,
             concentration=conc, overfitting=overfit,
-            cost_scenarios=cost_scenarios, oos_trades=oos_t)
+            cost_scenarios=cost_scenarios, target_sweep=target_sweep,
+            oos_trades=oos_t)
     return results
 
 

@@ -29,7 +29,7 @@ class TrendPullback(Setup):
             "rsi_long_max": 45.0,   # pullback must cool momentum
             "rsi_short_min": 55.0,
             "atr_stop_mult": 1.5,
-            "planned_r": 2.0,
+            "planned_r": 3.0,
             "pullback_atr": 0.5,    # low must come within 0.5 ATR of EMA20
         }
 

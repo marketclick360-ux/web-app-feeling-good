@@ -39,6 +39,7 @@ _BASE = "https://api.polygon.io"
 
 class PolygonAdapter(DataAdapter):
     name = "polygon"
+    survivorship_free = True  # delisted tickers remain queryable
 
     def __init__(self, api_key: Optional[str] = None, cache_dir: str = ".polygon_cache",
                  max_retries: int = 4, pause: float = 0.25):

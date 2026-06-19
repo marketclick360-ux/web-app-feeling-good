@@ -67,11 +67,12 @@ class Setup(ABC):
 
     name: str = "abstract"
     hypothesis: str = ""
-    # Each setup's OBJECTIVE target rule is expressed as a reward-to-risk
-    # multiple chosen to fit the hypothesis. There is deliberately NO universal
-    # 3R minimum — acceptance is decided by expectancy/profit-factor/robustness,
-    # not by manufacturing a 3R target.
-    target_r: float = 2.0
+    # Each setup's OBJECTIVE target rule is a reward-to-risk multiple chosen to
+    # fit its hypothesis. The HARD design rule is target_r >= 3.0: any setup
+    # whose realized planned target is below 3R is rejected before any
+    # performance test (validation.MIN_PLANNED_R). Targets are not curve-fit to
+    # manufacture a win rate — they are fixed by the setup's structure.
+    target_r: float = 3.0
     direction_modes = (Direction.LONG, Direction.SHORT)
 
     #: parameters exposed for sensitivity analysis (name -> value)

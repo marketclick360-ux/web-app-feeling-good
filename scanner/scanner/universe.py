@@ -53,6 +53,16 @@ def default_candidates() -> List[str]:
     return etfs + stocks
 
 
+def etf_candidates() -> List[str]:
+    """Liquid, unlevered ETF universe. Preferred for historical research:
+    indices/sector ETFs rarely delist, so survivorship bias is minimal and the
+    data is cleaner than a today's-list-of-stocks backtest."""
+    return ["SPY", "QQQ", "IWM", "DIA", "VTI",
+            "XLK", "XLF", "XLE", "XLV", "XLI", "XLY", "XLP", "XLU", "XLB", "XLRE",
+            "SMH", "SOXX", "XBI", "KRE", "ITB", "TLT", "IEF", "HYG", "LQD",
+            "GLD", "SLV", "DBC", "EEM", "EFA", "VNQ"]
+
+
 def filter_universe(adapter: DataAdapter,
                     as_of: pd.Timestamp,
                     cfg: Optional[UniverseConfig] = None,

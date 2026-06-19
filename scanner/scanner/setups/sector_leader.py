@@ -32,7 +32,7 @@ class SectorLeaderContinuation(Setup):
             "rs_lookback": 40,
             "breakout_lookback": 10,
             "atr_stop_mult": 1.5,
-            "planned_r": 2.5,
+            "planned_r": 3.0,
         }
 
     def generate(self, df, regime, symbol, context: Optional[dict] = None) -> list:

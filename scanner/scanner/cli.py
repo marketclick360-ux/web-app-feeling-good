@@ -23,7 +23,8 @@ from .data import get_adapter
 from .pipeline import (PipelineConfig, research, live_signals, SetupResult, SECTOR_MAP)
 from .rank import SetupEvidence, build_table, to_markdown
 from .sizing import RiskConfig
-from .universe import default_candidates, filter_universe, UniverseConfig
+from .universe import (default_candidates, etf_candidates, filter_universe,
+                       UniverseConfig)
 from .validation import LABEL_TENTATIVE, LABEL_ROBUST
 
 ELIGIBLE = {LABEL_TENTATIVE, LABEL_ROBUST}
@@ -41,7 +42,18 @@ ADJUSTMENT_INFO = {
 }
 
 
-def _print_header(source: str, universe_n: int, data_ts: str, real: bool):
+def _survivorship_note(adapter, etf_only: bool) -> str:
+    sf = getattr(adapter, "survivorship_free", None)
+    if sf is True:
+        return "NO (survivorship-bias-free source)"
+    base = "YES — source lacks delisted tickers/point-in-time constituents"
+    if etf_only:
+        base += "; reduced by ETF-only universe (indices rarely delist)"
+    return base
+
+
+def _print_header(source: str, universe_n: int, data_ts: str, real: bool,
+                  adapter=None, etf_only: bool = False):
     print("=" * 78)
     print("  RULE-BASED MARKET SCANNER — liquid U.S. stocks & ETFs")
     print("=" * 78)
@@ -59,6 +71,8 @@ def _print_header(source: str, universe_n: int, data_ts: str, real: bool):
     print(f"  Execution rule     : {params.EXECUTION_RULE}")
     print(f"  Timezone / session : UTC index, completed bars only")
     print(f"  Live data verified : {'YES' if real else 'NO — synthetic/offline'}")
+    if adapter is not None:
+        print(f"  Survivorship bias  : {_survivorship_note(adapter, etf_only)}")
     print("-" * 78)
     if not real:
         print("  CURRENT MARKET DATA NOT AVAILABLE — RESEARCH MODE ONLY")
@@ -103,6 +117,12 @@ def _print_research(results: Dict[str, SetupResult]):
               f"avg_win={r.oos.get('avg_winner_r',0):.2f}R "
               f"avg_loss={r.oos.get('avg_loser_r',0):.2f}R "
               f"planned_target={r.oos.get('planned_target_r',0):.2f}R")
+        if r.target_sweep:
+            sw = " | ".join(
+                f"{rr:.1f}R: n={m.get('n_trades',0)} exp={m.get('expectancy_r',0):.3f}R "
+                f"PF={m.get('profit_factor',0):.2f} win={m.get('win_rate',0):.0%}"
+                for rr, m in r.target_sweep.items())
+            print(f"    Target sweep (OOS, research only — 3R needed to accept): {sw}")
         if r.cost_scenarios:
             cs = " | ".join(
                 f"{k}: exp={v.get('expectancy_r',0):.3f}R PF={v.get('profit_factor',0):.2f}"
@@ -149,9 +169,16 @@ def _print_risk_controls(risk: RiskConfig):
     print("              no naked options, no leverage unless separately tested,")
     print("              no new positions within 10 trading days before earnings")
     print("              unless the setup is separately designed/tested for events.")
+    print("  STAGED SIZING for an UNVALIDATED system (recommended):")
+    print("    research / paper        : 0% (no live capital)")
+    print("    first tiny live test    : 0.25% per trade")
+    print("    after 100+ fwd trades   : up to 0.50%")
+    print("    only after strong fwd   : consider the 1.0% shown above")
+    print("    evidence")
 
 
-def _run(source: str, n_symbols: int, fast: bool, years: int = 10):
+def _run(source: str, n_symbols: int, fast: bool, years: int = 10,
+         etf_only: bool = False):
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
@@ -163,7 +190,8 @@ def _run(source: str, n_symbols: int, fast: bool, years: int = 10):
     adapter = get_adapter(source)
     as_of = pd.Timestamp.now("UTC").normalize()
 
-    candidates = default_candidates()[:n_symbols]
+    pool = etf_candidates() if etf_only else default_candidates()
+    candidates = pool[:n_symbols]
     try:
         universe = filter_universe(adapter, as_of, UniverseConfig(), candidates)
     except Exception as exc:  # e.g. missing API key
@@ -173,7 +201,8 @@ def _run(source: str, n_symbols: int, fast: bool, years: int = 10):
         universe = candidates
 
     data_ts = as_of.isoformat()
-    _print_header(source, len(universe), data_ts, real)
+    _print_header(source, len(universe), data_ts, real, adapter=adapter,
+                  etf_only=etf_only)
 
     results = research(adapter, universe, cfg=cfg, as_of=as_of)
     _print_research(results)
@@ -224,9 +253,12 @@ def main(argv: List[str] = None):
                        help="years of history (use 2 for Polygon free tier)")
         p.add_argument("--fast", action="store_true",
                        help="smaller bootstrap/placebo counts for a quick run")
+        p.add_argument("--etf-only", action="store_true", dest="etf_only",
+                       help="use the liquid ETF universe (cleaner, less survivorship bias)")
     args = ap.parse_args(argv)
     source = args.source or ("synthetic" if args.cmd == "demo" else "synthetic")
-    _run(source, args.symbols, fast=args.fast or args.cmd == "demo", years=args.years)
+    _run(source, args.symbols, fast=args.fast or args.cmd == "demo",
+         years=args.years, etf_only=args.etf_only)
 
 
 if __name__ == "__main__":

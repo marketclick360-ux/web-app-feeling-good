@@ -22,9 +22,12 @@ from typing import List, Optional
 from . import params
 
 LABEL_REJECTED = "REJECTED"
+LABEL_NO_SAMPLE = "NO OOS SAMPLE"
 LABEL_INCONCLUSIVE = "STATISTICALLY INCONCLUSIVE"
 LABEL_TENTATIVE = "TENTATIVE — FOR PAPER OBSERVATION ONLY"
 LABEL_ROBUST = "ROBUST — ELIGIBLE FOR FORWARD OBSERVATION ONLY"
+
+MIN_PLANNED_R = 3.0  # hard design gate: reject anything below this before testing
 
 
 @dataclass
@@ -56,9 +59,29 @@ class Verdict:
 def evaluate(e: Evidence) -> Verdict:
     reasons, warnings = [], []
 
-    # ---- HARD REJECTIONS ----
-    # NOTE: there is intentionally no minimum-R requirement. A high planned R
-    # is neither required nor sufficient; expectancy/PF/robustness decide.
+    # ---- GATE 0: no out-of-sample sample at all ----
+    # With zero trades there is nothing to test — do NOT run or report
+    # expectancy / profit-factor / placebo / concentration claims on it.
+    if e.n_oos_trades <= 0:
+        return Verdict(LABEL_NO_SAMPLE,
+                       ["no out-of-sample trades — insufficient sample; "
+                        "no edge statistics computed"], [])
+
+    # ---- GATE 1: hard 3R design rule (checked BEFORE any performance test) ----
+    if e.planned_target_r < MIN_PLANNED_R:
+        return Verdict(LABEL_REJECTED,
+                       [f"planned target {e.planned_target_r:.2f}R < "
+                        f"{MIN_PLANNED_R:.1f}R minimum (design rule, pre-backtest)"],
+                       [])
+
+    # ---- GATE 2: insufficient sample -> inconclusive, no edge claims ----
+    if e.n_oos_trades < params.MIN_OOS_TRADES:
+        return Verdict(LABEL_INCONCLUSIVE,
+                       [], [f"only {e.n_oos_trades} OOS trades "
+                            f"(< {params.MIN_OOS_TRADES}) — edge statistics not "
+                            "reliable; not evaluated for acceptance"])
+
+    # ---- HARD REJECTIONS (only with an adequate sample) ----
     if e.oos_expectancy_r <= 0:
         reasons.append(f"OOS expectancy {e.oos_expectancy_r:.3f}R not positive")
     if e.oos_profit_factor < params.MIN_PROFIT_FACTOR:
@@ -78,9 +101,6 @@ def evaluate(e: Evidence) -> Verdict:
     # ---- STATISTICAL CONFIDENCE ----
     if e.oos_expectancy_ci_low <= 0:
         warnings.append("95% CI for expectancy includes zero")
-        return Verdict(LABEL_INCONCLUSIVE, reasons, warnings)
-    if e.n_oos_trades < params.MIN_OOS_TRADES:
-        warnings.append(f"only {e.n_oos_trades} OOS trades (< {params.MIN_OOS_TRADES})")
         return Verdict(LABEL_INCONCLUSIVE, reasons, warnings)
     if e.pbo is not None and e.pbo > 0.5:
         warnings.append(f"PBO {e.pbo:.2f} > 0.50 (overfitting risk)")

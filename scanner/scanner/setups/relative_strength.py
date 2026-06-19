@@ -31,7 +31,7 @@ class RelativeStrengthBreakout(Setup):
             "rs_lookback": 60,
             "price_lookback": 20,
             "atr_stop_mult": 1.5,
-            "planned_r": 2.5,
+            "planned_r": 3.0,
         }
 
     def generate(self, df, regime, symbol, context: Optional[dict] = None) -> list:

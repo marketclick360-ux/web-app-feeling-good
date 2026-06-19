@@ -28,7 +28,7 @@ class VolumeBreakout(Setup):
         return {
             "vol_ratio_min": 1.7,
             "buffer_atr": 0.25,   # stop placed this far back inside old range
-            "planned_r": 2.5,
+            "planned_r": 3.0,
         }
 
     def generate(self, df, regime, symbol, context: Optional[dict] = None) -> list:

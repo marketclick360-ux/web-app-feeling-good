@@ -45,6 +45,9 @@ class DataAdapter(ABC):
     """Base class for all market-data sources."""
 
     name: str = "abstract"
+    #: True if delisted tickers / point-in-time constituents are available
+    #: (survivorship-bias-free); False if not; None if unknown.
+    survivorship_free = None
 
     @abstractmethod
     def get_bars(

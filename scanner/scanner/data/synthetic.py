@@ -21,6 +21,7 @@ _RES_FREQ = {"1d": "B", "1h": "h", "15m": "15min"}
 
 class SyntheticAdapter(DataAdapter):
     name = "synthetic"
+    survivorship_free = False  # synthetic; no real delistings anyway
 
     def __init__(self, seed: int = 7, n_days: int = 2600, regime_cycles: bool = True):
         self.seed = seed
