@@ -874,6 +874,208 @@ def _run_concentration(source, years, in_path, out_path, since=None,
           "concentration, placebo, cost stress, AND forward paper all pass.")
 
 
+# --------------------------------------------------------------------------
+# Trade plan: real dates, gap to the next signal, and money required.
+# --------------------------------------------------------------------------
+
+def _run_plan(source, years, in_path, out_path, since=None, account=2000.0,
+              risk_pct=0.01):
+    """Answer the practical questions: when do signals come (and how long until
+    the next one), how much money each trade needs, the peak capital required if
+    trades overlap, plus the interesting/important highlights."""
+    import os
+    from .sizing import RiskConfig, shares_for_trade
+
+    cfg = PipelineConfig()
+    cfg.years = years
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    if not os.path.exists(in_path):
+        print(f"No journal found at {in_path}. Run `log` first.")
+        return
+    rows = pd.read_csv(in_path).to_dict("records")
+    if since:
+        rows = [r for r in rows if str(r.get("date", "")) >= since]
+    rows = [r for r in rows if r.get("date")]
+    if not rows:
+        print("No dated signals in the journal for this window.")
+        return
+    tf = _journal_timeframe(rows)
+    adapter = wrap_timeframe(get_adapter(source), tf)
+    rcfg = RiskConfig()
+    rcfg.risk_per_trade_pct = risk_pct
+    dollar_risk_budget = account * risk_pct
+
+    print("=" * 78)
+    print("  TRADE PLAN — when signals come, and how much money it takes")
+    print("=" * 78)
+    print(f"  Journal: {in_path}   Source: {source}"
+          + (f"   Timeframe: {tf}-day candles" if tf > 1 else ""))
+    print(f"  Account assumed    : ${account:,.0f}    Risk/trade: {risk_pct:.2%} "
+          f"(${dollar_risk_budget:,.0f} at risk per trade)")
+    print("  HYPOTHETICAL paper plan — not advice. Sizing is fixed-fractional on "
+          "the entry-to-stop distance.")
+    print("=" * 78)
+
+    # ---------- CADENCE: dates and time until the next signal ----------
+    rows.sort(key=lambda r: str(r["date"]))
+    dates = [pd.Timestamp(str(r["date"])) for r in rows]
+    span_days = max((dates[-1] - dates[0]).days, 1)
+    gaps = [(dates[i + 1] - dates[i]).days for i in range(len(dates) - 1)]
+    uniq_days = sorted(set(d.date() for d in dates))
+    day_gaps = [(uniq_days[i + 1] - uniq_days[i]).days
+                for i in range(len(uniq_days) - 1)]
+    print("\n  CADENCE — how often, and how long before the next signal")
+    print(f"    Signals logged     : {len(rows)} over {span_days} days "
+          f"({dates[0].date()} → {dates[-1].date()})")
+    print(f"    Signals per month  : {len(rows) / (span_days / 30.4):.1f}")
+    if day_gaps:
+        import statistics as _st
+        longest = max(day_gaps)
+        li = day_gaps.index(longest)
+        print(f"    Days between signal DAYS: avg {_st.mean(day_gaps):.1f}, "
+              f"median {_st.median(day_gaps):.0f}, longest {longest} "
+              f"({uniq_days[li]} → {uniq_days[li + 1]})")
+        print(f"    Active signal days : {len(uniq_days)} of {span_days} "
+              f"({len(uniq_days) / span_days:.0%} of calendar days had a signal)")
+    if gaps:
+        same_day = sum(1 for g in gaps if g == 0)
+        print(f"    Clustering         : {same_day} signals landed on a day that "
+              f"already had another (they bunch up, then go quiet).")
+
+    # No-margin cash account: you can never deploy more dollars than you have,
+    # so the real share count is the smaller of the risk-based size and what the
+    # cash can buy. (A tight stop wants thousands of shares; the wallet says no.)
+    def _sized(entry, stop):
+        risk_sh = shares_for_trade(account, entry, stop, rcfg)
+        cash_sh = int(account // entry) if entry > 0 else 0
+        return min(risk_sh, cash_sh), risk_sh, cash_sh
+
+    # ---------- MONEY: per-trade sizing and affordability ----------
+    plan_rows = []
+    deployed_list, affordable, cash_capped = [], 0, 0
+    for i, r in enumerate(rows):
+        try:
+            entry, stop = float(r["entry"]), float(r["stop"])
+        except (ValueError, TypeError, KeyError):
+            continue
+        sh, risk_sh, cash_sh = _sized(entry, stop)
+        deployed = sh * entry
+        d_risk = sh * abs(entry - stop)
+        nxt = (dates[i + 1] - dates[i]).days if i < len(rows) - 1 else None
+        capped = sh >= 1 and cash_sh < risk_sh
+        if sh >= 1:
+            affordable += 1
+            deployed_list.append(deployed)
+            cash_capped += int(capped)
+        plan_rows.append({
+            "date": str(r["date"]), "symbol": str(r.get("symbol", "")).upper(),
+            "setup": r.get("setup", ""), "direction": r.get("direction", ""),
+            "entry": round(entry, 2), "stop": round(stop, 2),
+            "shares_at_account": sh, "dollars_deployed": round(deployed, 0),
+            "dollar_risk": round(d_risk, 2),
+            "days_to_next_signal": nxt,
+            "affordable": ("yes" if sh >= 1 else
+                           "NO (1 share costs more than the account)"),
+            "cash_capped": "yes" if capped else "",
+        })
+    print("\n  MONEY — how much each trade needs (at this account & risk)")
+    if deployed_list:
+        import statistics as _st
+        print(f"    $ deployed per trade: avg ${_st.mean(deployed_list):,.0f}, "
+              f"median ${_st.median(deployed_list):,.0f}, "
+              f"max ${max(deployed_list):,.0f} (never more than the ${account:,.0f} "
+              "you have)")
+        print(f"    As % of account     : avg {_st.mean(deployed_list)/account:.0%}, "
+              f"max {max(deployed_list)/account:.0%}")
+    if cash_capped:
+        print(f"    ℹ {cash_capped} trades are CASH-CAPPED: the proper 1% risk size "
+              "needs more cash than you have, so you'd buy fewer shares and your "
+              "real risk on those is BELOW 1% (small-account reality).")
+    unafford = len(plan_rows) - affordable
+    if unafford:
+        print(f"    ⚠ {unafford} of {len(plan_rows)} signals can't be taken at "
+              f"${account:,.0f} — one share costs more than the whole account. "
+              "Stick to cheaper ETFs (SPLG/QQQM/etc.) or fund more.")
+
+    # ---------- PEAK CAPITAL: overlapping open trades ----------
+    trades = evaluate_logged_signals(adapter, rows, cfg, as_of)
+    if trades:
+        df = trades_to_frame(trades)
+        events = []  # (time, +deployed on entry, -deployed on exit)
+        for _, t in df.iterrows():
+            sh, _, _ = _sized(float(t["entry_price"]), float(t["stop"]))
+            dep = sh * float(t["entry_price"])
+            events.append((pd.Timestamp(t["entry_time"]), dep, +1))
+            events.append((pd.Timestamp(t["exit_time"]), -dep, -1))
+        events.sort(key=lambda e: (e[0], e[2] * -1))  # process exits before entries on ties? keep entries last
+        cur_cap = cur_n = peak_cap = peak_n = 0
+        peak_when = None
+        # also track peak position COUNT (independent of when $ peaks)
+        c2 = 0
+        peak_count = 0
+        for ts, d, k in sorted(events, key=lambda e: e[0]):
+            c2 += k
+            peak_count = max(peak_count, c2)
+        for ts, d, k in events:
+            cur_cap += d
+            cur_n += k
+            if cur_cap > peak_cap:
+                peak_cap, peak_n, peak_when = cur_cap, cur_n, ts
+        print("\n  PEAK CAPITAL — how many trades overlap, and the cash to hold them")
+        print(f"    Most trades open at once: {peak_count} "
+              f"(around {peak_when.date() if peak_when is not None else 'n/a'})")
+        capped_positions = min(peak_count, rcfg.max_positions)
+        print(f"    Cash-account reality    : a no-margin account can't hold more "
+              f"than ~${account:,.0f} of stock total at any moment, and the "
+              f"moderate profile caps you at {rcfg.max_positions} open positions. "
+              f"So you'd hold at most {capped_positions} of those at a time and "
+              "skip the rest.")
+        if peak_count > rcfg.max_positions:
+            print(f"    ⚠ Signals bunch up to {peak_count} at once — far over the "
+                  f"{rcfg.max_positions}-position cap. Most overlaps would be "
+                  "SKIPPED live, so realistically you need about one account's "
+                  f"worth of cash (${account:,.0f}), not more.")
+
+        # ---------- HIGHLIGHTS ----------
+        df["_cal"] = [(pd.Timestamp(x) - pd.Timestamp(e)).days
+                      for e, x in zip(df["entry_time"], df["exit_time"])]
+        df["_pnl$"] = df["realized_r"] * dollar_risk_budget
+        best = df.loc[df["realized_r"].idxmax()]
+        worst = df.loc[df["realized_r"].idxmin()]
+        wins = int((df["realized_r"] > 0).sum())
+        n = len(df)
+        top_tkr = df["symbol"].value_counts().head(3)
+        reasons = df["exit_reason"].value_counts()
+        print("\n  HIGHLIGHTS — interesting & important")
+        print(f"    Closed trades       : {n}   Win rate: {wins/n:.0%}   "
+              f"Expectancy: {df['realized_r'].mean():+.3f}R "
+              f"(${df['_pnl$'].mean():+,.0f}/trade)")
+        print(f"    Best trade          : {best['symbol']} {best['realized_r']:+.2f}R "
+              f"(${best['_pnl$']:+,.0f}) entered {pd.Timestamp(best['entry_time']).date()}, "
+              f"held {int(best['_cal'])} cal days")
+        print(f"    Worst trade         : {worst['symbol']} {worst['realized_r']:+.2f}R "
+              f"(${worst['_pnl$']:+,.0f}) entered {pd.Timestamp(worst['entry_time']).date()}, "
+              f"held {int(worst['_cal'])} cal days")
+        print(f"    Hold time (calendar): avg {df['_cal'].mean():.0f} days, "
+              f"shortest {int(df['_cal'].min())}, longest {int(df['_cal'].max())}")
+        print(f"    Most active tickers : "
+              + ", ".join(f"{k} ({v})" for k, v in top_tkr.items()))
+        print(f"    How trades closed   : "
+              + ", ".join(f"{k} {v/n:.0%}" for k, v in reasons.items()))
+    else:
+        print("\n  PEAK CAPITAL / HIGHLIGHTS: no CLOSED trades yet (still open or "
+              "too recent). Re-run after some have resolved.")
+
+    if out_path and plan_rows:
+        pd.DataFrame(plan_rows).to_csv(out_path, index=False)
+        print(f"\n  Per-signal plan (date, days-to-next, shares, $ deployed, "
+              f"$ risk, affordable?) written: {out_path}")
+    print("\n  Reminder: HYPOTHETICAL paper plan. Sizing assumes you risk a fixed "
+          f"{risk_pct:.1%} of the account per trade; real fills, fees and skipped "
+          "signals will differ.")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -960,6 +1162,22 @@ def main(argv: List[str] = None):
     pc.add_argument("--min-oos", type=int, default=100, dest="min_oos",
                     help="minimum closed trades to consider validated (default 100)")
 
+    pp = sub.add_parser("plan",
+                        help="dates, time-to-next-signal, money required, highlights")
+    pp.add_argument("--source", default="synthetic",
+                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+    pp.add_argument("--years", type=int, default=3)
+    pp.add_argument("--in", default="signal_log.csv", dest="in_path",
+                    help="journal CSV to plan from")
+    pp.add_argument("--out", default="trade_plan.csv", dest="out_path",
+                    help="per-signal plan CSV to write")
+    pp.add_argument("--since", default=None,
+                    help="only plan signals on/after this date, e.g. 2026-01-01")
+    pp.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT,
+                    help="account size in dollars (how much you'd trade with)")
+    pp.add_argument("--risk-pct", type=float, default=0.01, dest="risk_pct",
+                    help="fraction of the account risked per trade (default 0.01 = 1%%)")
+
     args = ap.parse_args(argv)
     if args.cmd == "edge":
         _run_edge(args.source, args.symbols, args.fast, args.years,
@@ -972,6 +1190,10 @@ def main(argv: List[str] = None):
     if args.cmd == "concentration":
         _run_concentration(args.source, args.years, args.in_path, args.out_path,
                            args.since, args.setups, args.min_oos)
+        return
+    if args.cmd == "plan":
+        _run_plan(args.source, args.years, args.in_path, args.out_path,
+                  args.since, args.account, args.risk_pct)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
