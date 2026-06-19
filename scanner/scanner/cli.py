@@ -438,6 +438,7 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
                             backfill_days=backfill_days, account=account)
 
     cols = ["date", "symbol", "setup", "direction", "timeframe", "regime",
+            "price", "support", "resistance", "dist_to_support_%",
             "entry", "stop", "risk_per_share", "target_2R", "target_2_5R",
             "target_3R", "atr", "adv_dollar_M", "tradability",
             "fresh_on_last_bar", "status"]
@@ -464,10 +465,20 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
     print(f"  Fresh on most recent bar   : {len(fresh)}")
     if len(fresh):
         print("\n  FRESH candidates (most recent completed bar — act next session, paper):")
+        print(f"    {'date':<10} {'tkr':<5} {'dir':<5} {'setup':<22} {'price':>8} "
+              f"{'support':>8} {'resist':>8} {'→sup%':>6} {'entry':>8} {'stop':>8} "
+              f"{'3R':>8} {'trad':<6}")
         for _, r in fresh.iterrows():
-            print(f"    {r['date']}  {r['symbol']:<5} {r['direction']:<5} {r['setup']:<22} "
-                  f"entry {r['entry']} stop {r['stop']} 3R {r['target_3R']} "
-                  f"[trad {r['tradability']}]")
+            sup = r.get("support", "")
+            res = r.get("resistance", "")
+            dsup = r.get("dist_to_support_%", "")
+            print(f"    {str(r['date']):<10} {str(r['symbol']):<5} {str(r['direction']):<5} "
+                  f"{str(r['setup']):<22} {r['price']:>8} {str(sup):>8} {str(res):>8} "
+                  f"{(str(dsup)+'%' if dsup != '' else ''):>6} {r['entry']:>8} "
+                  f"{r['stop']:>8} {r['target_3R']:>8} {str(r['tradability']):<6}")
+        print("    support/resist = nearest rule-based level (MAs + recent swing "
+              "highs/lows). →sup% = how far price sits ABOVE support (smaller = "
+              "closer to support = better long entry).")
     if not new_df.empty:
         by_setup = new_df.groupby("setup").size().sort_values(ascending=False)
         print("\n  By setup family (this run):")

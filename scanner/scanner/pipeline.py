@@ -65,6 +65,30 @@ SECTOR_ETF = {
 }
 
 
+def _support_resistance(erow, price):
+    """Nearest rule-based support (highest level at/below price) and resistance
+    (lowest level at/above price) from levels the indicators already compute:
+    moving averages and recent swing highs/lows. Returns (support, resistance)
+    or (nan, nan) when unknown. Honest, mechanical levels — not chart art."""
+    if erow is None or price != price or price <= 0:
+        return float("nan"), float("nan")
+    names = ("ema10", "ema20", "sma20", "sma50", "sma200",
+             "lo10_prev", "lo20_prev", "hi20_prev", "hi55_prev")
+    levels = []
+    for n in names:
+        try:
+            v = float(erow[n])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if v == v and v > 0:        # skip NaN
+            levels.append(v)
+    below = [v for v in levels if v <= price]
+    above = [v for v in levels if v >= price]
+    support = max(below) if below else float("nan")
+    resistance = min(above) if above else float("nan")
+    return support, resistance
+
+
 def _sector_close_map(adapter: DataAdapter, symbols, cfg, as_of):
     """symbol -> sector ETF close series (for sector_leader_continuation)."""
     needed = {SECTOR_ETF[SECTOR_MAP.get(s.upper(), "")]
@@ -420,11 +444,20 @@ def build_signal_log(adapter: DataAdapter, symbols: List[str], setup_names: List
                 t = trad_score(s.entry_ref, adv, atr if atr == atr else s.entry_ref * 0.02,
                                risk, account)
                 fresh = s.signal_time == df.index[-1]
+                price = float(erow["close"]) if erow is not None and \
+                    erow["close"] == erow["close"] else float(s.entry_ref)
+                support, resistance = _support_resistance(erow, price)
+                dist_sup = ((price - support) / price * 100.0) \
+                    if support == support and price else float("nan")
                 rows.append({
                     "date": s.signal_time.date().isoformat(),
                     "symbol": sym.upper(), "setup": name, "direction": s.direction.value,
                     "timeframe": tf_days,
                     "regime": s.regime_at_signal,
+                    "price": round(price, 2),
+                    "support": round(support, 2) if support == support else "",
+                    "resistance": round(resistance, 2) if resistance == resistance else "",
+                    "dist_to_support_%": round(dist_sup, 1) if dist_sup == dist_sup else "",
                     "entry": round(s.entry_ref, 2), "stop": round(s.stop, 2),
                     "risk_per_share": round(risk, 2),
                     "target_2R": round(s.entry_ref + d * 2 * risk, 2),
