@@ -61,20 +61,27 @@ For each family: hypothesis · regime filter · entry · stop · planned ≥3R t
 · time stop · invalidation. Full parameter defaults live in each module under
 `scanner/setups/`.
 
-Default daily-swing research set (the five spec families). Each target is an
-**objective ATR-based R multiple fitting the hypothesis — there is no forced
-3R minimum.**
+Default daily-swing research set — now **8 families**. Targets are objective
+ATR-based R multiples, and the **hard rule is target ≥ 3R**: any family whose
+planned target is below 3R is rejected before testing. The breakout/pullback
+families are designed to 3R; `mean_reversion` (1.5R) is therefore auto-rejected
+by the gate (kept only as a diagnostic). Edge mode additionally reports a
+**2.0R / 2.5R / 3.0R target sweep** for transparency — but only the 3R variant
+can be accepted.
 
-| Setup | Hypothesis | Entry (closed bar → next open) | Stop | Target rule | Time stop |
-|-------|-----------|-------------------------------|------|-------------|-----------|
-| `trend_pullback` | Pullbacks to the EMA20 inside an ADX trend are continuations | Trend (close vs 50/200SMA, ADX≥20) + low within 0.5·ATR of EMA20 + RSI cooled, close reclaims EMA20 | entry ∓ 1.5·ATR | 2.0R | 10 bars |
-| `vcp_breakout` | Low-bandwidth coil + volume break precedes expansion | BB bandwidth in bottom quintile, close beyond prior-20 extreme, volume ≥1.5× | other side of coil / 1.2·ATR | 2.5R | 10 bars |
-| `relative_strength_breakout` | New RS highs vs SPY + price breakout capture cross-sectional momentum | RS line new 60-bar high **and** price > prior-20 high | entry − 1.5·ATR | 2.5R | 10 bars |
-| `ma_pullback` | Touch-and-hold of the 10/20-day MA in a strong trend is continuation | Trend (close vs 50/200SMA, ADX≥20) + bar low ≤ MA ≤ close | entry ∓ 1.5·ATR | 2.0R | 10 bars |
-| `sector_leader_continuation` | Leaders of leading sectors continue | RS-vs-sector ETF new 40-bar high + sector ETF > its 200SMA + price > prior-10 high + close > 50SMA | entry − 1.5·ATR | 2.5R | 10 bars |
+| Setup | Hypothesis | Entry (closed bar → next open) | Stop | Target | Time stop |
+|-------|-----------|-------------------------------|------|--------|-----------|
+| `trend_pullback` | Pullbacks to the EMA20 inside an ADX trend are continuations | Trend + low within 0.5·ATR of EMA20 + RSI cooled, close reclaims EMA20 | entry ∓ 1.5·ATR | 3R | 10 bars |
+| `ma_pullback` | Touch-and-hold of the 10/20-day MA in a strong trend | Trend (50/200SMA, ADX≥20) + bar low ≤ MA ≤ close | entry ∓ 1.5·ATR | 3R | 10 bars |
+| `breakout_retest` | Volume break of a 40-bar high, then a held retest of the broken level | breakout in last 10 bars on volume + current bar retests & holds level | level − 0.3·ATR | 3R | 10 bars |
+| `vcp_breakout` | Low-bandwidth coil + volume break precedes expansion | BB bandwidth bottom quintile, close beyond prior-20 extreme, volume ≥1.5× | other side of coil / 1.2·ATR | 3R | 10 bars |
+| `relative_strength_breakout` | New RS highs vs SPY + price breakout | RS line new 60-bar high **and** price > prior-20 high | entry − 1.5·ATR | 3R | 10 bars |
+| `failed_breakdown` | Quick reclaim of broken support traps shorts (bear trap) | low broke prior-40 support within 3 bars, close back above on volume | trap low − 0.25·ATR | 3R | 10 bars |
+| `accumulation_breakout` | Breakout confirmed by objective accumulation (CMF>0, rising OBV, volume) | close > prior-20 high + CMF>0.05 + OBV rising + volume ≥1.3× | entry − 1.5·ATR | 3R | 10 bars |
+| `sector_leader_continuation` | Leaders of leading sectors continue | RS-vs-sector ETF new 40-bar high + sector ETF > 200SMA + price > prior-10 high + close > 50SMA | entry − 1.5·ATR | 3R | 10 bars |
 
-Also available (not default): `volume_breakout`, `mean_reversion` (1.5R),
-`opening_range_breakout` (intraday).
+Also available (not default): `volume_breakout`, `mean_reversion` (1.5R → 3R-gate
+rejected), `opening_range_breakout` (intraday).
 
 The **planned target R is not the average winner.** Time stops, gap exits, and
 the conservative same-bar rule mean realized winners are frequently below the
@@ -128,13 +135,15 @@ conflated.
 ## 6. Acceptance / rejection rules
 
 A setup reaches **ROBUST — ELIGIBLE FOR FORWARD OBSERVATION ONLY** only when
-*all* gates hold — **note there is no minimum-R requirement**: OOS expectancy>0;
-PF ≥ `MIN_PROFIT_FACTOR`; profitable under the stressed cost scenario;
-win>50% or payoff distribution justifies positive expectancy; ≥100 OOS trades;
-CI-low>0; passes concentration and placebo tests; holdout not negative;
+*all* gates hold. **Hard pre-test gate: planned target ≥ 3R** (anything below 3R
+is rejected before any performance test; see `validation.MIN_PLANNED_R`). Then:
+OOS expectancy>0; PF ≥ `MIN_PROFIT_FACTOR`; profitable under the stressed cost
+scenario; win>50% or payoff distribution justifies positive expectancy; ≥100 OOS
+trades; CI-low>0; passes concentration and placebo tests; holdout not negative;
 parameter-stable; PBO not high. Soft failures →
 **TENTATIVE — FOR PAPER OBSERVATION ONLY**. CI-low≤0 or thin sample →
-**STATISTICALLY INCONCLUSIVE**. Hard failures → **REJECTED**.
+**STATISTICALLY INCONCLUSIVE**. Zero OOS trades → **NO OOS SAMPLE** (no stats
+computed). Hard failures → **REJECTED**.
 
 Setup Quality Score (0–100) is computed only from defined components and only
 when required inputs exist:
@@ -209,3 +218,67 @@ On the only data shipped with the repo (synthetic), the evidence is
 robust edge requires re-running against real adjusted, survivorship-free data
 and confirming every acceptance gate, followed by a documented paper-trading
 period before any discussion of live readiness.
+
+---
+
+## 10. Cross-Review Conclusion and Current Research Status
+
+Two independent AI reviews — **Codex** (working in the separate
+`vpa-trading-strategy` repo) and **Claude** (this `scanner` package) — reviewed
+the methodology and the real-data (Schwab) outputs and reached the same core
+conclusions.
+
+### 10.1 Where both reviews agree (safety conclusions)
+- A **hard 3R gate** is correct: any setup whose planned target is below 3R is
+  rejected *before* backtesting.
+- **OOS n == 0** must be labeled **NO OOS SAMPLE** (no expectancy / profit
+  factor / win rate / placebo / concentration / cost-stress claims computed).
+- **OOS n < 100** must be labeled **STATISTICALLY INCONCLUSIVE**; 300+ preferred.
+- **No 3R stock/ETF setup scanner qualifies yet** — there is no 100+ OOS-trade
+  sample, and current setup exporters are not true backtests.
+- **ETF timing/regime filters currently look stronger than the 3R setup scanner.**
+- `sector_rotation` and `SPY_or_BONDS` **remain rejected**.
+- `SPY_200d_timing` is a **defensive overlay, not a return engine**.
+
+### 10.2 Important caveat on SPY_abs_momentum
+- `SPY_abs_momentum` had the **strongest out-of-sample** result (OOS CAGR
+  ~13.8%, MaxDD ~−18.8%, Sharpe ~0.79, Calmar ~0.73).
+- **But it performed poorly in-sample** (IS CAGR ~5.6% vs SPY ~14.3%, with
+  ~−34% drawdown — i.e. no protection in the first half).
+- A strategy that only works in one half is **regime-dependent luck, not a
+  robust edge**. It must **not** be crowned the best framework yet.
+- Status: **observe-only** until it survives further forward testing across a
+  full market cycle. The same caution applies to `dual_momentum`.
+
+### 10.3 Revised ranking (current, hypothetical)
+1. **Primary paper-track candidate:** `SPY_200d_timing` / 200-day defensive
+   overlay (and its lower-whipsaw `SPY_200d_buffer` variant) — chosen because it
+   showed **consistent drawdown reduction across both in-sample and
+   out-of-sample halves**. It reduces risk; it does **not** beat SPY on total
+   return.
+2. **Observe-only candidates:** `SPY_abs_momentum`, `dual_momentum` — strong OOS
+   but weak/ inconsistent IS; track forward before trusting.
+3. **Rejected:** `sector_rotation`, `SPY_or_BONDS`.
+4. **No qualifying 3R scanner setup exists yet** (insufficient OOS sample;
+   exporters are not true backtests).
+
+### 10.4 Warning — agreement is not proof
+- Two AI reviews agreeing is **useful corroboration, not proof of
+  profitability.**
+- Both reviews are based on the **same historical outputs and assumptions**
+  (same Schwab price-return data, same cost model) — so they share the same
+  blind spots; agreement does not add independent evidence about the future.
+- **Forward paper-tracking is still required** before any live-risk decision.
+  Backtests are hypothetical and do not predict future results (SEC).
+
+### 10.5 Repository source-of-truth
+- **Canonical / maintained going forward:** this **`scanner/`** package in
+  `web-app-feeling-good` — it is self-contained, has a passing test suite
+  (no-look-ahead, cost, sizing, engine, metrics, pipeline) and CI, and
+  implements the validation gates, edge mode, and the Beat-SPY overlay tooling.
+- **Reference / archival:** the `vpa-trading-strategy` repo (Codex's changes)
+  and the legacy `trading/` folder (Gann/VPA experiments). Useful for
+  cross-checking conclusions, but **not** the primary codebase — to avoid two
+  divergent implementations, new development should land in `scanner/`.
+- If the two repos must coexist, keep `scanner/` authoritative for validation
+  rules and engine logic; treat the other as research notes.
