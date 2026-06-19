@@ -104,6 +104,14 @@ class SchwabAdapter(DataAdapter):
 
     def _access_token(self) -> str:
         token = self._load_token()
+        if "refresh_token" not in token or "access_token" not in token:
+            raise RuntimeError(
+                f"token.json at {self.token_path} is incomplete (no refresh_token). "
+                "The OAuth login did not complete — re-mint it: open the authorize "
+                "URL, log in, click Allow, and paste the FULL https://127.0.0.1/?code=... "
+                "address-bar URL back within ~30 seconds. Current file contents: "
+                f"{token}"
+            )
         if time.time() >= token.get("expires_at", 0) - 300:
             token = self._refresh(token)
         return token["access_token"]
