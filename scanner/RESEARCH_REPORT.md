@@ -152,20 +152,44 @@ when required inputs exist:
 ## 7. Standing results
 
 **On the synthetic demo adapter (random-walk data with no real edge), all five
-daily families are REJECTED** — typically for failing the placebo and
-concentration tests and/or sub-1.30 profit factor after costs. This is the
-correct, intended outcome: the system does not manufacture an edge where none
-exists, and the live table prints `NO QUALIFYING SETUPS TODAY`.
+daily families are REJECTED** — the system does not manufacture an edge where
+none exists, and the live table prints `NO QUALIFYING SETUPS TODAY`.
 
-To populate this section with real evidence, run:
+### 7a. First real-data run — Schwab (smoke test)
+
+Source: **Schwab** (`Live data verified: YES`), split-adjusted, price-return,
+not survivorship-bias-free. Config: 8 liquid symbols, 5 years, `--fast`. This is
+a deliberately small smoke test, **not** a definitive study — samples are far
+too thin to draw conclusions, which is itself why nothing qualified.
+
+| Setup | OOS n | Win | Expectancy (R) | PF | Outcome / reason |
+|-------|------:|----:|---------------:|---:|------------------|
+| trend_pullback | 0 | — | — | — | REJECTED — no signals in this tiny universe |
+| vcp_breakout | 3 | 66.7% | +0.427 | 28.9 | REJECTED — only 3 trades; **holdout −0.998R**, fails placebo |
+| relative_strength_breakout | 49 | 30.6% | −0.519 | 0.22 | REJECTED — negative expectancy after costs |
+| ma_pullback | 59 | 28.8% | −0.363 | 0.55 | REJECTED — negative expectancy after costs |
+| sector_leader_continuation | — | — | — | — | REJECTED — not eligible |
+
+**Result: NO QUALIFYING SETUPS TODAY (0 of 5 eligible).** The `vcp_breakout`
+case is the key illustration of the design working: a tiny, attractive-looking
+in-sample sample (PF 29) was correctly refused because it collapsed on the
+untouched holdout and failed the placebo control. Expectancy stayed negative
+under all three cost scenarios for the losing families.
+
+Caveats: 8 symbols / 5 years / fast mode → thin samples (most families would be
+`STATISTICALLY INCONCLUSIVE` on sample size alone). A meaningful test requires
+the larger run (≥30 symbols, 10 years, full mode) across more tickers, years,
+and regimes. Schwab data is price-return and not survivorship-bias-free — both
+disclosed limitations.
+
+### 7b. Reproducing / extending
+
+To populate a fuller study, run against real data:
 
 ```bash
-python -m scanner.cli research --source polygon   # or --source csv
+python -m scanner.cli research --source schwab --symbols 30 --years 10
+python -m scanner.cli research --source polygon  # or csv
 ```
-
-and record, per setup: development vs OOS vs holdout metrics, walk-forward
-folds, bootstrap CIs, Monte Carlo drawdown, placebo p-value, concentration
-survival, parameter sensitivity, deflated Sharpe and PBO, and the final label.
 
 ## 8. Assumptions & limitations
 
