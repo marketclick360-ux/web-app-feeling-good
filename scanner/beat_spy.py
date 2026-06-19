@@ -144,13 +144,58 @@ def metrics(equity, cash_yield):
 
 
 def _fmt(m, n_trades, pct_in, yrs):
+    trpy = "    —" if (n_trades is None) else f"{n_trades/max(yrs,1e-9):5.1f}"
+    pin = "    —" if (pct_in != pct_in) else f"{pct_in*100:4.0f}%"
     return (f"{m['cagr']*100:6.2f}%  {m['max_drawdown']*100:7.2f}%  "
             f"{m['sharpe']:5.2f}  {m['calmar']:5.2f}  "
-            f"{m['total_return']*100:8.1f}%  {n_trades/max(yrs,1e-9):5.1f}  "
-            f"{pct_in*100:5.0f}%")
+            f"{m['total_return']*100:8.1f}%  {trpy:>5}  {pin:>5}")
 
 
-def evaluate(eq, bond, args, label, idx=None):
+SECTOR_ETFS = ["XLK", "XLF", "XLE", "XLV", "XLI", "XLY", "XLP", "XLU", "XLB", "XLRE"]
+
+
+def _load_basket(adapter, syms, years, as_of):
+    start = as_of - pd.Timedelta(days=int(365.25 * years) + 220)
+    out = {}
+    for s in syms:
+        df = adapter.get_bars(s, "1d", start=start, end=as_of, as_of=as_of).df
+        if len(df) > 250:
+            out[s] = df["close"]
+    return out
+
+
+def sector_rotation_returns(basket, index, lookback=126, top_n=3,
+                            cash_yield=0.04, div_yield=0.017, cost_bps=5.0):
+    """Monthly relative-momentum sector rotation: each month hold the top-N
+    sector ETFs by `lookback`-day return that are also positive (absolute
+    filter), else cash. Equal weight. 1-day lag, turnover cost. Returns a daily
+    return series aligned to `index`. Documented strategy, tested OOS like the
+    rest — not curve-fit."""
+    if len(basket) < top_n + 1:
+        return None
+    closes = pd.DataFrame({s: c.reindex(index).ffill() for s, c in basket.items()})
+    asset_ret = closes.pct_change().fillna(0) + div_yield / TRADING_DAYS
+    mom = closes / closes.shift(lookback) - 1
+    cash_daily = cash_yield / TRADING_DAYS
+
+    daily = pd.Series(0.0, index=index)
+    holdings, prev = [], []
+    cur_month = None
+    for i, dt in enumerate(index):
+        m = (dt.year, dt.month)
+        if m != cur_month:
+            cur_month = m
+            row = mom.iloc[i - 1] if i > 0 else mom.iloc[i]
+            ranked = row.dropna().sort_values(ascending=False)
+            holdings = [s for s in ranked.index if ranked[s] > 0][:top_n]
+            turnover = len(set(holdings) ^ set(prev)) / max(len(holdings) or 1, 1)
+            daily.iloc[i] -= turnover * cost_bps / 10_000.0
+            prev = holdings
+        daily.iloc[i] += (asset_ret.iloc[i][holdings].mean() if holdings else cash_daily)
+    return daily
+
+
+def evaluate(eq, bond, args, label, idx=None, extra=None):
     e = eq if idx is None else eq.loc[idx]
     b = None if bond is None else bond.loc[bond.index.intersection(e.index)]
     yrs = max((len(e) - 1) / TRADING_DAYS, 1e-9)
@@ -168,6 +213,13 @@ def evaluate(eq, bond, args, label, idx=None):
         m = metrics(equity, args.cash_yield)
         rows[name] = m
         print(f"  {name:<18} {_fmt(m, n_tr, pin, yrs)}")
+    # extra strategies supplied as precomputed daily-return series (e.g. rotation)
+    for name, dret in (extra or {}).items():
+        dr = dret.reindex(e.index).fillna(0.0)
+        equity = (1 + dr).cumprod()
+        m = metrics(equity, args.cash_yield)
+        rows[name] = m
+        print(f"  {name:<18} {_fmt(m, None, float('nan'), yrs)}")
     return rows
 
 
@@ -233,13 +285,23 @@ def main():
           f"div added back ({args.div_yield:.1%}); PRICE-RETURN data; "
           "NOT survivorship/dividend-exact. Estimates history, not the future.")
 
-    full = evaluate(eq, bond, args, "FULL PERIOD")
+    # sector-rotation momentum (relative-strength across sector ETFs)
+    extra = {}
+    basket = _load_basket(adapter, SECTOR_ETFS, args.years, as_of)
+    rot = sector_rotation_returns(basket, eq.index, cash_yield=args.cash_yield,
+                                  div_yield=args.div_yield, cost_bps=args.cost_bps)
+    if rot is not None:
+        extra["sector_rotation"] = rot
+        print(f"  Sector rotation: top-3 of {len(basket)} sector ETFs by 6-mo momentum")
+
+    full = evaluate(eq, bond, args, "FULL PERIOD", extra=extra)
 
     # in-sample / out-of-sample split (first 60% / last 40%)
     split = eq.index[int(len(eq) * 0.6)]
-    evaluate(eq, bond, args, "IN-SAMPLE (first 60%)", idx=eq.index[eq.index <= split])
+    evaluate(eq, bond, args, "IN-SAMPLE (first 60%)",
+             idx=eq.index[eq.index <= split], extra=extra)
     oos = evaluate(eq, bond, args, "OUT-OF-SAMPLE (last 40%)",
-                   idx=eq.index[eq.index > split])
+                   idx=eq.index[eq.index > split], extra=extra)
 
     # honest verdict
     print("\n" + "=" * 80)
