@@ -7,4 +7,5 @@ token.json
 *.csv
 !tests/**/*.csv
 .env
-data/
+/data/
+
