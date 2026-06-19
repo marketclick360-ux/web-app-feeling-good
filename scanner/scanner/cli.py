@@ -34,6 +34,7 @@ ADJUSTMENT_INFO = {
                 "price-return (dividends NOT reinvested)"),
     "schwab": ("Schwab pricehistory: split-adjusted; price-return (dividends NOT "
                "reinvested); NOT survivorship-bias-free (disclose as limitation)"),
+    "stooq": ("Stooq split- & dividend-adjusted daily; NOT survivorship-bias-free (disclose as limitation)"),
     "csv": ("as supplied by local files — assumed fully split/dividend adjusted; "
             "treatment must be documented by the file producer"),
     "synthetic": "synthetic series — NOT real, no corporate actions",
@@ -151,7 +152,7 @@ def _print_risk_controls(risk: RiskConfig):
 
 
 def _run(source: str, n_symbols: int, fast: bool, years: int = 10):
-    real = source in ("polygon", "csv", "schwab")
+    real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     if fast:
@@ -216,7 +217,7 @@ def main(argv: List[str] = None):
     for cmd in ("demo", "research", "scan"):
         p = sub.add_parser(cmd)
         p.add_argument("--source", default="synthetic" if cmd == "demo" else None,
-                       choices=["synthetic", "csv", "polygon", "schwab"])
+                       choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
         p.add_argument("--symbols", type=int, default=20,
                        help="number of candidate symbols to scan")
         p.add_argument("--years", type=int, default=10,

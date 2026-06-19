@@ -4,22 +4,39 @@ Schwab can't complete its browser OAuth inside a headless container, and this
 environment's network egress is allowlisted. So enabling Schwab takes three
 one-time setup steps **outside** the container, then a fresh session.
 
-## Step 1 — Mint a token.json on your own machine (has a browser)
+## Step 1 — Mint a token on your Mac with `curl` (no Python, no clone)
 
-You already have a no-web-driver helper in `trading/`:
+Open **Terminal** (press Cmd+Space, type "Terminal", Enter). Paste this whole
+block after editing the first three lines with your Schwab app values, then
+press Enter:
 
 ```bash
-cd trading
-pip install python-dotenv
-cp .env.example .env          # fill in SCHWAB_APP_KEY, SCHWAB_APP_SECRET,
-                              # SCHWAB_CALLBACK_URL (must match your Schwab app)
-python3 setup_auth.py         # prints a URL -> log in -> Allow -> paste the
-                              # redirect URL back. Writes trading/token.json
+KEY="YOUR_SCHWAB_APP_KEY"
+SECRET="YOUR_SCHWAB_APP_SECRET"
+CALLBACK="https://127.0.0.1"   # must match your Schwab app's callback exactly
+
+echo; echo "1) Open this URL in your browser, log in, click Allow:"; echo
+echo "https://api.schwabapi.com/v1/oauth/authorize?response_type=code&client_id=$KEY&redirect_uri=$CALLBACK"
+echo; echo "2) The browser will show 'can't reach this site' — that's fine."
+echo "   Copy the ENTIRE URL from the address bar (starts with $CALLBACK?code=...)"; echo
+read "REDIR?3) Paste that URL here and press Enter: "
+CODE=$(printf '%s' "$REDIR" | sed -n 's/.*code=\([^&]*\).*/\1/p')
+CODE=$(printf '%b' "${CODE//%/\\x}")   # url-decode
+AUTH=$(printf '%s' "$KEY:$SECRET" | base64 | tr -d '\n')
+echo; echo "Exchanging code for token..."
+curl -s -X POST https://api.schwabapi.com/v1/oauth/token \
+  -H "Authorization: Basic $AUTH" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "grant_type=authorization_code" \
+  --data-urlencode "code=$CODE" \
+  --data-urlencode "redirect_uri=$CALLBACK" | tee token.json
+echo; echo "If you see access_token + refresh_token above, copy ALL of token.json."
 ```
 
-`token.json` contains `access_token` + `refresh_token` + `expires_at`. The
-**refresh token is valid ~7 days**, so do this shortly before the run. The
-scanner auto-refreshes the short-lived access token using it.
+Work quickly between steps 2 and 3 — Schwab authorization codes expire in about
+30 seconds. The printed JSON (also saved to `token.json` in your current folder)
+contains `access_token` + `refresh_token`; the **refresh token is valid ~7
+days**. The scanner auto-refreshes the short-lived access token from it.
 
 ## Step 2 — Configure the Claude Code environment (web UI)
 
