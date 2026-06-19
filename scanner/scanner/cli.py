@@ -478,7 +478,7 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
           f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
 
 
-def _run_review(source, years, in_path, out_path, since=None):
+def _run_review(source, years, in_path, out_path, since=None, only_setup=None):
     import os
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
@@ -545,21 +545,53 @@ def _run_review(source, years, in_path, out_path, since=None):
         gw = float(g.loc[g["realized_r"] > 0, "realized_r"].sum())
         gl = float(-g.loc[g["realized_r"] <= 0, "realized_r"].sum())
         pf = gw / gl if gl > 0 else float("inf")
+        win_hold = float(g.loc[g["realized_r"] > 0, "bars_held"].mean()) if w else float("nan")
+        loss_hold = float(g.loc[g["realized_r"] <= 0, "bars_held"].mean()) if l else float("nan")
         fam_rows.append({"setup": name, "fired": journal_counts.get(name, len(g)),
                          "closed": len(g), "w": w, "l": l,
                          "wl": (w / l if l else float("inf")),
-                         "win": w / len(g), "exp": float(g["realized_r"].mean()), "pf": pf})
-    for r in sorted(fam_rows, key=lambda x: -x["exp"]):
+                         "win": w / len(g), "exp": float(g["realized_r"].mean()), "pf": pf,
+                         "hold": float(g["bars_held"].mean()),
+                         "win_hold": win_hold, "loss_hold": loss_hold})
+    fam_rows.sort(key=lambda x: -x["exp"])
+    for r in fam_rows:
         wl = f"{r['wl']:.2f}" if r["l"] else "∞"
         pf = f"{r['pf']:.2f}" if r["pf"] != float("inf") else "∞"
         print(f"  {r['setup']:<24} {r['fired']:>5} {r['closed']:>6} {r['w']:>4} {r['l']:>4} "
               f"{wl:>5} {r['win']:>5.0%} {r['exp']:>8.3f} {pf:>6}")
 
+    # hold-time table (trading days)
+    print("\n  Hold time by family (trading days, max 10):")
+    print(f"  {'setup':<24} {'avg':>5} {'if WIN':>7} {'if loss/exit':>13}")
+    print("  " + "-" * 52)
+    for r in fam_rows:
+        wh = f"{r['win_hold']:.1f}" if r["win_hold"] == r["win_hold"] else "—"
+        lh = f"{r['loss_hold']:.1f}" if r["loss_hold"] == r["loss_hold"] else "—"
+        print(f"  {r['setup']:<24} {r['hold']:>5.1f} {wh:>7} {lh:>13}")
+
+    # optional per-trade detail for one family: tickers, dates, days, result
+    if only_setup:
+        gg = df[df["setup"] == only_setup].copy()
+        print(f"\n  Individual closed trades — {only_setup} ({len(gg)}):")
+        if gg.empty:
+            print("    (none closed for this setup)")
+        else:
+            print(f"  {'entry':<11} {'exit':<11} {'days':>4} {'tkr':<5} {'dir':<5} "
+                  f"{'R':>7} {'exit':<10}")
+            print("  " + "-" * 60)
+            for _, t in gg.sort_values("entry_time").iterrows():
+                print(f"  {str(pd.Timestamp(t['entry_time']).date()):<11} "
+                      f"{str(pd.Timestamp(t['exit_time']).date()):<11} "
+                      f"{int(t['bars_held']):>4} {str(t['symbol']):<5} "
+                      f"{str(t['direction']):<5} {t['realized_r']:>7.2f} "
+                      f"{str(t['exit_reason']):<10}")
+
     if out_path:
         df.to_csv(out_path, index=False)
-        print(f"\n  Per-trade outcomes written: {out_path}")
+        print(f"\n  Full per-trade detail (every ticker, entry/exit date, days held, "
+              f"R, reason) written: {out_path}")
     print("\n  'fired' = signals logged in the window (incl. still-open); 'closed' = "
-          "resolved at 3R/stop/time.")
+          "resolved at 3R/stop/time. Hold = trading days in the trade.")
     print("  Reminder: a small/medium closed sample is STATISTICALLY INCONCLUSIVE. "
           "Aim for 100+ per family. Hypothetical, not advice.")
 
@@ -617,6 +649,8 @@ def main(argv: List[str] = None):
                     help="per-trade outcomes CSV to write")
     pr.add_argument("--since", default=None,
                     help="only review signals on/after this date, e.g. 2026-01-01 (YTD)")
+    pr.add_argument("--setup", default=None, dest="only_setup",
+                    help="list individual trades (ticker/dates/days/result) for one family")
 
     args = ap.parse_args(argv)
     if args.cmd == "edge":
@@ -624,7 +658,8 @@ def main(argv: List[str] = None):
                   args.small_account, args.etf_only, args.account)
         return
     if args.cmd == "review":
-        _run_review(args.source, args.years, args.in_path, args.out_path, args.since)
+        _run_review(args.source, args.years, args.in_path, args.out_path,
+                    args.since, args.only_setup)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
