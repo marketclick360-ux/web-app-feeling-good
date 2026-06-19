@@ -336,3 +336,65 @@ def live_signals(adapter: DataAdapter, symbols: List[str], setup_names: List[str
     ts_str = f"{data_ts.isoformat()} (most recent completed daily bar)" if data_ts \
         else "UNKNOWN"
     return out, ts_str
+
+
+def build_signal_log(adapter: DataAdapter, symbols: List[str], setup_names: List[str],
+                     cfg: PipelineConfig, as_of: pd.Timestamp,
+                     backfill_days: int = 365, account: float = 2000.0) -> list:
+    """Every signal each family would have fired over the last `backfill_days`,
+    as flat log rows (for a paper journal). Includes a forward-proxy bar so the
+    freshest signal on the most recent completed bar is captured too. Each row
+    is HYPOTHETICAL — a paper candidate, not a trade. Dedup is the caller's job."""
+    from .tradability import score as trad_score
+
+    frames, _ = _load_universe_frames(adapter, symbols, cfg, as_of)
+    bench_raw = adapter.get_bars(cfg.benchmark, "1d",
+                                 start=as_of - pd.Timedelta(days=int(cfg.years*365.25)+260),
+                                 end=as_of, as_of=as_of).df
+    context = {"benchmark": ind.enrich_daily(bench_raw),
+               "sector_close": _sector_close_map(adapter, list(frames), cfg, as_of)}
+    reg_df = regime_mod.classify(bench_raw)
+    cutoff = as_of - pd.Timedelta(days=backfill_days)
+
+    rows = []
+    for name in setup_names:
+        setup = ALL_SETUPS[name]()
+        for sym, df in frames.items():
+            if df.empty or len(df) < 2:
+                continue
+            fwd_idx = df.index[-1] + (df.index[-1] - df.index[-2])
+            fwd = df.iloc[[-1]].copy()
+            fwd.index = [fwd_idx]
+            fwd["open"] = df["close"].iloc[-1]
+            ext = pd.concat([df, fwd])
+            reg = reg_df["regime"].reindex(ext.index).ffill().fillna("UNKNOWN")
+            for s in setup.generate(ext, reg, sym, context):
+                if s.signal_time < cutoff:
+                    continue
+                erow = df.loc[s.signal_time] if s.signal_time in df.index else None
+                atr = float(erow["atr14"]) if erow is not None and erow["atr14"] == erow["atr14"] \
+                    else float("nan")
+                adv = float(erow["adv20"]) if erow is not None and erow.get("adv20") == erow.get("adv20") \
+                    else 0.0
+                risk = s.risk_per_share
+                d = 1 if s.direction.value == "long" else -1
+                t = trad_score(s.entry_ref, adv, atr if atr == atr else s.entry_ref * 0.02,
+                               risk, account)
+                fresh = s.signal_time == df.index[-1]
+                rows.append({
+                    "date": s.signal_time.date().isoformat(),
+                    "symbol": sym.upper(), "setup": name, "direction": s.direction.value,
+                    "regime": s.regime_at_signal,
+                    "entry": round(s.entry_ref, 2), "stop": round(s.stop, 2),
+                    "risk_per_share": round(risk, 2),
+                    "target_2R": round(s.entry_ref + d * 2 * risk, 2),
+                    "target_2_5R": round(s.entry_ref + d * 2.5 * risk, 2),
+                    "target_3R": round(s.target, 2),
+                    "atr": round(atr, 2) if atr == atr else "",
+                    "adv_dollar_M": round(adv / 1e6, 1),
+                    "tradability": f"{t.score:.0f}/{t.grade}",
+                    "fresh_on_last_bar": "YES" if fresh else "",
+                    "status": "HYPOTHETICAL — paper only",
+                })
+    rows.sort(key=lambda r: (r["date"], r["symbol"], r["setup"]))
+    return rows

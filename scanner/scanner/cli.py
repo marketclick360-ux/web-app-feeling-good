@@ -23,9 +23,11 @@ from . import edge as edge_mod
 from . import indicators as ind
 from . import tradability as trad_mod
 from .data import get_adapter
-from .pipeline import (PipelineConfig, research, live_signals, SetupResult, SECTOR_MAP)
+from .pipeline import (PipelineConfig, research, live_signals, build_signal_log,
+                       SetupResult, SECTOR_MAP)
 from .rank import SetupEvidence, build_table, to_markdown
 from .sizing import RiskConfig
+from .setups.registry import ALL_SETUPS, INTRADAY_ONLY
 from .universe import (default_candidates, etf_candidates, filter_universe,
                        small_account_etf_candidates, small_account_config,
                        UniverseConfig)
@@ -389,6 +391,89 @@ def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account):
           "Paper-trade first; size 0% → 0.25% only after forward evidence.")
 
 
+_LOG_KEYS = ("date", "symbol", "setup", "direction")
+
+
+def _run_log(source, n_symbols, years, small_account, etf_only, account,
+             backfill_days, out_path):
+    import os
+    real = source in ("polygon", "csv", "schwab", "stooq")
+    cfg = PipelineConfig()
+    cfg.years = years
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    if small_account:
+        ucfg = small_account_config()
+        pool = small_account_etf_candidates() if etf_only else \
+            (small_account_etf_candidates() + default_candidates())
+    else:
+        ucfg = UniverseConfig()
+        pool = etf_candidates() if etf_only else default_candidates()
+    candidates = pool[:n_symbols]
+    try:
+        universe = filter_universe(adapter, as_of, ucfg, candidates)
+    except Exception as exc:
+        print(f"[universe] filter failed ({exc}); using raw candidates")
+        universe = candidates
+    if not universe:
+        universe = candidates
+
+    _print_header(source, len(universe), as_of.isoformat(), real,
+                  adapter=adapter, etf_only=etf_only)
+    print(f"  Mode               : SIGNAL LOG (paper journal)")
+    print(f"  Backfill window    : last {backfill_days} days")
+    print(f"  Journal file       : {out_path}")
+    print("  Every row is HYPOTHETICAL — a paper candidate, not a trade or advice.")
+    print("=" * 78)
+    if not real:
+        print("(RESEARCH MODE — synthetic data; log rows are illustrative only.)\n")
+
+    setup_names = [n for n in ALL_SETUPS if n not in INTRADAY_ONLY]
+    rows = build_signal_log(adapter, universe, setup_names, cfg, as_of,
+                            backfill_days=backfill_days, account=account)
+
+    cols = ["date", "symbol", "setup", "direction", "regime", "entry", "stop",
+            "risk_per_share", "target_2R", "target_2_5R", "target_3R", "atr",
+            "adv_dollar_M", "tradability", "fresh_on_last_bar", "status"]
+    new_df = pd.DataFrame(rows, columns=cols)
+
+    existing = pd.read_csv(out_path) if os.path.exists(out_path) else pd.DataFrame(columns=cols)
+    if not existing.empty:
+        seen = set(existing[list(_LOG_KEYS)].astype(str).agg("|".join, axis=1))
+        keys = new_df[list(_LOG_KEYS)].astype(str).agg("|".join, axis=1)
+        add = new_df[~keys.isin(seen)]
+    else:
+        add = new_df
+    combined = pd.concat([existing, add], ignore_index=True)
+    combined = combined.drop_duplicates(subset=list(_LOG_KEYS)).sort_values(
+        ["date", "symbol", "setup"]).reset_index(drop=True)
+    combined.to_csv(out_path, index=False)
+
+    fresh = new_df[new_df["fresh_on_last_bar"] == "YES"]
+    print(f"  Signals generated this run : {len(new_df)}")
+    print(f"  NEW rows appended to journal: {len(add)}")
+    print(f"  Total rows in journal      : {len(combined)}")
+    print(f"  Fresh on most recent bar   : {len(fresh)}")
+    if len(fresh):
+        print("\n  FRESH candidates (most recent completed bar — act next session, paper):")
+        for _, r in fresh.iterrows():
+            print(f"    {r['date']}  {r['symbol']:<5} {r['direction']:<5} {r['setup']:<22} "
+                  f"entry {r['entry']} stop {r['stop']} 3R {r['target_3R']} "
+                  f"[trad {r['tradability']}]")
+    if not new_df.empty:
+        by_setup = new_df.groupby("setup").size().sort_values(ascending=False)
+        print("\n  By setup family (this run):")
+        for name, cnt in by_setup.items():
+            print(f"    {name:<24} {cnt}")
+    print(f"\n  Journal saved: {out_path}. Re-run anytime — only NEW signals are appended.")
+    print("  Schedule it (macOS) to log automatically, e.g. weekdays at 5pm ET:")
+    print(f'    (crontab -e)  0 17 * * 1-5  cd "{os.getcwd()}" && '
+          f'./.venv/bin/python -m scanner.cli log --source {source} '
+          f'{"--small-account " if small_account else ""}'
+          f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -418,10 +503,28 @@ def main(argv: List[str] = None):
     pe.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT,
                     help="account size for position-sizing checks")
 
+    pl = sub.add_parser("log", help="backfill + append a paper signal journal (CSV)")
+    pl.add_argument("--source", default="synthetic",
+                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+    pl.add_argument("--symbols", type=int, default=30)
+    pl.add_argument("--years", type=int, default=3,
+                    help="history depth for indicator warmup")
+    pl.add_argument("--backfill-days", type=int, default=365, dest="backfill_days",
+                    help="how far back to log signals (default 365)")
+    pl.add_argument("--etf-only", action="store_true", dest="etf_only")
+    pl.add_argument("--small-account", action="store_true", dest="small_account")
+    pl.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
+    pl.add_argument("--out", default="signal_log.csv", dest="out_path",
+                    help="journal CSV path (appended idempotently)")
+
     args = ap.parse_args(argv)
     if args.cmd == "edge":
         _run_edge(args.source, args.symbols, args.fast, args.years,
                   args.small_account, args.etf_only, args.account)
+        return
+    if args.cmd == "log":
+        _run_log(args.source, args.symbols, args.years, args.small_account,
+                 args.etf_only, args.account, args.backfill_days, args.out_path)
         return
     source = args.source or ("synthetic" if args.cmd == "demo" else "synthetic")
     _run(source, args.symbols, fast=args.fast or args.cmd == "demo",
