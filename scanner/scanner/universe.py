@@ -35,6 +35,7 @@ LEVERAGED_ETFS = {
 class UniverseConfig:
     min_adv_dollar: float = params.MIN_AVG_DOLLAR_VOLUME   # $20M
     min_price: float = params.MIN_PRICE                    # $10
+    max_price: Optional[float] = None                      # e.g. $250 small-acct
     adv_window: int = 20
     allow_leveraged: bool = False
     candidates: List[str] = field(default_factory=list)
@@ -63,6 +64,19 @@ def etf_candidates() -> List[str]:
             "GLD", "SLV", "DBC", "EEM", "EFA", "VNQ"]
 
 
+def small_account_etf_candidates() -> List[str]:
+    """Cheap, liquid ETF core suited to a small account (lower share prices,
+    broad exposure, minimal single-name blowup/earnings risk)."""
+    return ["SPLG", "QQQM", "IWM", "DIA", "XLF", "XLK", "XLE", "XLV", "XLI",
+            "XLP", "XLY", "GLD", "SLV", "TLT", "HYG"]
+
+
+def small_account_config() -> "UniverseConfig":
+    """Tighter universe for small-account mode: $100M ADV, $10-$250 price."""
+    return UniverseConfig(min_adv_dollar=100_000_000.0, min_price=10.0,
+                          max_price=250.0)
+
+
 def filter_universe(adapter: DataAdapter,
                     as_of: pd.Timestamp,
                     cfg: Optional[UniverseConfig] = None,
@@ -86,6 +100,8 @@ def filter_universe(adapter: DataAdapter,
             continue
         last_price = float(bars["close"].iloc[-1])
         if last_price < cfg.min_price:
+            continue
+        if cfg.max_price is not None and last_price > cfg.max_price:
             continue
         adv = float((bars["close"] * bars["volume"]).tail(cfg.adv_window).mean())
         if adv < cfg.min_adv_dollar:

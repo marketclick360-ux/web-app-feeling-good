@@ -109,6 +109,8 @@ class SetupResult:
     overfitting: dict
     cost_scenarios: dict = field(default_factory=dict)
     target_sweep: dict = field(default_factory=dict)
+    n_signals_raw: int = 0
+    n_symbols_tested: int = 0
     oos_trades: list = field(default_factory=list)
 
 
@@ -138,7 +140,8 @@ def _backtest_setup(setup: Setup, frames, regime_by_sym, context, cfg: PipelineC
     engine = BacktestEngine(cost=cost or cfg.cost, risk=cfg.risk,
                             sector_map=SECTOR_MAP, enforce_portfolio_risk=True)
     trades = engine.run(signals_by_symbol, bars_by_symbol)
-    return trades, engine, bars_by_symbol
+    n_signals = sum(len(v) for v in signals_by_symbol.values())
+    return trades, engine, bars_by_symbol, n_signals
 
 
 def _param_sensitivity(setup_cls, frames, regime_by_sym, context, cfg: PipelineConfig):
@@ -155,7 +158,7 @@ def _param_sensitivity(setup_cls, frames, regime_by_sym, context, cfg: PipelineC
             if not overrides:
                 continue
             s = setup_cls(**overrides)
-            trades, _, _ = _backtest_setup(s, frames, regime_by_sym, context, cfg)
+            trades, _, _, _ = _backtest_setup(s, frames, regime_by_sym, context, cfg)
             _, oos, _ = time_splits(trades)
             m = metrics.summary(oos)
             expectancies.append(m.get("expectancy_r", 0.0))
@@ -194,8 +197,8 @@ def research(adapter: DataAdapter, symbols: List[str],
     for name in setup_names:
         setup_cls = ALL_SETUPS[name]
         setup = setup_cls()
-        trades, engine, bars_by_symbol = _backtest_setup(setup, frames, regime_by_sym,
-                                                         context, cfg)
+        trades, engine, bars_by_symbol, n_signals_raw = _backtest_setup(
+            setup, frames, regime_by_sym, context, cfg)
         dev_t, oos_t, hold_t = time_splits(trades)
         dev, oos, hold = (metrics.summary(dev_t), metrics.summary(oos_t),
                           metrics.summary(hold_t))
@@ -213,7 +216,7 @@ def research(adapter: DataAdapter, symbols: List[str],
                                        n_runs=cfg.placebo_runs)
             cost_scenarios = {}
             for scen in params.COST_SCENARIOS:
-                sc_trades, _, _ = _backtest_setup(setup, frames, regime_by_sym, context,
+                sc_trades, _, _, _ = _backtest_setup(setup, frames, regime_by_sym, context,
                                                   cfg, cost=scenario_costs(scen))
                 _, sc_oos, _ = time_splits(sc_trades)
                 cost_scenarios[scen] = metrics.summary(sc_oos)
@@ -232,7 +235,7 @@ def research(adapter: DataAdapter, symbols: List[str],
         target_sweep = {}
         if has_sample:
             for r_mult in (2.0, 2.5, 3.0):
-                sw_trades, _, _ = _backtest_setup(setup_cls(planned_r=r_mult),
+                sw_trades, _, _, _ = _backtest_setup(setup_cls(planned_r=r_mult),
                                                   frames, regime_by_sym, context, cfg)
                 _, sw_oos, _ = time_splits(sw_trades)
                 target_sweep[r_mult] = metrics.summary(sw_oos)
@@ -295,6 +298,7 @@ def research(adapter: DataAdapter, symbols: List[str],
             holdout=hold, walk=walk, boot=boot, placebo=plac,
             concentration=conc, overfitting=overfit,
             cost_scenarios=cost_scenarios, target_sweep=target_sweep,
+            n_signals_raw=n_signals_raw, n_symbols_tested=len(frames),
             oos_trades=oos_t)
     return results
 

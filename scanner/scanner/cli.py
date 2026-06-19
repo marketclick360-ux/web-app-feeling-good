@@ -19,11 +19,15 @@ from typing import Dict, List
 import pandas as pd
 
 from . import DISCLAIMER, params
+from . import edge as edge_mod
+from . import indicators as ind
+from . import tradability as trad_mod
 from .data import get_adapter
 from .pipeline import (PipelineConfig, research, live_signals, SetupResult, SECTOR_MAP)
 from .rank import SetupEvidence, build_table, to_markdown
 from .sizing import RiskConfig
 from .universe import (default_candidates, etf_candidates, filter_universe,
+                       small_account_etf_candidates, small_account_config,
                        UniverseConfig)
 from .validation import LABEL_TENTATIVE, LABEL_ROBUST
 
@@ -240,6 +244,151 @@ def _run(source: str, n_symbols: int, fast: bool, years: int = 10,
           f"tested; {len(eligible_names)} reached paper/forward-observation eligibility.)")
 
 
+def _tradability_map(adapter, universe, as_of, account):
+    """Per-symbol tradability from the last completed daily bar."""
+    out = {}
+    for sym in universe:
+        try:
+            bars = adapter.get_bars(sym, "1d", start=as_of - pd.Timedelta(days=420),
+                                    end=as_of, as_of=as_of).df
+        except Exception:
+            continue
+        if len(bars) < 60:
+            continue
+        enr = ind.enrich_daily(bars)
+        last = enr.iloc[-1]
+        price = float(last["close"])
+        atr = float(last["atr14"]) if last["atr14"] == last["atr14"] else price * 0.02
+        adv = float(last["adv20"]) if last["adv20"] == last["adv20"] else 0.0
+        out[sym.upper()] = {"price": price, "atr": atr, "adv": adv,
+                            "avg_vol": float(last.get("vol_sma20", 0) or 0),
+                            "trad": trad_mod.score(price, adv, atr, 1.5 * atr, account)}
+    return out
+
+
+def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account):
+    real = source in ("polygon", "csv", "schwab", "stooq")
+    cfg = PipelineConfig()
+    cfg.years = years
+    if fast:
+        cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
+
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    if small_account:
+        ucfg = small_account_config()
+        pool = small_account_etf_candidates() if etf_only else \
+            (small_account_etf_candidates() + default_candidates())
+    else:
+        ucfg = UniverseConfig()
+        pool = etf_candidates() if etf_only else default_candidates()
+    candidates = pool[:n_symbols]
+    try:
+        universe = filter_universe(adapter, as_of, ucfg, candidates)
+    except Exception as exc:
+        print(f"[universe] filter failed ({exc}); using raw candidates")
+        universe = candidates
+    if not universe:
+        universe = candidates
+
+    _print_header(source, len(universe), as_of.isoformat(), real,
+                  adapter=adapter, etf_only=etf_only)
+    print(f"  Mode               : EDGE{' / SMALL-ACCOUNT' if small_account else ''} "
+          f"(account ${account:,.0f})")
+    _maxp = f"${ucfg.max_price:.0f}" if ucfg.max_price else "∞"
+    print(f"  Universe filter    : ADV>=${ucfg.min_adv_dollar/1e6:.0f}M, "
+          f"price ${ucfg.min_price:.0f}-{_maxp}, no leveraged/OTC")
+    print(f"  Output             : HYPOTHETICAL backtest — requires forward testing; "
+          f"no profitability claimed")
+    print("=" * 78)
+
+    results = research(adapter, universe, cfg=cfg, as_of=as_of)
+    reports = edge_mod.build_reports(results, cfg)
+    trad = _tradability_map(adapter, universe, as_of, account) if real else {}
+
+    # ---- per-family scorecards ----
+    print("\n## SETUP-FAMILY SCORECARDS\n")
+    for r in reports:
+        print(f"### {r.family}   [{r.bucket.split('.')[0]}]   grade {r.grade}   "
+              f"({r.label})")
+        print(f"    symbols tested={r.n_symbols}  IS trades={r.is_trades}  "
+              f"OOS trades={r.oos_trades}  signals/mo={r.signals_per_month:.2f}  "
+              f"trades/mo={r.trades_per_month:.2f}")
+        print(f"    frequency: {r.frequency_tag}")
+        if r.sample_status == "NO SAMPLE":
+            print("    NO SAMPLE — no OOS trades; no stats computed.")
+            print()
+            continue
+        if r.sample_status == "INCONCLUSIVE":
+            print(f"    STATISTICALLY INCONCLUSIVE — {r.oos_trades} OOS trades "
+                  f"(< {params.MIN_OOS_TRADES}); edge stats not reliable.")
+        print(f"    win={r.win_rate:.1%}  avgWin={r.avg_win_r:.2f}R  "
+              f"avgLoss={r.avg_loss_r:.2f}R  exp={r.expectancy_r:.3f}R  "
+              f"PF={r.profit_factor:.2f}  maxDD={r.max_dd_r:.1f}R  "
+              f"CIlow={r.ci_low if r.ci_low is None else round(r.ci_low,3)}")
+        if r.target_sweep:
+            sw = " | ".join(f"{rr:.1f}R exp={m.get('expectancy_r',0):.3f} "
+                            f"PF={m.get('profit_factor',0):.2f}"
+                            for rr, m in r.target_sweep.items())
+            print(f"    target sweep (3R needed to accept): {sw}")
+        if r.regime_breakdown:
+            rb = " | ".join(f"{reg}:exp={exp:.2f}R(n={n})"
+                            for reg, n, win, exp in r.regime_breakdown)
+            print(f"    regime: {rb}  (consistency {r.regime_consistency:.0%})")
+        print(f"    concentration: {r.concentration_warning}")
+        if r.edge_score is not None:
+            print(f"    EDGE SCORE: {r.edge_score}/100  {r.edge_components}")
+        print()
+
+    # ---- four buckets ----
+    print("\n## FAMILY BUCKETS\n")
+    for bucket in (edge_mod.BUCKET_VALIDATED, edge_mod.BUCKET_PAPER,
+                   edge_mod.BUCKET_WATCHLIST, edge_mod.BUCKET_REJECTED):
+        members = [r for r in reports if r.bucket == bucket]
+        print(f"{bucket}")
+        if not members:
+            print("   (none)")
+        for r in members:
+            print(f"   - {r.family}: grade {r.grade}, "
+                  f"edge {r.edge_score if r.edge_score is not None else 'n/a'}, "
+                  f"{r.frequency_tag}")
+        print()
+
+    # ---- current candidates from best (A/B) families ----
+    best = edge_mod.best_families(reports)
+    print("## CURRENT CANDIDATES (most recent completed bar)\n")
+    if not real:
+        print("(RESEARCH MODE — synthetic data; illustrative, not tradeable.)")
+    if not best:
+        print("NO QUALIFYING SETUPS TODAY — no family reached Validated/Paper "
+              "status, so no current candidate is surfaced.")
+    else:
+        sigs, live_ts = live_signals(adapter, universe, best, cfg, as_of)
+        if not sigs:
+            print(f"No fresh signals on the latest bar ({live_ts}) from the "
+                  f"qualifying families: {', '.join(best)}.")
+        for s in sigs:
+            sym = s.symbol.upper()
+            risk = s.risk_per_share
+            t = trad.get(sym)
+            tg = f"{t['trad'].score}/100 ({t['trad'].grade})" if t else "n/a"
+            shares = t['trad'].shares_at_risk if t else {}
+            print(f"  {sym} {s.direction.value} via {s.setup_name}")
+            print(f"     entry {s.entry_ref:.2f}  stop {s.stop:.2f}  "
+                  f"risk/sh {risk:.2f}  ATR {t['atr']:.2f}" if t else
+                  f"     entry {s.entry_ref:.2f}  stop {s.stop:.2f}  risk/sh {risk:.2f}")
+            d = 1 if s.direction.value == "long" else -1
+            print(f"     targets: 2R {s.entry_ref + d*2*risk:.2f}  "
+                  f"2.5R {s.entry_ref + d*2.5*risk:.2f}  "
+                  f"3R {s.entry_ref + d*3*risk:.2f} (planned)")
+            print(f"     small-account tradability: {tg}  shares@risk {shares}")
+            print(f"     options suitability: UNKNOWN (needs live options chain)")
+            print(f"     status: paper-only candidate (HYPOTHETICAL — forward-test first)")
+    print("\nReminder: backtests are hypothetical and do not prove future results. "
+          "Paper-trade first; size 0% → 0.25% only after forward evidence.")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -255,7 +404,25 @@ def main(argv: List[str] = None):
                        help="smaller bootstrap/placebo counts for a quick run")
         p.add_argument("--etf-only", action="store_true", dest="etf_only",
                        help="use the liquid ETF universe (cleaner, less survivorship bias)")
+
+    pe = sub.add_parser("edge", help="validate setup families, grade, bucket, "
+                                     "then surface current candidates")
+    pe.add_argument("--source", default="synthetic",
+                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+    pe.add_argument("--symbols", type=int, default=30)
+    pe.add_argument("--years", type=int, default=12)
+    pe.add_argument("--fast", action="store_true")
+    pe.add_argument("--etf-only", action="store_true", dest="etf_only")
+    pe.add_argument("--small-account", action="store_true", dest="small_account",
+                    help="small-account universe + tradability scoring")
+    pe.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT,
+                    help="account size for position-sizing checks")
+
     args = ap.parse_args(argv)
+    if args.cmd == "edge":
+        _run_edge(args.source, args.symbols, args.fast, args.years,
+                  args.small_account, args.etf_only, args.account)
+        return
     source = args.source or ("synthetic" if args.cmd == "demo" else "synthetic")
     _run(source, args.symbols, fast=args.fast or args.cmd == "demo",
          years=args.years, etf_only=args.etf_only)

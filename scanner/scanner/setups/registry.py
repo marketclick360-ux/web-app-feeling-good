@@ -9,6 +9,8 @@ from .relative_strength import RelativeStrengthBreakout
 from .volume_breakout import VolumeBreakout
 from .ma_pullback import MAPullback
 from .sector_leader import SectorLeaderContinuation
+from .breakout_retest import BreakoutRetest
+from .failed_breakdown import FailedBreakdown
 
 ALL_SETUPS = {
     TrendPullback.name: TrendPullback,
@@ -16,6 +18,8 @@ ALL_SETUPS = {
     RelativeStrengthBreakout.name: RelativeStrengthBreakout,
     MAPullback.name: MAPullback,
     SectorLeaderContinuation.name: SectorLeaderContinuation,
+    BreakoutRetest.name: BreakoutRetest,
+    FailedBreakdown.name: FailedBreakdown,
     VolumeBreakout.name: VolumeBreakout,
     MeanReversion.name: MeanReversion,
     OpeningRangeBreakout.name: OpeningRangeBreakout,
@@ -24,12 +28,14 @@ ALL_SETUPS = {
 # Families that require intraday data (excluded from daily-bar backtests).
 INTRADAY_ONLY = {OpeningRangeBreakout.name}
 
-# The five daily-swing families from the spec — the default research set.
+# Daily-swing families — the default research set (edge mode tests all of these).
 DEFAULT_RESEARCH_SETUPS = [
     TrendPullback.name,
+    MAPullback.name,
+    BreakoutRetest.name,
     VCPBreakout.name,
     RelativeStrengthBreakout.name,
-    MAPullback.name,
+    FailedBreakdown.name,
     SectorLeaderContinuation.name,
 ]
 
