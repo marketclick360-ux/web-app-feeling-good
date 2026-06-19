@@ -23,6 +23,7 @@ from . import edge as edge_mod
 from . import indicators as ind
 from . import tradability as trad_mod
 from .data import get_adapter
+from .timeframe import wrap_timeframe
 from .pipeline import (PipelineConfig, research, live_signals, build_signal_log,
                        evaluate_logged_signals, SetupResult, SECTOR_MAP)
 from .backtest import metrics
@@ -186,7 +187,7 @@ def _print_risk_controls(risk: RiskConfig):
 
 
 def _run(source: str, n_symbols: int, fast: bool, years: int = 10,
-         etf_only: bool = False):
+         etf_only: bool = False, timeframe: int = 1):
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
@@ -195,7 +196,7 @@ def _run(source: str, n_symbols: int, fast: bool, years: int = 10,
         cfg.placebo_runs = 30
         cfg.param_perturb = (0.9, 1.1)
 
-    adapter = get_adapter(source)
+    adapter = wrap_timeframe(get_adapter(source), timeframe)
     as_of = pd.Timestamp.now("UTC").normalize()
 
     pool = etf_candidates() if etf_only else default_candidates()
@@ -270,14 +271,15 @@ def _tradability_map(adapter, universe, as_of, account):
     return out
 
 
-def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account):
+def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account,
+              timeframe=1):
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     if fast:
         cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
 
-    adapter = get_adapter(source)
+    adapter = wrap_timeframe(get_adapter(source), timeframe)
     as_of = pd.Timestamp.now("UTC").normalize()
 
     if small_account:
@@ -397,12 +399,12 @@ _LOG_KEYS = ("date", "symbol", "setup", "direction")
 
 
 def _run_log(source, n_symbols, years, small_account, etf_only, account,
-             backfill_days, out_path):
+             backfill_days, out_path, timeframe=1):
     import os
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
-    adapter = get_adapter(source)
+    adapter = wrap_timeframe(get_adapter(source), timeframe)
     as_of = pd.Timestamp.now("UTC").normalize()
 
     if small_account:
@@ -435,9 +437,10 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
     rows = build_signal_log(adapter, universe, setup_names, cfg, as_of,
                             backfill_days=backfill_days, account=account)
 
-    cols = ["date", "symbol", "setup", "direction", "regime", "entry", "stop",
-            "risk_per_share", "target_2R", "target_2_5R", "target_3R", "atr",
-            "adv_dollar_M", "tradability", "fresh_on_last_bar", "status"]
+    cols = ["date", "symbol", "setup", "direction", "timeframe", "regime",
+            "entry", "stop", "risk_per_share", "target_2R", "target_2_5R",
+            "target_3R", "atr", "adv_dollar_M", "tradability",
+            "fresh_on_last_bar", "status"]
     new_df = pd.DataFrame(rows, columns=cols)
 
     existing = pd.read_csv(out_path) if os.path.exists(out_path) else pd.DataFrame(columns=cols)
@@ -478,13 +481,24 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
           f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
 
 
+def _journal_timeframe(rows) -> int:
+    """Largest timeframe (candle size in days) recorded in the journal rows.
+    Older journals without the column default to 1-day candles."""
+    tfs = []
+    for r in rows:
+        try:
+            tfs.append(int(float(r.get("timeframe", 1))))
+        except (TypeError, ValueError):
+            continue
+    return max(tfs) if tfs else 1
+
+
 def _run_review(source, years, in_path, out_path, since=None, only_setup=None,
                 by="setup"):
     import os
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
-    adapter = get_adapter(source)
     as_of = pd.Timestamp.now("UTC").normalize()
 
     if not os.path.exists(in_path):
@@ -493,6 +507,11 @@ def _run_review(source, years, in_path, out_path, since=None, only_setup=None,
     rows = pd.read_csv(in_path).to_dict("records")
     if since:
         rows = [r for r in rows if str(r.get("date", "")) >= since]
+    # Resolve forward outcomes on the SAME timeframe the signals were logged on.
+    tf = _journal_timeframe(rows)
+    adapter = wrap_timeframe(get_adapter(source), tf)
+    if tf > 1:
+        print(f"  (timeframe: {tf}-day candles, from journal)")
     dates = sorted(str(r["date"]) for r in rows if r.get("date"))
     span = f"{dates[0]} → {dates[-1]}" if dates else "n/a"
 
@@ -653,13 +672,14 @@ def _run_concentration(source, years, in_path, out_path, since=None,
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
-    adapter = get_adapter(source)
     as_of = pd.Timestamp.now("UTC").normalize()
 
     if not os.path.exists(in_path):
         print(f"No journal found at {in_path}. Run `log` first.")
         return
     rows = pd.read_csv(in_path).to_dict("records")
+    tf = _journal_timeframe(rows)
+    adapter = wrap_timeframe(get_adapter(source), tf)
     if since:
         rows = [r for r in rows if str(r.get("date", "")) >= since]
 
@@ -829,6 +849,9 @@ def main(argv: List[str] = None):
                        help="smaller bootstrap/placebo counts for a quick run")
         p.add_argument("--etf-only", action="store_true", dest="etf_only",
                        help="use the liquid ETF universe (cleaner, less survivorship bias)")
+        p.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3],
+                       help="candle size in trading days (1=daily, 2=two-day). "
+                            "One timeframe per run — see scanner/timeframe.py.")
 
     pe = sub.add_parser("edge", help="validate setup families, grade, bucket, "
                                      "then surface current candidates")
@@ -842,6 +865,8 @@ def main(argv: List[str] = None):
                     help="small-account universe + tradability scoring")
     pe.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT,
                     help="account size for position-sizing checks")
+    pe.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3],
+                    help="candle size in trading days (1=daily, 2=two-day)")
 
     pl = sub.add_parser("log", help="backfill + append a paper signal journal (CSV)")
     pl.add_argument("--source", default="synthetic",
@@ -856,6 +881,9 @@ def main(argv: List[str] = None):
     pl.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
     pl.add_argument("--out", default="signal_log.csv", dest="out_path",
                     help="journal CSV path (appended idempotently)")
+    pl.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3],
+                    help="candle size in trading days (1=daily, 2=two-day). "
+                         "Recorded in the journal so review/concentration match it.")
 
     pr = sub.add_parser("review", help="score how logged paper candidates played out")
     pr.add_argument("--source", default="synthetic",
@@ -892,7 +920,7 @@ def main(argv: List[str] = None):
     args = ap.parse_args(argv)
     if args.cmd == "edge":
         _run_edge(args.source, args.symbols, args.fast, args.years,
-                  args.small_account, args.etf_only, args.account)
+                  args.small_account, args.etf_only, args.account, args.timeframe)
         return
     if args.cmd == "review":
         _run_review(args.source, args.years, args.in_path, args.out_path,
@@ -904,11 +932,12 @@ def main(argv: List[str] = None):
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
-                 args.etf_only, args.account, args.backfill_days, args.out_path)
+                 args.etf_only, args.account, args.backfill_days, args.out_path,
+                 args.timeframe)
         return
     source = args.source or ("synthetic" if args.cmd == "demo" else "synthetic")
     _run(source, args.symbols, fast=args.fast or args.cmd == "demo",
-         years=args.years, etf_only=args.etf_only)
+         years=args.years, etf_only=args.etf_only, timeframe=args.timeframe)
 
 
 if __name__ == "__main__":

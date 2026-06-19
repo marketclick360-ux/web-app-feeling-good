@@ -394,6 +394,7 @@ def build_signal_log(adapter: DataAdapter, symbols: List[str], setup_names: List
     reg_df = regime_mod.classify(bench_raw)
     cutoff = as_of - pd.Timedelta(days=backfill_days)
 
+    tf_days = int(getattr(adapter, "n_days", 1))
     rows = []
     for name in setup_names:
         setup = ALL_SETUPS[name]()
@@ -422,6 +423,7 @@ def build_signal_log(adapter: DataAdapter, symbols: List[str], setup_names: List
                 rows.append({
                     "date": s.signal_time.date().isoformat(),
                     "symbol": sym.upper(), "setup": name, "direction": s.direction.value,
+                    "timeframe": tf_days,
                     "regime": s.regime_at_signal,
                     "entry": round(s.entry_ref, 2), "stop": round(s.stop, 2),
                     "risk_per_share": round(risk, 2),
