@@ -478,7 +478,7 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
           f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
 
 
-def _run_review(source, years, in_path, out_path):
+def _run_review(source, years, in_path, out_path, since=None):
     import os
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
@@ -490,25 +490,42 @@ def _run_review(source, years, in_path, out_path):
         print(f"No journal found at {in_path}. Run `log` first.")
         return
     rows = pd.read_csv(in_path).to_dict("records")
+    if since:
+        rows = [r for r in rows if str(r.get("date", "")) >= since]
+    dates = sorted(str(r["date"]) for r in rows if r.get("date"))
+    span = f"{dates[0]} → {dates[-1]}" if dates else "n/a"
+
     print("=" * 78)
     print("  PAPER JOURNAL REVIEW — how logged candidates actually played out")
     print("=" * 78)
     print(f"  Journal: {in_path}   Source: {source}   Live data: {'YES' if real else 'NO'}")
+    print(f"  Window : {span}" + (f"   (since {since})" if since else ""))
     print(f"  Logged candidates: {len(rows)}")
     print("  HYPOTHETICAL outcomes at the 3R target (gap/stop/target/time-stop,")
     print("  same engine as the backtests). Not advice; forward evidence only.")
     print("=" * 78)
 
+    # signals fired per family (from the journal — includes still-open ones)
+    journal_counts = {}
+    for r in rows:
+        journal_counts[r.get("setup", "?")] = journal_counts.get(r.get("setup", "?"), 0) + 1
+
     trades = evaluate_logged_signals(adapter, rows, cfg, as_of)
     if not trades:
         print("\n  No CLOSED paper trades yet (candidates still open / too recent).")
-        print("  Keep logging; re-run review as the window fills in.")
+        print("  Signals fired per family (still open):")
+        for name, c in sorted(journal_counts.items(), key=lambda kv: -kv[1]):
+            print(f"    {name:<24} {c}")
         return
 
     df = trades_to_frame(trades)
     s = metrics.summary(trades)
+    wins_all = int((df["realized_r"] > 0).sum())
+    losses_all = int((df["realized_r"] <= 0).sum())
+    wl_all = f"{wins_all/losses_all:.2f}" if losses_all else "∞"
     n_open = len(rows) - len(trades)
     print(f"\n  CLOSED paper trades : {s['n_trades']}   (still open/pending: {n_open})")
+    print(f"  Wins / Losses       : {wins_all} / {losses_all}   (win:loss ratio {wl_all})")
     print(f"  Win rate            : {s['win_rate']:.1%}")
     print(f"  Expectancy          : {s['expectancy_r']:.3f}R  (${s['expectancy_currency']:.0f}/trade nominal)")
     print(f"  Profit factor       : {s['profit_factor']:.2f}")
@@ -517,20 +534,34 @@ def _run_review(source, years, in_path, out_path):
     print(f"  Exits: target {s['pct_target_exits']:.0%} | time {s['pct_time_exits']:.0%} | "
           f"gap-tail(<-1R) {s['gap_tail_rate']:.0%}")
 
-    bd = metrics.breakdown(trades, "setup")
-    if not bd.empty:
-        print("\n  By setup family:")
-        print(f"  {'setup':<24} {'n':>4} {'win':>6} {'exp(R)':>8} {'PF':>6}")
-        print("  " + "-" * 52)
-        for _, r in bd.sort_values("expectancy_r", ascending=False).iterrows():
-            print(f"  {r['setup']:<24} {int(r['n']):>4} {r['win_rate']:>6.0%} "
-                  f"{r['expectancy_r']:>8.3f} {r['profit_factor']:>6.2f}")
+    print("\n  By setup family:")
+    print(f"  {'setup':<24} {'fired':>5} {'closed':>6} {'W':>4} {'L':>4} {'W:L':>5} "
+          f"{'win%':>5} {'exp(R)':>8} {'PF':>6}")
+    print("  " + "-" * 76)
+    fam_rows = []
+    for name, g in df.groupby("setup"):
+        w = int((g["realized_r"] > 0).sum())
+        l = int((g["realized_r"] <= 0).sum())
+        gw = float(g.loc[g["realized_r"] > 0, "realized_r"].sum())
+        gl = float(-g.loc[g["realized_r"] <= 0, "realized_r"].sum())
+        pf = gw / gl if gl > 0 else float("inf")
+        fam_rows.append({"setup": name, "fired": journal_counts.get(name, len(g)),
+                         "closed": len(g), "w": w, "l": l,
+                         "wl": (w / l if l else float("inf")),
+                         "win": w / len(g), "exp": float(g["realized_r"].mean()), "pf": pf})
+    for r in sorted(fam_rows, key=lambda x: -x["exp"]):
+        wl = f"{r['wl']:.2f}" if r["l"] else "∞"
+        pf = f"{r['pf']:.2f}" if r["pf"] != float("inf") else "∞"
+        print(f"  {r['setup']:<24} {r['fired']:>5} {r['closed']:>6} {r['w']:>4} {r['l']:>4} "
+              f"{wl:>5} {r['win']:>5.0%} {r['exp']:>8.3f} {pf:>6}")
 
     if out_path:
         df.to_csv(out_path, index=False)
         print(f"\n  Per-trade outcomes written: {out_path}")
-    print("\n  Reminder: a small/medium closed sample is STATISTICALLY INCONCLUSIVE. "
-          "Aim for 100+ per family before trusting any number. Hypothetical, not advice.")
+    print("\n  'fired' = signals logged in the window (incl. still-open); 'closed' = "
+          "resolved at 3R/stop/time.")
+    print("  Reminder: a small/medium closed sample is STATISTICALLY INCONCLUSIVE. "
+          "Aim for 100+ per family. Hypothetical, not advice.")
 
 
 def main(argv: List[str] = None):
@@ -584,6 +615,8 @@ def main(argv: List[str] = None):
                     help="journal CSV to review")
     pr.add_argument("--out", default="signal_outcomes.csv", dest="out_path",
                     help="per-trade outcomes CSV to write")
+    pr.add_argument("--since", default=None,
+                    help="only review signals on/after this date, e.g. 2026-01-01 (YTD)")
 
     args = ap.parse_args(argv)
     if args.cmd == "edge":
@@ -591,7 +624,7 @@ def main(argv: List[str] = None):
                   args.small_account, args.etf_only, args.account)
         return
     if args.cmd == "review":
-        _run_review(args.source, args.years, args.in_path, args.out_path)
+        _run_review(args.source, args.years, args.in_path, args.out_path, args.since)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
