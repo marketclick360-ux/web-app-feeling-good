@@ -445,9 +445,11 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
         add = new_df[~keys.isin(seen)]
     else:
         add = new_df
-    combined = pd.concat([existing, add], ignore_index=True)
-    combined = combined.drop_duplicates(subset=list(_LOG_KEYS)).sort_values(
-        ["date", "symbol", "setup"]).reset_index(drop=True)
+    parts = [f for f in (existing, add) if not f.empty]
+    combined = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=cols)
+    if not combined.empty:
+        combined = combined.drop_duplicates(subset=list(_LOG_KEYS)).sort_values(
+            ["date", "symbol", "setup"]).reset_index(drop=True)
     combined.to_csv(out_path, index=False)
 
     fresh = new_df[new_df["fresh_on_last_bar"] == "YES"]
