@@ -33,7 +33,7 @@ from .backtest.placebo import random_date_placebo
 from .backtest.walkforward import time_splits, walk_forward
 from .costs import CostModel, DEFAULT_COSTS, scenario_costs
 from .rank import SetupEvidence, build_table
-from .setups.base import Setup, Signal
+from .setups.base import Setup, Signal, Direction
 from .setups.registry import ALL_SETUPS, INTRADAY_ONLY, DEFAULT_RESEARCH_SETUPS
 from .sizing import RiskConfig
 from .validation import Evidence, evaluate
@@ -336,6 +336,44 @@ def live_signals(adapter: DataAdapter, symbols: List[str], setup_names: List[str
     ts_str = f"{data_ts.isoformat()} (most recent completed daily bar)" if data_ts \
         else "UNKNOWN"
     return out, ts_str
+
+
+def evaluate_logged_signals(adapter: DataAdapter, rows: list,
+                            cfg: PipelineConfig, as_of: pd.Timestamp) -> list:
+    """Replay logged paper candidates through the SAME backtest engine (gap
+    handling, stop/target/time-stop) to see how each actually played out. Each
+    row needs date, symbol, setup, direction, entry, stop, target_3R. Trades
+    that haven't completed yet (not enough forward bars) are excluded = still
+    open. Returns Trade objects (realized_r is in R units)."""
+    from .backtest.engine import BacktestEngine
+
+    by_sym = {}
+    for r in rows:
+        by_sym.setdefault(str(r["symbol"]).upper(), []).append(r)
+
+    signals_by_symbol, bars_by_symbol = {}, {}
+    start = as_of - pd.Timedelta(days=int(cfg.years * 365.25) + 500)
+    for sym, rs in by_sym.items():
+        bars = adapter.get_bars(sym, "1d", start=start, end=as_of, as_of=as_of).df
+        if bars.empty:
+            continue
+        bars_by_symbol[sym] = bars
+        sigs = []
+        for r in rs:
+            try:
+                st = pd.Timestamp(str(r["date"]), tz="UTC")
+                entry, stop, tgt = float(r["entry"]), float(r["stop"]), float(r["target_3R"])
+            except (ValueError, KeyError, TypeError):
+                continue
+            if st not in bars.index or entry == stop:
+                continue
+            d = Direction.LONG if str(r["direction"]) == "long" else Direction.SHORT
+            sigs.append(Signal(sym, d, str(r["setup"]), st, entry, stop, tgt,
+                               planned_r_multiple=3.0, time_stop_bars=10))
+        if sigs:
+            signals_by_symbol[sym] = sigs
+    engine = BacktestEngine(sector_map=SECTOR_MAP, enforce_portfolio_risk=False)
+    return engine.run(signals_by_symbol, bars_by_symbol)
 
 
 def build_signal_log(adapter: DataAdapter, symbols: List[str], setup_names: List[str],

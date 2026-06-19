@@ -24,7 +24,9 @@ from . import indicators as ind
 from . import tradability as trad_mod
 from .data import get_adapter
 from .pipeline import (PipelineConfig, research, live_signals, build_signal_log,
-                       SetupResult, SECTOR_MAP)
+                       evaluate_logged_signals, SetupResult, SECTOR_MAP)
+from .backtest import metrics
+from .backtest.engine import trades_to_frame
 from .rank import SetupEvidence, build_table, to_markdown
 from .sizing import RiskConfig
 from .setups.registry import ALL_SETUPS, INTRADAY_ONLY
@@ -476,6 +478,61 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
           f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
 
 
+def _run_review(source, years, in_path, out_path):
+    import os
+    real = source in ("polygon", "csv", "schwab", "stooq")
+    cfg = PipelineConfig()
+    cfg.years = years
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    if not os.path.exists(in_path):
+        print(f"No journal found at {in_path}. Run `log` first.")
+        return
+    rows = pd.read_csv(in_path).to_dict("records")
+    print("=" * 78)
+    print("  PAPER JOURNAL REVIEW — how logged candidates actually played out")
+    print("=" * 78)
+    print(f"  Journal: {in_path}   Source: {source}   Live data: {'YES' if real else 'NO'}")
+    print(f"  Logged candidates: {len(rows)}")
+    print("  HYPOTHETICAL outcomes at the 3R target (gap/stop/target/time-stop,")
+    print("  same engine as the backtests). Not advice; forward evidence only.")
+    print("=" * 78)
+
+    trades = evaluate_logged_signals(adapter, rows, cfg, as_of)
+    if not trades:
+        print("\n  No CLOSED paper trades yet (candidates still open / too recent).")
+        print("  Keep logging; re-run review as the window fills in.")
+        return
+
+    df = trades_to_frame(trades)
+    s = metrics.summary(trades)
+    n_open = len(rows) - len(trades)
+    print(f"\n  CLOSED paper trades : {s['n_trades']}   (still open/pending: {n_open})")
+    print(f"  Win rate            : {s['win_rate']:.1%}")
+    print(f"  Expectancy          : {s['expectancy_r']:.3f}R  (${s['expectancy_currency']:.0f}/trade nominal)")
+    print(f"  Profit factor       : {s['profit_factor']:.2f}")
+    print(f"  Avg win / avg loss  : {s['avg_winner_r']:.2f}R / {s['avg_loser_r']:.2f}R")
+    print(f"  Max drawdown        : {s['max_drawdown_r']:.1f}R")
+    print(f"  Exits: target {s['pct_target_exits']:.0%} | time {s['pct_time_exits']:.0%} | "
+          f"gap-tail(<-1R) {s['gap_tail_rate']:.0%}")
+
+    bd = metrics.breakdown(trades, "setup")
+    if not bd.empty:
+        print("\n  By setup family:")
+        print(f"  {'setup':<24} {'n':>4} {'win':>6} {'exp(R)':>8} {'PF':>6}")
+        print("  " + "-" * 52)
+        for _, r in bd.sort_values("expectancy_r", ascending=False).iterrows():
+            print(f"  {r['setup']:<24} {int(r['n']):>4} {r['win_rate']:>6.0%} "
+                  f"{r['expectancy_r']:>8.3f} {r['profit_factor']:>6.2f}")
+
+    if out_path:
+        df.to_csv(out_path, index=False)
+        print(f"\n  Per-trade outcomes written: {out_path}")
+    print("\n  Reminder: a small/medium closed sample is STATISTICALLY INCONCLUSIVE. "
+          "Aim for 100+ per family before trusting any number. Hypothetical, not advice.")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -519,10 +576,22 @@ def main(argv: List[str] = None):
     pl.add_argument("--out", default="signal_log.csv", dest="out_path",
                     help="journal CSV path (appended idempotently)")
 
+    pr = sub.add_parser("review", help="score how logged paper candidates played out")
+    pr.add_argument("--source", default="synthetic",
+                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+    pr.add_argument("--years", type=int, default=3)
+    pr.add_argument("--in", default="signal_log.csv", dest="in_path",
+                    help="journal CSV to review")
+    pr.add_argument("--out", default="signal_outcomes.csv", dest="out_path",
+                    help="per-trade outcomes CSV to write")
+
     args = ap.parse_args(argv)
     if args.cmd == "edge":
         _run_edge(args.source, args.symbols, args.fast, args.years,
                   args.small_account, args.etf_only, args.account)
+        return
+    if args.cmd == "review":
+        _run_review(args.source, args.years, args.in_path, args.out_path)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
