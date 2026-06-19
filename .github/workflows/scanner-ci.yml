@@ -1,0 +1,40 @@
+name: scanner-ci
+
+# Runs the scanner test suite against a CLEAN checkout (tracked files only),
+# so a file that exists locally but was never committed — e.g. a package hidden
+# by an over-broad .gitignore — fails CI instead of silently shipping.
+
+on:
+  push:
+    paths:
+      - 'scanner/**'
+      - '.github/workflows/scanner-ci.yml'
+  pull_request:
+    paths:
+      - 'scanner/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scanner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install -r requirements.txt pytest
+      - name: Import every module from a clean checkout
+        run: |
+          python -c "import scanner.cli, scanner.pipeline; \
+            from scanner.data import get_adapter; \
+            from scanner.data import (base, factory, synthetic, csv_adapter, \
+              polygon_adapter, schwab_adapter, stooq_adapter); \
+            from scanner.setups.registry import ALL_SETUPS; \
+            print('clean-checkout imports OK:', list(ALL_SETUPS))"
+      - name: Unit + pipeline tests
+        run: python -m pytest tests -q
+      - name: Demo pipeline end-to-end (synthetic)
+        run: python -m scanner.cli demo --symbols 6 --fast
