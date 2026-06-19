@@ -481,6 +481,52 @@ def _run_log(source, n_symbols, years, small_account, etf_only, account,
           f'{"--etf-only " if etf_only else ""}--backfill-days 5 >> log_cron.txt 2>&1')
 
 
+def _calendar_days(entry, exit_) -> int:
+    try:
+        return int((pd.Timestamp(exit_) - pd.Timestamp(entry)).days)
+    except (ValueError, TypeError):
+        return 0
+
+
+def _trade_outcomes_frame(df):
+    """Tidy per-trade CSV: the human-relevant columns first (ticker, entry/exit
+    date & price, how long it lasted, R, reason), then everything else."""
+    out = df.copy()
+    if out.empty:
+        return out
+    out["entry_date"] = pd.to_datetime(out["entry_time"]).dt.date.astype(str)
+    out["exit_date"] = pd.to_datetime(out["exit_time"]).dt.date.astype(str)
+    out["trading_days_held"] = out["bars_held"].astype(int)
+    out["calendar_days_held"] = [
+        _calendar_days(e, x) for e, x in zip(out["entry_time"], out["exit_time"])]
+    front = ["symbol", "setup", "direction", "entry_date", "entry_price",
+             "exit_date", "exit_price", "trading_days_held", "calendar_days_held",
+             "realized_r", "exit_reason", "stop", "target", "regime", "year"]
+    front = [c for c in front if c in out.columns]
+    rest = [c for c in out.columns if c not in front]
+    return out[front + rest].sort_values(["symbol", "entry_date"])
+
+
+def _print_trade_table(gg, title):
+    """Print each closed trade with entry/exit price, dates and duration."""
+    print(f"\n  {title} ({len(gg)}):")
+    if gg.empty:
+        print("    (none closed)")
+        return
+    print(f"  {'tkr':<5} {'dir':<5} {'entry':<11} {'entry$':>8} {'exit':<11} "
+          f"{'exit$':>8} {'days':>4} {'cal':>4} {'R':>7} {'reason':<10}")
+    print("  " + "-" * 86)
+    for _, t in gg.sort_values("entry_time").iterrows():
+        ed = pd.Timestamp(t["entry_time"]).date()
+        xd = pd.Timestamp(t["exit_time"]).date()
+        print(f"  {str(t['symbol']):<5} {str(t['direction']):<5} "
+              f"{str(ed):<11} {float(t['entry_price']):>8.2f} "
+              f"{str(xd):<11} {float(t['exit_price']):>8.2f} "
+              f"{int(t['bars_held']):>4} {_calendar_days(t['entry_time'], t['exit_time']):>4} "
+              f"{t['realized_r']:>7.2f} {str(t['exit_reason']):<10}")
+    print("    days = trading days held; cal = calendar days; $ = cost-adjusted fill.")
+
+
 def _journal_timeframe(rows) -> int:
     """Largest timeframe (candle size in days) recorded in the journal rows.
     Older journals without the column default to 1-day candles."""
@@ -494,7 +540,7 @@ def _journal_timeframe(rows) -> int:
 
 
 def _run_review(source, years, in_path, out_path, since=None, only_setup=None,
-                by="setup"):
+                by="setup", show_trades=False):
     import os
     real = source in ("polygon", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
@@ -604,27 +650,21 @@ def _run_review(source, years, in_path, out_path, since=None, only_setup=None,
         print(f"  (grouped by {by}; small per-group samples are unreliable — "
               "a high past win% is hindsight, not a prediction.)")
 
-    # optional per-trade detail for one family: tickers, dates, days, result
+    # per-trade detail: entry/exit price, dates, how long it lasted, result.
+    # Shown for one family with --setup, or for ALL closed trades with --trades.
     if only_setup:
         gg = df[df["setup"] == only_setup].copy()
-        print(f"\n  Individual closed trades — {only_setup} ({len(gg)}):")
-        if gg.empty:
-            print("    (none closed for this setup)")
-        else:
-            print(f"  {'entry':<11} {'exit':<11} {'days':>4} {'tkr':<5} {'dir':<5} "
-                  f"{'R':>7} {'exit':<10}")
-            print("  " + "-" * 60)
-            for _, t in gg.sort_values("entry_time").iterrows():
-                print(f"  {str(pd.Timestamp(t['entry_time']).date()):<11} "
-                      f"{str(pd.Timestamp(t['exit_time']).date()):<11} "
-                      f"{int(t['bars_held']):>4} {str(t['symbol']):<5} "
-                      f"{str(t['direction']):<5} {t['realized_r']:>7.2f} "
-                      f"{str(t['exit_reason']):<10}")
+        _print_trade_table(gg, f"Individual closed trades — {only_setup}")
+    elif show_trades:
+        _print_trade_table(df, "Individual closed trades — ALL families")
 
     if out_path:
-        df.to_csv(out_path, index=False)
-        print(f"\n  Full per-trade detail (every ticker, entry/exit date, days held, "
-              f"R, reason) written: {out_path}")
+        out_df = _trade_outcomes_frame(df)
+        out_df.to_csv(out_path, index=False)
+        print(f"\n  Full per-trade detail (ticker, entry/exit date & PRICE, days "
+              f"held, calendar days, R, reason) written: {out_path}")
+        print(f"  Open it in VS Code (or Excel) to see every trade's entry, exit "
+              f"and how long it lasted.")
     print("\n  'fired' = signals logged in the window (incl. still-open); 'closed' = "
           "resolved at 3R/stop/time. Hold = trading days in the trade.")
     print("  Reminder: a small/medium closed sample is STATISTICALLY INCONCLUSIVE. "
@@ -897,6 +937,9 @@ def main(argv: List[str] = None):
                     help="only review signals on/after this date, e.g. 2026-01-01 (YTD)")
     pr.add_argument("--setup", default=None, dest="only_setup",
                     help="list individual trades (ticker/dates/days/result) for one family")
+    pr.add_argument("--trades", action="store_true", dest="show_trades",
+                    help="print every closed trade: entry/exit date & price, how "
+                         "long it lasted (trading + calendar days), R, reason")
     pr.add_argument("--by", default="setup",
                     choices=["setup", "symbol", "regime", "year", "month", "direction"],
                     help="break outcomes down by this dimension (default: setup)")
@@ -924,7 +967,7 @@ def main(argv: List[str] = None):
         return
     if args.cmd == "review":
         _run_review(args.source, args.years, args.in_path, args.out_path,
-                    args.since, args.only_setup, args.by)
+                    args.since, args.only_setup, args.by, args.show_trades)
         return
     if args.cmd == "concentration":
         _run_concentration(args.source, args.years, args.in_path, args.out_path,
