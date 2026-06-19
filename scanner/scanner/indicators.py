@@ -99,6 +99,30 @@ def pct_rank(s: pd.Series, n: int) -> pd.Series:
         lambda x: (x[-1] >= x).mean(), raw=True)
 
 
+def obv(df: pd.DataFrame) -> pd.Series:
+    """On-Balance Volume — cumulative signed volume (objective volume flow)."""
+    direction = np.sign(df["close"].diff()).fillna(0.0)
+    return (direction * df["volume"]).cumsum()
+
+
+def chaikin_money_flow(df: pd.DataFrame, n: int = 20) -> pd.Series:
+    """CMF — volume-weighted buying/selling pressure. >0 accumulation, <0
+    distribution. Objective formula, no chart interpretation."""
+    rng = (df["high"] - df["low"]).replace(0, np.nan)
+    mfm = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / rng
+    mfv = mfm.fillna(0.0) * df["volume"]
+    return mfv.rolling(n, min_periods=n).sum() / (df["volume"].rolling(n, min_periods=n).sum() + 1e-12)
+
+
+def money_flow_index(df: pd.DataFrame, n: int = 14) -> pd.Series:
+    """MFI — volume-weighted RSI (0..100)."""
+    tp = (df["high"] + df["low"] + df["close"]) / 3.0
+    rmf = tp * df["volume"]
+    pos = rmf.where(tp > tp.shift(1), 0.0).rolling(n, min_periods=n).sum()
+    neg = rmf.where(tp < tp.shift(1), 0.0).rolling(n, min_periods=n).sum()
+    return 100 - (100 / (1 + pos / (neg + 1e-12)))
+
+
 def enrich_daily(df: pd.DataFrame) -> pd.DataFrame:
     """Attach the common indicator set used by daily setups. No look-ahead."""
     d = df.copy()
@@ -122,4 +146,9 @@ def enrich_daily(df: pd.DataFrame) -> pd.DataFrame:
     d["vol_ratio"] = d["volume"] / (d["vol_sma20"] + 1e-12)
     d["ret20"] = d["close"].pct_change(20)
     d["ret63"] = d["close"].pct_change(63)
+    # objective accumulation/distribution (volume flow)
+    d["cmf20"] = chaikin_money_flow(d, 20)
+    d["obv"] = obv(d)
+    d["obv_slope"] = d["obv"].diff(10)
+    d["mfi14"] = money_flow_index(d, 14)
     return d

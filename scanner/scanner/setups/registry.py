@@ -11,6 +11,7 @@ from .ma_pullback import MAPullback
 from .sector_leader import SectorLeaderContinuation
 from .breakout_retest import BreakoutRetest
 from .failed_breakdown import FailedBreakdown
+from .accumulation_breakout import AccumulationBreakout
 
 ALL_SETUPS = {
     TrendPullback.name: TrendPullback,
@@ -20,6 +21,7 @@ ALL_SETUPS = {
     SectorLeaderContinuation.name: SectorLeaderContinuation,
     BreakoutRetest.name: BreakoutRetest,
     FailedBreakdown.name: FailedBreakdown,
+    AccumulationBreakout.name: AccumulationBreakout,
     VolumeBreakout.name: VolumeBreakout,
     MeanReversion.name: MeanReversion,
     OpeningRangeBreakout.name: OpeningRangeBreakout,
@@ -36,6 +38,7 @@ DEFAULT_RESEARCH_SETUPS = [
     VCPBreakout.name,
     RelativeStrengthBreakout.name,
     FailedBreakdown.name,
+    AccumulationBreakout.name,
     SectorLeaderContinuation.name,
 ]
 

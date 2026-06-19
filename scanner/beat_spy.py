@@ -66,6 +66,24 @@ def strat_200d_timing(eq, bond):
     return _month_end_ffill(pos)
 
 
+def strat_200d_buffer(eq, bond, band=0.015):
+    """200-day timing with a confirmation BUFFER + hysteresis: only go to cash
+    when price is band% BELOW the MA, only re-enter when band% ABOVE it; hold
+    the prior state in the dead zone. This cuts the whipsaws that hurt the plain
+    200-day rule in choppy markets."""
+    sma = eq["close"].rolling(200).mean()
+    pos, cur = [], "CASH"
+    for c, m in zip(eq["close"], sma):
+        if m != m:                       # NaN warmup
+            cur = "CASH"
+        elif c > m * (1 + band):
+            cur = "EQ"
+        elif c < m * (1 - band):
+            cur = "CASH"
+        pos.append(cur)                  # dead zone -> keep current
+    return _month_end_ffill(pd.Series(pos, index=eq.index))
+
+
 def strat_abs_momentum(eq, bond, lookback=200):
     mom = eq["close"] / eq["close"].shift(lookback) - 1
     pos = pd.Series("CASH", index=eq.index)
@@ -97,6 +115,7 @@ def strat_dual_momentum(eq, bond, lookback=200):
 STRATEGIES = {
     "buy_hold_SPY": strat_buy_hold,
     "SPY_200d_timing": strat_200d_timing,
+    "SPY_200d_buffer": strat_200d_buffer,
     "SPY_abs_momentum": strat_abs_momentum,
     "SPY_or_BONDS": strat_spy_or_bonds,
     "dual_momentum": strat_dual_momentum,
