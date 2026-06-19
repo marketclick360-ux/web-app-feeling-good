@@ -113,10 +113,20 @@ def _concentration_warning(conc: dict) -> str:
                        ("drop_best_sector", "one sector"),
                        ("drop_best_year", "one year")):
         v = conc.get(dim, {})
-        if isinstance(v, dict) and v.get("expectancy_r", 1) is not None \
-                and v.get("expectancy_r", 1) <= 0:
-            flags.append(f"{label} dominates (removing it → expectancy "
-                         f"{v.get('expectancy_r'):.3f}R)")
+        if not isinstance(v, dict):
+            continue
+        exp = v.get("expectancy_r", 1)
+        if exp is None:
+            continue
+        # NaN (e.g. only one ticker total) or non-positive both signal that the
+        # edge does not survive removing the single biggest contributor.
+        if (isinstance(exp, float) and exp != exp) or exp <= 0:
+            removed = v.get("removed")
+            who = f" ({removed})" if removed not in (None, "") else ""
+            tail = (" — only one ticker, maximal concentration"
+                    if isinstance(exp, float) and exp != exp
+                    else f" → expectancy {exp:.3f}R")
+            flags.append(f"{label}{who} dominates{tail}")
     # top winners
     for pct in (0.05,):
         v = conc.get(f"drop_top_{int(pct*100)}pct_winners", {})
