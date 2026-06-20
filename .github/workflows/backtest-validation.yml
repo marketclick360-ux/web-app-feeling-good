@@ -44,11 +44,11 @@ jobs:
       - name: Run backtest validation on real data
         run: |
           SRC="${{ github.event.inputs.source || 'yahoo' }}"
-          YRS="${{ github.event.inputs.years || '6' }}"
+          YRS="${{ github.event.inputs.years || '12' }}"
           SYM="${{ github.event.inputs.symbols || '15' }}"
           python -m scanner.cli validate \
             --source "$SRC" --years "$YRS" --symbols "$SYM" \
-            --small-account --etf-only --fast \
+            --small-account --etf-only --fast --market-filter \
             --out-dir validation_out | tee validation_out_console.txt
       - name: Print the report to the log
         run: |

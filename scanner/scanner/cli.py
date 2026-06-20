@@ -1388,7 +1388,7 @@ def _ticker_contrib(oos_trades):
 
 
 def _run_validate(source, n_symbols, years, small_account, etf_only, account,
-                  fast, only_setups, out_dir, timeframe=1):
+                  fast, only_setups, out_dir, timeframe=1, market_filter=False):
     """Run the full validation pass for the ETF swing setups and WRITE the
     deliverables: BACKTEST_VALIDATION.md, concentration_report.csv,
     paper_trade_candidates.csv, rejected_setups.csv. Backtest-only — proves
@@ -1396,6 +1396,7 @@ def _run_validate(source, n_symbols, years, small_account, etf_only, account,
     import os
     cfg = PipelineConfig()
     cfg.years = years
+    cfg.market_filter = market_filter
     if fast:
         cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
     adapter = wrap_timeframe(get_adapter(source), timeframe)
@@ -1405,7 +1406,9 @@ def _run_validate(source, n_symbols, years, small_account, etf_only, account,
     print("=" * 78)
     print("  BACKTEST VALIDATION — is there an edge worth PAPER trading? (not live)")
     print("=" * 78)
-    print(f"  Source: {source}   Universe: {len(universe)} symbols   Years: {years}")
+    print(f"  Source: {source}   Universe: {len(universe)} symbols   Years: {years}"
+          + ("   OVERLAY: 200-day market filter ON (risk-on only)" if market_filter
+             else ""))
     print("  Gates: 3R target · no look-ahead · next-open fills · gap-through-stop ·")
     print("  100+ OOS trades · PF>=1.30 · stressed costs · concentration · placebo.")
     print("=" * 78)
@@ -1700,6 +1703,9 @@ def main(argv: List[str] = None):
                     help="restrict to a setup family (repeatable)")
     pv.add_argument("--out-dir", default=".", dest="out_dir",
                     help="directory to write the report + CSVs (default: here)")
+    pv.add_argument("--market-filter", action="store_true", dest="market_filter",
+                    help="200-day overlay: only take signals when SPY is above "
+                         "its 200-day average (risk-on)")
     pv.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
 
     prp = sub.add_parser("report",
@@ -1754,7 +1760,7 @@ def main(argv: List[str] = None):
     if args.cmd == "validate":
         _run_validate(args.source, args.symbols, args.years, args.small_account,
                       args.etf_only, args.account, args.fast, args.only_setups,
-                      args.out_dir, args.timeframe)
+                      args.out_dir, args.timeframe, args.market_filter)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,

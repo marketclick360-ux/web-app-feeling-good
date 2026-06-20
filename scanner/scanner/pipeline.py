@@ -116,6 +116,7 @@ class PipelineConfig:
     n_boot: int = 2000
     param_perturb: tuple = (0.8, 0.9, 1.1, 1.2)  # multiplicative param sweeps
     placebo_runs: int = 100
+    market_filter: bool = False  # only take signals when SPY > its 200-day MA
 
 
 @dataclass
@@ -154,10 +155,24 @@ def _load_universe_frames(adapter: DataAdapter, symbols: List[str],
 
 def _backtest_setup(setup: Setup, frames, regime_by_sym, context, cfg: PipelineConfig,
                     cost: Optional[CostModel] = None):
+    # 200-day market-regime overlay: keep only signals fired while the
+    # benchmark (SPY) is above its own 200-day moving average (risk-on). The
+    # date is checked on the bar BEFORE the signal acts, so there is no
+    # look-ahead. Off by default; turned on with cfg.market_filter.
+    risk_on = None
+    if cfg.market_filter:
+        bench = context.get("benchmark")
+        if bench is not None and "sma200" in bench:
+            risk_on = (bench["close"] > bench["sma200"])
+
     signals_by_symbol, bars_by_symbol = {}, {}
     for sym, df in frames.items():
         reg = regime_by_sym.get(sym)
         sigs = setup.generate(df, reg, sym, context)
+        if sigs and risk_on is not None:
+            ro = risk_on.reindex(df.index).ffill().fillna(False)
+            sigs = [s for s in sigs
+                    if bool(ro.get(s.signal_time, False))]
         if sigs:
             signals_by_symbol[sym] = sigs
         bars_by_symbol[sym] = df
