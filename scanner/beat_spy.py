@@ -300,7 +300,11 @@ def main():
     if args.signal:
         eq = load(adapter, args.equity, max(args.years, 2), as_of)
         if eq is None:
-            raise SystemExit(f"No data for {args.equity} from {args.source}.")
+            raise SystemExit(
+            f"\n  No price data for {args.equity} from {args.source}.\n"
+            f"  • {args.source} may not carry that ticker. Try a common one:\n"
+            f"      python3 beat_spy.py --source stooq --equity SPY --years 12\n"
+            f"  • or use your Massive key:  --source massive --equity SPLG\n")
         close = float(eq["close"].iloc[-1])
         sma200 = float(eq["close"].rolling(200).mean().iloc[-1])
         pct = (close / sma200 - 1) * 100
@@ -324,7 +328,11 @@ def main():
 
     eq = load(adapter, args.equity, args.years, as_of)
     if eq is None:
-        raise SystemExit(f"No data for {args.equity} from {args.source}.")
+        raise SystemExit(
+            f"\n  No price data for {args.equity} from {args.source}.\n"
+            f"  • {args.source} may not carry that ticker. Try a common one:\n"
+            f"      python3 beat_spy.py --source stooq --equity SPY --years 12\n"
+            f"  • or use your Massive key:  --source massive --equity SPLG\n")
     bond = load(adapter, args.bond, args.years, as_of)
 
     real = args.source in ("polygon", "csv", "schwab", "stooq")
