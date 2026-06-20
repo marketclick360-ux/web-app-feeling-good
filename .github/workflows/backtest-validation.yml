@@ -24,7 +24,7 @@ on:
   # Also runs whenever THIS workflow file changes — so editing it kicks off a
   # fresh validation run (handy when workflow_dispatch isn't available on a
   # feature branch). Other commits do NOT trigger it.
-  # (re-trigger: mtf v2 patient/slow-exit run)
+  # (re-trigger: mtf v2 basket run — indices, sectors, megacaps, gold/bonds)
   push:
     paths:
       - '.github/workflows/backtest-validation.yml'
@@ -66,8 +66,10 @@ jobs:
         run: |
           mkdir -p validation_out
           SRC="${{ github.event.inputs.source || 'yahoo' }}"
-          python -m scanner.cli mtf \
-            --source "$SRC" --ticker SPY --ticker QQQ --years 15 --trades \
+          python -m scanner.cli mtf --source "$SRC" --years 15 \
+            --ticker SPY --ticker QQQ --ticker DIA --ticker IWM \
+            --ticker XLK --ticker XLV --ticker XLF --ticker XLE --ticker SMH \
+            --ticker AAPL --ticker MSFT --ticker GLD --ticker TLT \
             --out-dir validation_out | tee validation_out/mtf_console.txt
       - name: Print the reports to the log
         run: |

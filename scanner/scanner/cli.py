@@ -1964,6 +1964,7 @@ def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades,
           "**Not a live-trading green light.**\n"]
 
     any_data = False
+    summary = []   # (ticker, res, dd_cut)
     for ticker in tickers:
         res = run_mtf(adapter, ticker, years=years, as_of=as_of, atr_stop_mult=stop,
                       slow_exit=slow_exit)
@@ -1973,6 +1974,7 @@ def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades,
             continue
         any_data = True
         dd_cut = res.bh_max_dd - res.strat_max_dd
+        summary.append((ticker, res, dd_cut))
         verdict = _mtf_verdict(res)
         print(f"\n  ### {ticker}  ({res.years:.1f} years, {res.n_trades} round-trips)")
         print(f"  {'metric':<22}{'this model':>14}{'buy & hold':>14}")
@@ -2009,6 +2011,38 @@ def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades,
             for t in res.trips[-40:]:
                 print(f"  {t.entry_date:<12}{t.exit_date:<12}{t.days_held:>5}"
                       f"{t.return_pct:>8.1f}% {t.exit_reason}")
+
+    # cross-ticker summary — the headline: where does the smoother ride hold up?
+    if len(summary) > 1:
+        ranked = sorted(summary, key=lambda x: -x[2])  # biggest drawdown cut first
+        n_dd = sum(1 for _, r, dc in summary if dc > 3)
+        n_sharpe = sum(1 for _, r, _ in summary if r.strat_sharpe >= r.bh_sharpe - 0.05)
+        print("\n  " + "=" * 78)
+        print("  SUMMARY — smoother-ride scorecard (drawdown cut + risk-adjusted return)")
+        print("  " + "=" * 78)
+        print(f"  {'ticker':<7}{'CAGR':>7}{'B&H':>7}{'maxDD':>7}{'B&H':>7}"
+              f"{'DDcut':>7}{'Shrp':>6}{'B&H':>6}  verdict")
+        for tk, r, dc in ranked:
+            sh = "smoother" if (dc > 3 and r.strat_sharpe >= r.bh_sharpe - 0.05) \
+                else ("calmer" if dc > 3 else "no edge")
+            print(f"  {tk:<7}{r.strat_cagr:>6.1f}%{r.bh_cagr:>6.1f}%"
+                  f"{r.strat_max_dd:>6.1f}%{r.bh_max_dd:>6.1f}%{dc:>+6.1f}"
+                  f"{r.strat_sharpe:>6.2f}{r.bh_sharpe:>6.2f}  {sh}")
+        print(f"\n  Drawdown cut on {n_dd}/{len(summary)} tickers; risk-adjusted "
+              f"return held (or beat) buy-and-hold on {n_sharpe}/{len(summary)}.")
+
+        md.insert(4, "\n## Summary — smoother-ride scorecard\n")
+        md.insert(5, "| Ticker | CAGR | B&H CAGR | Max DD | B&H DD | DD cut | "
+                  "Sharpe | B&H Sharpe |")
+        md.insert(6, "|---|--:|--:|--:|--:|--:|--:|--:|")
+        for i, (tk, r, dc) in enumerate(ranked):
+            md.insert(7 + i, f"| {tk} | {r.strat_cagr:.1f}% | {r.bh_cagr:.1f}% | "
+                      f"{r.strat_max_dd:.1f}% | {r.bh_max_dd:.1f}% | {dc:+.1f} | "
+                      f"{r.strat_sharpe:.2f} | {r.bh_sharpe:.2f} |")
+        md.insert(7 + len(ranked),
+                  f"\n**Drawdown cut on {n_dd}/{len(summary)} tickers; risk-adjusted "
+                  f"return held or beat buy-and-hold on {n_sharpe}/{len(summary)}.** "
+                  "A smaller drawdown with similar Sharpe = the smoother ride.\n")
 
     md.append("\n## How to read this\n"
               "- The win here is NOT bigger returns — it's a **smoother ride**: "
