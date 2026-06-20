@@ -110,11 +110,23 @@ class MassiveFlatFilesAdapter(DataAdapter):
                 open(self._miss_path(date), "w").close()  # remember the gap
                 return None
             if code in ("403", "AccessDenied", "InvalidAccessKeyId",
-                        "SignatureDoesNotMatch"):
+                        "SignatureDoesNotMatch", "Forbidden"):
+                akid = self.access_key or ""
+                shown = f"{akid[:4]}…{akid[-4:]}" if len(akid) > 8 else akid
+                if code in ("SignatureDoesNotMatch",):
+                    why = ("The SECRET access key is wrong/mistyped. Re-copy the "
+                           "'Secret Access Key' exactly (no spaces).")
+                elif code in ("InvalidAccessKeyId",):
+                    why = ("The ACCESS KEY ID is wrong, OR the two keys are SWAPPED. "
+                           "MASSIVE_ACCESS_KEY_ID must be the long ID (e.g. "
+                           "a054cdda-…), MASSIVE_SECRET_ACCESS_KEY the other one.")
+                else:  # AccessDenied / 403 / Forbidden
+                    why = ("Credentials look valid but your plan may not grant "
+                           "Flat Files read access, OR the keys are swapped. Check "
+                           "the 'Accessing Flat Files (S3)' tab is enabled.")
                 raise RuntimeError(
-                    f"Massive Flat Files rejected your S3 credentials ({code}). "
-                    "Re-copy the Access Key ID and Secret Access Key from the "
-                    "'Accessing Flat Files (S3)' tab on massive.com.") from exc
+                    f"Massive Flat Files rejected the request: {code}.\n"
+                    f"  (using Access Key ID {shown})\n  → {why}") from exc
             raise
 
     def _day_symbol_row(self, date, symbol):
