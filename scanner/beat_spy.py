@@ -345,25 +345,77 @@ def main():
                    idx=eq.index[eq.index > split], extra=extra, strategies=strategies)
 
     # honest verdict
+    _plain_bottom_line(oos)
+
+
+def _plain_bottom_line(oos):
+    """Plain-English summary of the OUT-OF-SAMPLE results: what beat buy-and-hold,
+    HOW it beat it, and what didn't — sorted so the best is on top."""
     print("\n" + "=" * 80)
-    print("  VERDICT (out-of-sample vs buy_hold_SPY)")
+    print("  BOTTOM LINE — did anything beat just holding the market? (plain English)")
+    print("  (out-of-sample = the honest test, on data the rules never saw)")
     print("=" * 80)
     base = oos.get("buy_hold_SPY")
-    if base:
-        for name, m in oos.items():
-            if name == "buy_hold_SPY":
-                continue
-            ret_beat = m["cagr"] > base["cagr"]
-            dd_beat = m["max_drawdown"] > base["max_drawdown"]  # less negative = smaller crash
-            calmar_beat = m["calmar"] > base["calmar"]
-            tag = []
-            tag.append("higher return" if ret_beat else "lower return")
-            tag.append("smaller drawdown" if dd_beat else "bigger drawdown")
-            tag.append("better Calmar" if calmar_beat else "worse Calmar")
-            print(f"  {name:<18}: " + ", ".join(tag))
-    print("\n  Reminder: 'smaller drawdown with similar return' IS beating buy-and-hold")
-    print("  on risk — the achievable kind. Higher raw return out-of-sample is rare;")
-    print("  treat any single win skeptically until it holds across periods and costs.")
+    if not base:
+        print("  Not enough data to judge.")
+        return
+    b_ret, b_dd = base["total_return"] * 100, base["max_drawdown"] * 100
+    print(f"\n  Just holding the market (buy & hold): grew {b_ret:+.0f}% overall, "
+          f"but its worst drop along the way was {b_dd:.0f}%.")
+
+    wins, risk_only, worse = [], [], []
+    for name, m in oos.items():
+        if name == "buy_hold_SPY":
+            continue
+        ret, dd = m["total_return"] * 100, m["max_drawdown"] * 100
+        smaller_crash = dd > b_dd                       # less negative
+        comparable_return = ret >= 0.8 * b_ret          # within 20% of the market
+        better_return = ret >= b_ret
+        item = (name, ret, dd, better_return)
+        if smaller_crash and comparable_return:
+            wins.append(item)
+        elif smaller_crash:
+            risk_only.append(item)
+        else:
+            worse.append(item)
+
+    # best = biggest crash reduction among the genuine wins
+    wins.sort(key=lambda x: x[2], reverse=True)         # least-negative dd first
+    risk_only.sort(key=lambda x: x[2], reverse=True)
+
+    def _name(n):  # friendlier label
+        return n.replace("SPY_", "").replace("_", " ")
+
+    if wins:
+        print("\n  ✅ THESE BEAT BUY-AND-HOLD (smoother ride — the win you want):")
+        for n, ret, dd, better in wins:
+            how = ("grew MORE and crashed less" if better
+                   else "kept up with the market but crashed less")
+            print(f"     • {_name(n):<16} {how}: "
+                  f"worst drop {dd:.0f}% vs the market's {b_dd:.0f}%, "
+                  f"growth {ret:+.0f}%.")
+        best = wins[0]
+        print(f"\n     BEST: '{_name(best[0])}' cut your worst crash from "
+              f"{b_dd:.0f}% to {best[2]:.0f}% — that is how it beats buy-and-hold: "
+              "less pain for similar gain.")
+    else:
+        print("\n  ✅ Cleanly beat buy-and-hold: NONE this run. That's normal — "
+              "don't force it.")
+
+    if risk_only:
+        print("\n  🟡 SAFER BUT SLOWER (smaller crash, but gave up too much growth):")
+        for n, ret, dd, _ in risk_only:
+            print(f"     • {_name(n):<16} worst drop {dd:.0f}% (vs {b_dd:.0f}%), "
+                  f"but growth only {ret:+.0f}%.")
+
+    if worse:
+        names = ", ".join(_name(n) for n, *_ in worse)
+        print(f"\n  ❌ DID NOT HELP (bigger crash — skip): {names}")
+
+    print("\n  WHAT 'BEAT' MEANS HERE: a smaller worst-drop with similar growth is")
+    print("  the realistic win for a small, low-risk account. Beating raw growth is")
+    print("  rare and usually luck — only trust a winner that holds up here, out-of-")
+    print("  sample, across different time periods. Paper-trade before real money.")
 
 
 if __name__ == "__main__":
