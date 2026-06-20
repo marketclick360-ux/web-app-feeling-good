@@ -290,6 +290,11 @@ def _r_metrics(rows: List[dict]) -> dict:
         "pct_reach_2_5R": float(df["reached_2_5R"].mean()),
         "gap_tail_rate": float(df["worse_than_1r"].mean()),
         "n_gap_stops": int((df["exit_reason"] == "gap_stop").sum()),
+        "worst_trades": [
+            (str(t["symbol"]),
+             pd.Timestamp(t["entry_time"]).date().isoformat(),
+             round(float(t["realized_r"]), 2))
+            for _, t in df.nsmallest(5, "realized_r").iterrows()],
     }
 
 
@@ -450,6 +455,8 @@ class DefensiveResult:
     best: Optional[dict] = None
     n_symbols: int = 0
     n_entries: int = 0
+    suspects: list = field(default_factory=list)  # (symbol, date, R) excluded as bad bars
+    max_abs_r: float = 0.0
 
 
 def _oos_rows(rows: List[dict], frac: float = 0.4) -> List[dict]:
@@ -469,7 +476,8 @@ def run_defensive(adapter: DataAdapter, symbols: List[str],
                   exits: Optional[List[str]] = None,
                   filters: Optional[List[str]] = None,
                   rc: Optional[RiskControls] = None,
-                  bond_symbol: str = "AGG") -> DefensiveResult:
+                  bond_symbol: str = "AGG",
+                  max_abs_r: float = 10.0) -> DefensiveResult:
     cfg = cfg or PipelineConfig()
     as_of = as_of or pd.Timestamp.now("UTC").normalize()
     setup_names = setup_names or list(DEFAULT_RESEARCH_SETUPS)
@@ -521,6 +529,12 @@ def run_defensive(adapter: DataAdapter, symbols: List[str],
     # 2) Pre-compute each risk filter as a risk-on boolean on the bench index.
     filt_series = {f: _filter_series(f, bench, bond) for f in filters}
 
+    # Data-quality guard: a single trade whose realized loss/gain exceeds
+    # `max_abs_r` (default 10R) on a liquid ETF is almost certainly a corrupt
+    # bar (an unadjusted split / bad print), not a real fill. We EXCLUDE such
+    # trades from the statistics and disclose them, rather than let one phantom
+    # -51R trade distort every result.
+    suspect_map = {}   # (symbol, date) -> worst R seen (for disclosure)
     combos = []
     for filt in filters:
         ro = filt_series[filt]
@@ -536,6 +550,12 @@ def run_defensive(adapter: DataAdapter, symbols: List[str],
                     df, e["fill_pos"], e["is_long"], e["entry_ref"],
                     e["init_stop"], e["time_stop_bars"], variant, cost)
                 if res is None:
+                    continue
+                if abs(res["realized_r"]) > max_abs_r:
+                    key = (e["symbol"], pd.Timestamp(e["signal_time"]).date().isoformat())
+                    prev = suspect_map.get(key, 0.0)
+                    if abs(res["realized_r"]) > abs(prev):
+                        suspect_map[key] = round(float(res["realized_r"]), 2)
                     continue
                 res.update({"symbol": e["symbol"], "setup": e["setup"],
                             "direction": "long" if e["is_long"] else "short",
@@ -570,5 +590,8 @@ def run_defensive(adapter: DataAdapter, symbols: List[str],
     ranked = sorted(combos, key=_objective)
     best = next((c for c in ranked if c["metrics"].get("n", 0) > 0), None)
 
+    suspects = sorted(((s, d, r) for (s, d), r in suspect_map.items()),
+                      key=lambda x: abs(x[2]), reverse=True)
     return DefensiveResult(combos=combos, best=best,
-                           n_symbols=len(frames), n_entries=len(entries))
+                           n_symbols=len(frames), n_entries=len(entries),
+                           suspects=suspects, max_abs_r=max_abs_r)

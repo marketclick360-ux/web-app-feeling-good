@@ -1710,7 +1710,12 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
         return
 
     print(f"\n  {res.n_entries} total entries across {res.n_symbols} symbols "
-          f"(out-of-sample = most recent 40%).\n")
+          f"(out-of-sample = most recent 40%).")
+    if res.suspects:
+        shown = ", ".join(f"{s} {d} ({r:+.0f}R)" for s, d, r in res.suspects[:5])
+        print(f"  Data-quality guard: EXCLUDED {len(res.suspects)} trade(s) with "
+              f"|R| > {res.max_abs_r:.0f} as suspected bad bars (e.g. {shown}).")
+    print()
 
     # ---- the 24-row matrix (6 exits x 4 filters) ----
     hdr = (f"  {'exit model':<17} {'filter':<13} {'n':>4} {'win%':>5} "
@@ -1759,6 +1764,14 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
             f"{conc['best_ticker']} {conc['best_share']:.0%} | "
             f"{conc['exp_without_best']:+.3f} | {c['label']} |")
 
+    if res.suspects:
+        shown = ", ".join(f"{s} {d} ({r:+.0f}R)" for s, d, r in res.suspects[:8])
+        md.append(f"\n> **Data-quality guard:** excluded {len(res.suspects)} "
+                  f"trade(s) with |R| > {res.max_abs_r:.0f} as suspected corrupt "
+                  f"bars (a >{res.max_abs_r:.0f}× overnight move on a liquid ETF is "
+                  f"almost certainly a bad/unadjusted price, not a real fill). "
+                  f"Worst: {shown}.\n")
+
     # ---- verdict / best survivor ----
     survivors = [c for c in res.combos if c["label"] != "REJECTED"
                  and c["metrics"].get("n", 0) > 0]
@@ -1805,6 +1818,9 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
         md.append(f"**When wrong:** avg loser {m['avg_loss_r']:.2f}R, worst single "
                   f"loss {m['worst_loss_r']:.2f}R, gap-through-stop losses on "
                   f"{m['gap_tail_rate']:.0%} of trades ({m['n_gap_stops']} trades).\n")
+        if m.get("worst_trades"):
+            worst = ", ".join(f"{s} {d} {r:+.1f}R" for s, d, r in m["worst_trades"])
+            md.append(f"**5 worst trades (clean):** {worst}.\n")
         md.append(f"**Concentration:** best ticker {conc['best_ticker']} carries "
                   f"{conc['best_share']:.0%} of gross profit; expectancy WITHOUT it "
                   f"= {conc['exp_without_best']:+.3f}R "
