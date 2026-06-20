@@ -1928,6 +1928,113 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
+def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades):
+    """Single-ticker, multi-timeframe trend-alignment model vs buy-and-hold.
+    Long/flat, never short, never leveraged. The goal is a SMOOTHER ride:
+    keep most of the upside while cutting buy-and-hold's deep drawdowns."""
+    import os
+    from .mtf import run_mtf
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+    stop = None if atr_stop == 0 else atr_stop
+
+    print("=" * 80)
+    print("  ONE-TICKER MULTI-TIMEFRAME MODEL — only in when short/medium/long agree")
+    print("=" * 80)
+    print(f"  Source: {source}   Tickers: {', '.join(tickers)}   Years: {years}")
+    print("  Long/flat only. Never short, never leveraged, never an overnight")
+    print("  position that can gap to zero. Goal: smoother ride than buy-and-hold.")
+    print("=" * 80)
+
+    md = ["# One-Ticker Multi-Timeframe Trend-Alignment Model\n",
+          f"- **Source:** {source} · **History:** {years}y · "
+          + (f"catastrophe stop: {stop}×ATR" if stop else "no ATR stop"),
+          "- Long/flat on ONE ticker; in only when 20-EMA, 50-SMA and 200-SMA "
+          "trends all agree. Compared head-to-head with buy-and-hold.\n",
+          "> Next-open cost-adjusted fills, gap-through-stop = actual loss. "
+          "**Not a live-trading green light.**\n"]
+
+    any_data = False
+    for ticker in tickers:
+        res = run_mtf(adapter, ticker, years=years, as_of=as_of, atr_stop_mult=stop)
+        if res is None:
+            print(f"\n  [{ticker}] no data from {source}.")
+            md.append(f"\n## {ticker}\n\n_No data from {source}._\n")
+            continue
+        any_data = True
+        dd_cut = res.bh_max_dd - res.strat_max_dd
+        verdict = _mtf_verdict(res)
+        print(f"\n  ### {ticker}  ({res.years:.1f} years, {res.n_trades} round-trips)")
+        print(f"  {'metric':<22}{'this model':>14}{'buy & hold':>14}")
+        print("  " + "-" * 50)
+        print(f"  {'total return':<22}{res.strat_total_return:>13.0f}%{res.bh_total_return:>13.0f}%")
+        print(f"  {'annual return (CAGR)':<22}{res.strat_cagr:>13.1f}%{res.bh_cagr:>13.1f}%")
+        print(f"  {'MAX DRAWDOWN':<22}{res.strat_max_dd:>13.1f}%{res.bh_max_dd:>13.1f}%")
+        print(f"  {'volatility (annual)':<22}{res.strat_vol:>13.1f}%{res.bh_vol:>13.1f}%")
+        print(f"  {'risk-adj (Sharpe)':<22}{res.strat_sharpe:>14.2f}{res.bh_sharpe:>14.2f}")
+        print(f"  time invested {res.pct_time_invested:.0f}%   win rate "
+              f"{res.win_rate:.0f}%   avg win {res.avg_win_pct:+.1f}%   "
+              f"avg loss {res.avg_loss_pct:+.1f}%   worst trip {res.worst_trade_pct:+.1f}%")
+        print(f"  worst overnight gap while holding: {res.worst_hold_gap_pct:+.1f}%")
+        print(f"  → {verdict}")
+
+        md.append(f"\n## {ticker}  ({res.years:.1f} years, {res.n_trades} round-trips)\n")
+        md.append("| Metric | This model | Buy & hold |")
+        md.append("|---|--:|--:|")
+        md.append(f"| Total return | {res.strat_total_return:.0f}% | {res.bh_total_return:.0f}% |")
+        md.append(f"| Annual return (CAGR) | {res.strat_cagr:.1f}% | {res.bh_cagr:.1f}% |")
+        md.append(f"| **Max drawdown** | **{res.strat_max_dd:.1f}%** | **{res.bh_max_dd:.1f}%** |")
+        md.append(f"| Volatility (annual) | {res.strat_vol:.1f}% | {res.bh_vol:.1f}% |")
+        md.append(f"| Risk-adjusted (Sharpe) | {res.strat_sharpe:.2f} | {res.bh_sharpe:.2f} |")
+        md.append(f"\n- Time invested: {res.pct_time_invested:.0f}% · "
+                  f"win rate {res.win_rate:.0f}% · avg win {res.avg_win_pct:+.1f}% · "
+                  f"avg loss {res.avg_loss_pct:+.1f}% · worst round-trip "
+                  f"{res.worst_trade_pct:+.1f}% · worst overnight gap while holding "
+                  f"{res.worst_hold_gap_pct:+.1f}%.")
+        md.append(f"\n**Read:** drawdown {'cut' if dd_cut>0 else 'NOT cut'} by "
+                  f"{dd_cut:+.1f} points vs buy-and-hold. {verdict}\n")
+        if show_trades and res.trips:
+            print(f"\n  Round-trips ({len(res.trips)}):")
+            print(f"  {'entry':<12}{'exit':<12}{'days':>5}{'return':>9} reason")
+            for t in res.trips[-40:]:
+                print(f"  {t.entry_date:<12}{t.exit_date:<12}{t.days_held:>5}"
+                      f"{t.return_pct:>8.1f}% {t.exit_reason}")
+
+    md.append("\n## How to read this\n"
+              "- The win here is NOT bigger returns — it's a **smoother ride**: "
+              "a smaller max drawdown and higher Sharpe (return per unit of risk) "
+              "while keeping most of the upside, because you sit in cash when the "
+              "trend breaks.\n- 'Worst overnight gap while holding' is your "
+              "exposure to a gold-style surprise. On a broad index it stays small; "
+              "that is the point of trading SPY, not a single commodity.\n"
+              "- Still backtest-only. Paper-trade before any real money.\n")
+    if any_data:
+        if out_dir not in (".", ""):
+            os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, "MTF_MODEL.md") if out_dir else "MTF_MODEL.md"
+        with open(path, "w") as fh:
+            fh.write("\n".join(md) + "\n")
+        print(f"\n  Wrote {path}. Backtest only — paper-trade before real money.")
+    else:
+        _warn_no_data(source, adapter)
+
+
+def _mtf_verdict(res) -> str:
+    """Plain-English judgement: did it deliver a smoother ride?"""
+    dd_better = res.strat_max_dd < res.bh_max_dd - 3
+    sharpe_better = res.strat_sharpe > res.bh_sharpe + 0.05
+    ret_ok = res.strat_cagr >= res.bh_cagr - 2  # within 2pts of buy-hold return
+    if dd_better and sharpe_better and ret_ok:
+        return ("SMOOTHER RIDE: lower drawdown AND better risk-adjusted return — "
+                "PAPER-TRACK candidate (not proven).")
+    if dd_better and sharpe_better:
+        return ("Lower drawdown and better Sharpe, but gives up some return — "
+                "a calmer ride for less upside. Worth paper-tracking.")
+    if dd_better:
+        return "Cuts drawdown but Sharpe not clearly better — mixed."
+    return "Does NOT beat buy-and-hold on a risk-adjusted basis here."
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -2113,6 +2220,19 @@ def main(argv: List[str] = None):
                      help="halt new trades the rest of a month once it is down "
                           "this many R (default 2; use 0 to disable)")
 
+    pmt = sub.add_parser("mtf",
+                         help="ONE-ticker multi-timeframe trend model vs buy-and-hold")
+    pmt.add_argument("--source", default="yahoo",
+                     choices=["synthetic", "csv", "polygon", "massive", "massive_files", "schwab", "stooq", "yahoo"])
+    pmt.add_argument("--ticker", action="append", dest="tickers", default=None,
+                     help="ticker to test (repeatable; default SPY)")
+    pmt.add_argument("--years", type=int, default=12)
+    pmt.add_argument("--atr-stop", type=float, default=3.0, dest="atr_stop",
+                     help="catastrophe stop in ATRs (0 disables; default 3)")
+    pmt.add_argument("--out-dir", default=".", dest="out_dir")
+    pmt.add_argument("--trades", action="store_true", dest="show_trades",
+                     help="print the round-trips")
+
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
     prp.add_argument("--source", default="stooq",
@@ -2176,6 +2296,10 @@ def main(argv: List[str] = None):
         _run_defensive(args.source, args.symbols, args.years, args.small_account,
                        args.etf_only, args.fast, args.only_setups, args.out_dir,
                        args.risk_pct, args.max_open, args.month_stop)
+        return
+    if args.cmd == "mtf":
+        _run_mtf(args.source, args.tickers or ["SPY"], args.years, args.atr_stop,
+                 args.out_dir, args.show_trades)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
