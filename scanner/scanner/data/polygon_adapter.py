@@ -68,9 +68,23 @@ class PolygonAdapter(DataAdapter):
                 time.sleep(backoff)
                 backoff *= 2
                 continue
+            # Surface the provider's OWN message on auth errors (a bare "401" is
+            # useless; Massive/Polygon return e.g. "Unknown API Key" or "not
+            # entitled to this data" which tells you exactly what to fix).
+            if resp.status_code in (401, 403):
+                try:
+                    msg = resp.json().get("message") or resp.text
+                except Exception:
+                    msg = resp.text
+                hint = ("Check the key is correct and ACTIVE on massive.com, and "
+                        "that your plan includes the Aggregates/REST endpoint. "
+                        "A brand-new free key can take a minute to activate.")
+                raise RuntimeError(
+                    f"{self.name} rejected the request ({resp.status_code}): "
+                    f"{str(msg)[:200]}\n  → {hint}")
             resp.raise_for_status()
             return resp.json()
-        raise RuntimeError(f"Polygon request failed after retries: {url}")
+        raise RuntimeError(f"{self.name} request failed after retries: {url}")
 
     def _cache_path(self, symbol, resolution, start, end) -> str:
         key = f"{symbol}_{resolution}_{start.date()}_{end.date()}.json"
