@@ -1363,6 +1363,198 @@ def _run_expectancy(source, years, in_path, since=None, risk_dollars=67.0,
           "holds up forward.")
 
 
+# --------------------------------------------------------------------------
+# Validate: full backtest-gate pass -> the 4 deliverables + plain answers.
+# --------------------------------------------------------------------------
+
+def _ticker_contrib(oos_trades):
+    """Per-ticker contribution rows from a family's OOS trades."""
+    if not oos_trades:
+        return [], None, 0.0
+    df = trades_to_frame(oos_trades)
+    df["symbol"] = df["symbol"].astype(str).str.upper()
+    total_pos = float(df.loc[df["realized_r"] > 0, "realized_r"].sum())
+    rows = []
+    for tkr, g in df.groupby("symbol"):
+        st = _grp_stats(g)
+        share = (max(st["total_r"], 0.0) / total_pos * 100) if total_pos > 0 else 0.0
+        rows.append(dict(ticker=tkr, n=st["n"], total_r=round(st["total_r"], 3),
+                         avg_r=round(st["exp"], 3), win_rate=round(st["win"], 3),
+                         pct_of_profit=round(share, 1)))
+    rows.sort(key=lambda r: -r["total_r"])
+    best = rows[0]["ticker"] if rows else None
+    best_share = rows[0]["pct_of_profit"] if rows else 0.0
+    return rows, best, best_share
+
+
+def _run_validate(source, n_symbols, years, small_account, etf_only, account,
+                  fast, only_setups, out_dir, timeframe=1):
+    """Run the full validation pass for the ETF swing setups and WRITE the
+    deliverables: BACKTEST_VALIDATION.md, concentration_report.csv,
+    paper_trade_candidates.csv, rejected_setups.csv. Backtest-only — proves
+    whether anything deserves PAPER trading. Never a live-trade green light."""
+    import os
+    cfg = PipelineConfig()
+    cfg.years = years
+    if fast:
+        cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
+    adapter = wrap_timeframe(get_adapter(source), timeframe)
+    as_of = pd.Timestamp.now("UTC").normalize()
+    universe = _edge_universe(adapter, as_of, small_account, etf_only, n_symbols)
+
+    print("=" * 78)
+    print("  BACKTEST VALIDATION — is there an edge worth PAPER trading? (not live)")
+    print("=" * 78)
+    print(f"  Source: {source}   Universe: {len(universe)} symbols   Years: {years}")
+    print("  Gates: 3R target · no look-ahead · next-open fills · gap-through-stop ·")
+    print("  100+ OOS trades · PF>=1.30 · stressed costs · concentration · placebo.")
+    print("=" * 78)
+
+    results = research(adapter, universe, cfg=cfg, as_of=as_of)
+    if only_setups:
+        results = {k: v for k, v in results.items() if k in only_setups}
+    reports = {r.family: r for r in edge_mod.build_reports(results, cfg)}
+
+    if results and all(r.oos_trades == 0 and r.is_trades == 0
+                       for r in reports.values()):
+        _warn_no_data(source, adapter)
+        return
+
+    candidates, rejected, conc_rows, rows_md = [], [], [], []
+    for name, res in results.items():
+        rep = reports.get(name)
+        oos = res.oos
+        n = oos.get("n_trades", 0)
+        target_r = oos.get("planned_target_r", float("nan"))
+        win = oos.get("win_rate")
+        exp = oos.get("expectancy_r")
+        pf = oos.get("profit_factor")
+        dd = oos.get("max_drawdown_r")
+        conc = res.concentration or {}
+        conc_pass = bool(conc.get("passes", False))
+        plac_pass = bool(res.placebo.get("passes", False)) if res.placebo else False
+        st = (res.cost_scenarios or {}).get(params.ACCEPTANCE_SCENARIO, {})
+        cost_ok = (st.get("expectancy_r", -1) > 0
+                   and st.get("profit_factor", 0) >= params.MIN_PROFIT_FACTOR)
+        hold = res.holdout.get("expectancy_r") if res.holdout.get("n_trades") else None
+        label = res.verdict.label
+        tickers, best_tkr, best_share = _ticker_contrib(res.oos_trades)
+        for t in tickers:
+            conc_rows.append({"setup": name, **t})
+
+        # classify
+        conc_driven = (not conc_pass) and best_tkr is not None and best_share >= 50
+        if n == 0:
+            status = "REJECTED — NO SAMPLE (no trades / no data)"
+        elif n < params.MIN_OOS_TRADES:
+            status = f"STATISTICALLY INCONCLUSIVE ({n} OOS < {params.MIN_OOS_TRADES})"
+        elif conc_driven:
+            status = (f"REJECTED — CONCENTRATION-DRIVEN ({best_tkr} = "
+                      f"{best_share:.0f}% of profit)")
+        elif label in (LABEL_ROBUST, LABEL_TENTATIVE):
+            status = "PAPER-TRADE CANDIDATE"
+        else:
+            why = "; ".join(res.verdict.reasons[:2]) or "failed a gate"
+            status = f"REJECTED — {why}"
+
+        row = {"setup": name, "status": status, "oos_trades": n,
+               "target_r": round(target_r, 2) if target_r == target_r else "",
+               "win_rate": round(win, 3) if win is not None else "",
+               "expectancy_r": round(exp, 3) if exp is not None else "",
+               "profit_factor": round(pf, 2) if pf not in (None, float("inf")) else "",
+               "max_dd_r": round(dd, 1) if dd is not None else "",
+               "concentration_pass": conc_pass, "placebo_pass": plac_pass,
+               "stressed_cost_pass": cost_ok,
+               "holdout_expectancy_r": round(hold, 3) if hold is not None else "",
+               "top_ticker": best_tkr or "", "top_ticker_pct": best_share}
+        rows_md.append(row)
+        (candidates if status == "PAPER-TRADE CANDIDATE" else rejected).append(row)
+
+    # ---- write deliverables ----
+    os.makedirs(out_dir, exist_ok=True) if out_dir not in (".", "") else None
+    def _p(fn):
+        return os.path.join(out_dir, fn) if out_dir else fn
+    pd.DataFrame(conc_rows).to_csv(_p("concentration_report.csv"), index=False)
+    pd.DataFrame(candidates).to_csv(_p("paper_trade_candidates.csv"), index=False)
+    pd.DataFrame(rejected).to_csv(_p("rejected_setups.csv"), index=False)
+    _write_validation_md(_p("BACKTEST_VALIDATION.md"), source, years, len(universe),
+                         rows_md, candidates)
+
+    # ---- print plain answers ----
+    print("\n## RESULT — by setup\n")
+    for r in sorted(rows_md, key=lambda x: (0 if x["status"] == "PAPER-TRADE CANDIDATE"
+                                            else 1, -(x["oos_trades"]))):
+        print(f"  {r['setup']:<28} {r['status']}")
+        if r["oos_trades"]:
+            print(f"      n={r['oos_trades']}  win={r['win_rate']}  "
+                  f"exp={r['expectancy_r']}R  PF={r['profit_factor']}  "
+                  f"maxDD={r['max_dd_r']}R  conc={'ok' if r['concentration_pass'] else 'FAIL'}"
+                  f"  cost={'ok' if r['stressed_cost_pass'] else 'FAIL'}"
+                  + (f"  top={r['top_ticker']} {r['top_ticker_pct']:.0f}%" if r['top_ticker'] else ""))
+    print("\n## ANSWERS")
+    rs = next((r for r in rows_md if r["setup"] == "relative_strength_breakout"), None)
+    ab = next((r for r in rows_md if r["setup"] == "accumulation_breakout"), None)
+    if rs:
+        print(f"  1. relative_strength_breakout: {rs['status']}")
+    if ab:
+        slv = ("YES" if "CONCENTRATION" in ab["status"] else "no")
+        print(f"  2. accumulation_breakout concentration-driven? {slv} "
+              f"(top {ab['top_ticker']} {ab['top_ticker_pct']:.0f}%) → {ab['status']}")
+    print(f"  3. Ready for PAPER trading only: "
+          + (", ".join(c["setup"] for c in candidates) if candidates else "NONE"))
+    print("  4. See per-setup win/exp/PF/DD/n above and in BACKTEST_VALIDATION.md.")
+    incon = [r["setup"] for r in rows_md if "INCONCLUSIVE" in r["status"]]
+    print(f"  5. Needs more data (inconclusive): "
+          + (", ".join(incon) if incon else "none"))
+    print(f"\n  Wrote: BACKTEST_VALIDATION.md, concentration_report.csv, "
+          f"paper_trade_candidates.csv, rejected_setups.csv"
+          + (f" (in {out_dir}/)" if out_dir else ""))
+    print("  Reminder: PAPER-TRADE CANDIDATE ≠ live. Paper-trade first; "
+          "0% real money until forward evidence.")
+
+
+def _write_validation_md(path, source, years, n_syms, rows, candidates):
+    L = []
+    L.append("# Backtest Validation Report\n")
+    L.append(f"- **Source:** {source}  |  **Universe:** {n_syms} symbols  |  "
+             f"**History:** {years}y")
+    L.append(f"- **Generated:** {pd.Timestamp.now('UTC').strftime('%Y-%m-%d %H:%M UTC')}")
+    L.append("- **Purpose:** prove whether any setup deserves *paper* trading. "
+             "This is NOT a live-trading green light.\n")
+    L.append("> Gates: target ≥ 3R · indicators on completed daily bars · entry at "
+             "next-day open · gap-through-stop = actual loss · conservative same-bar · "
+             "low/normal/stressed costs · ≥100 OOS trades · PF ≥ 1.30 · concentration "
+             "(drop-best ticker/month/quarter) · placebo · holdout.\n")
+    L.append("## Summary\n")
+    L.append("| Setup | Status | OOS | TgtR | Win% | Exp(R) | PF | MaxDD | Conc | Cost | Top ticker |")
+    L.append("|---|---|--:|--:|--:|--:|--:|--:|:--:|:--:|---|")
+    for r in rows:
+        win = f"{r['win_rate']*100:.0f}%" if r['win_rate'] != "" else "—"
+        L.append(f"| {r['setup']} | {r['status']} | {r['oos_trades']} | "
+                 f"{r['target_r']} | {win} | {r['expectancy_r']} | "
+                 f"{r['profit_factor']} | {r['max_dd_r']} | "
+                 f"{'✓' if r['concentration_pass'] else '✗'} | "
+                 f"{'✓' if r['stressed_cost_pass'] else '✗'} | "
+                 f"{r['top_ticker']} {r['top_ticker_pct']:.0f}% |")
+    L.append("\n## Paper-trade candidates\n")
+    if candidates:
+        for c in candidates:
+            L.append(f"- **{c['setup']}** — n={c['oos_trades']}, win="
+                     f"{c['win_rate']}, exp={c['expectancy_r']}R, PF={c['profit_factor']}, "
+                     f"maxDD={c['max_dd_r']}R. Forward-test on paper next; not live.")
+    else:
+        L.append("**NONE.** No setup cleared every gate. That is the scanner "
+                 "protecting you — not a failure. Re-run with more history/data.")
+    L.append("\n## Decision rule\n")
+    L.append("- No setup passes → no paper trade.\n- One passes → paper-trade only "
+             "that one.\n- Multiple pass → pick lower drawdown + better concentration."
+             "\n- Fails concentration → reject even if profit looks good.\n")
+    L.append("_Paper-trade a candidate before any real money; then a tiny live test; "
+             "then scale slowly only if it holds up._\n")
+    with open(path, "w") as fh:
+        fh.write("\n".join(L) + "\n")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1494,6 +1686,22 @@ def main(argv: List[str] = None):
     pm.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
     pm.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
 
+    pv = sub.add_parser("validate",
+                        help="full backtest-gate pass → BACKTEST_VALIDATION.md + CSVs")
+    pv.add_argument("--source", default="yahoo",
+                    choices=["synthetic", "csv", "polygon", "massive", "massive_files", "schwab", "stooq", "yahoo"])
+    pv.add_argument("--symbols", type=int, default=30)
+    pv.add_argument("--years", type=int, default=12)
+    pv.add_argument("--fast", action="store_true")
+    pv.add_argument("--etf-only", action="store_true", dest="etf_only")
+    pv.add_argument("--small-account", action="store_true", dest="small_account")
+    pv.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
+    pv.add_argument("--setup", action="append", dest="only_setups", default=None,
+                    help="restrict to a setup family (repeatable)")
+    pv.add_argument("--out-dir", default=".", dest="out_dir",
+                    help="directory to write the report + CSVs (default: here)")
+    pv.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
+
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
     prp.add_argument("--source", default="stooq",
@@ -1542,6 +1750,11 @@ def main(argv: List[str] = None):
     if args.cmd == "expectancy":
         _run_expectancy(args.source, args.years, args.in_path, args.since,
                         args.risk_dollars, args.only_setup, args.win)
+        return
+    if args.cmd == "validate":
+        _run_validate(args.source, args.symbols, args.years, args.small_account,
+                      args.etf_only, args.account, args.fast, args.only_setups,
+                      args.out_dir, args.timeframe)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
