@@ -228,6 +228,16 @@ def build_strategies(ma=200, band=0.015, mom=200):
     }
 
 
+def _avg_hold_days(pos):
+    """Average length (in trading days) of an IN-MARKET stretch — i.e. how long
+    you typically stay in a position before the rule flips you out."""
+    import itertools
+    vals = [v for v in pos.tolist() if isinstance(v, str)]
+    runs = [(k, len(list(g))) for k, g in itertools.groupby(vals)]
+    held = [n for k, n in runs if k in ("EQ", "BOND")]
+    return (sum(held) / len(held)) if held else 0.0
+
+
 def evaluate(eq, bond, args, label, idx=None, extra=None, strategies=None):
     e = eq if idx is None else eq.loc[idx]
     b = None if bond is None else bond.loc[bond.index.intersection(e.index)]
@@ -244,6 +254,9 @@ def evaluate(eq, bond, args, label, idx=None, extra=None, strategies=None):
         equity, n_tr, pin = run(pos, e, b, args.cash_yield, args.div_yield,
                                 args.bond_div_yield, args.cost_bps)
         m = metrics(equity, args.cash_yield)
+        m["trades_per_year"] = n_tr / yrs
+        m["pct_in_market"] = pin
+        m["avg_hold_days"] = _avg_hold_days(pos)
         rows[name] = m
         print(f"  {name:<18} {_fmt(m, n_tr, pin, yrs)}")
     # extra strategies supplied as precomputed daily-return series (e.g. rotation)
@@ -348,6 +361,35 @@ def main():
     _plain_bottom_line(oos)
 
 
+def _how_to_trade(label, m):
+    """Plain-English 'how you'd actually run this': instrument, how often you
+    trade, how long you hold. These timing rules are ETF swaps, NOT options."""
+    tpy = m.get("trades_per_year")
+    hold = m.get("avg_hold_days")
+    pin = m.get("pct_in_market")
+    print(f"\n     HOW YOU'D TRADE '{label}' (the practical details):")
+    print("       • What you trade: PLAIN ETF SHARES — buy/sell a fund "
+          "(e.g. SPLG for stocks, AGG for bonds, SGOV for cash). NO options.")
+    if tpy is not None:
+        permo = tpy / 12.0
+        unit = "time" if round(tpy) == 1 else "times"
+        if permo < 0.5:
+            freq = f"about {tpy:.0f} {unit} a YEAR (less than once a month)"
+        else:
+            freq = f"about {tpy:.0f} {unit} a year (~{permo:.1f} a month)"
+        print(f"       • How often you trade: {freq}. You CHECK once a month, "
+              "but only actually buy/sell when the signal flips.")
+    if hold:
+        months = hold / 21.0
+        print(f"       • How long you stay in: typically ~{months:.0f} month(s) "
+              f"per position (~{hold:.0f} trading days) before it flips you out.")
+    if pin is not None and pin == pin:
+        print(f"       • Time invested: about {pin:.0%} of the time in the market; "
+              "the rest you sit safely in cash/bonds (that's what dodges crashes).")
+    print("       • Effort: ~5 minutes, once a month. This is slow, low-stress "
+          "investing — the opposite of day-trading.")
+
+
 def _plain_bottom_line(oos):
     """Plain-English summary of the OUT-OF-SAMPLE results: what beat buy-and-hold,
     HOW it beat it, and what didn't — sorted so the best is on top."""
@@ -398,6 +440,7 @@ def _plain_bottom_line(oos):
         print(f"\n     BEST: '{_name(best[0])}' cut your worst crash from "
               f"{b_dd:.0f}% to {best[2]:.0f}% — that is how it beats buy-and-hold: "
               "less pain for similar gain.")
+        _how_to_trade(_name(best[0]), oos.get(best[0], {}))
     else:
         print("\n  ✅ Cleanly beat buy-and-hold: NONE this run. That's normal — "
               "don't force it.")
