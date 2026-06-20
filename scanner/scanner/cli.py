@@ -1928,7 +1928,8 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
-def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades):
+def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades,
+             exit_mode="slow"):
     """Single-ticker, multi-timeframe trend-alignment model vs buy-and-hold.
     Long/flat, never short, never leveraged. The goal is a SMOOTHER ride:
     keep most of the upside while cutting buy-and-hold's deep drawdowns."""
@@ -1937,26 +1938,35 @@ def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades):
     adapter = get_adapter(source)
     as_of = pd.Timestamp.now("UTC").normalize()
     stop = None if atr_stop == 0 else atr_stop
+    slow_exit = exit_mode == "slow"
 
     print("=" * 80)
     print("  ONE-TICKER MULTI-TIMEFRAME MODEL — only in when short/medium/long agree")
     print("=" * 80)
+    exit_desc = ("ENTER on 3-timeframe alignment, EXIT only when the 200-day "
+                 "trend breaks (patient — rides pullbacks)") if slow_exit else \
+                ("EXIT the moment alignment breaks (twitchy — whipsaws)")
     print(f"  Source: {source}   Tickers: {', '.join(tickers)}   Years: {years}")
+    print(f"  Rule: {exit_desc}.")
     print("  Long/flat only. Never short, never leveraged, never an overnight")
     print("  position that can gap to zero. Goal: smoother ride than buy-and-hold.")
     print("=" * 80)
 
     md = ["# One-Ticker Multi-Timeframe Trend-Alignment Model\n",
           f"- **Source:** {source} · **History:** {years}y · "
-          + (f"catastrophe stop: {stop}×ATR" if stop else "no ATR stop"),
-          "- Long/flat on ONE ticker; in only when 20-EMA, 50-SMA and 200-SMA "
-          "trends all agree. Compared head-to-head with buy-and-hold.\n",
+          + (f"catastrophe stop: {stop}×ATR" if stop else "no ATR stop")
+          + f" · exit: {'patient (200-day break)' if slow_exit else 'twitchy (any break)'}",
+          "- Long/flat on ONE ticker; ENTER only when 20-EMA, 50-SMA and 200-SMA "
+          "trends all agree. " + ("EXIT only when the 200-day trend breaks."
+          if slow_exit else "EXIT the moment any trend breaks.")
+          + " Compared head-to-head with buy-and-hold.\n",
           "> Next-open cost-adjusted fills, gap-through-stop = actual loss. "
           "**Not a live-trading green light.**\n"]
 
     any_data = False
     for ticker in tickers:
-        res = run_mtf(adapter, ticker, years=years, as_of=as_of, atr_stop_mult=stop)
+        res = run_mtf(adapter, ticker, years=years, as_of=as_of, atr_stop_mult=stop,
+                      slow_exit=slow_exit)
         if res is None:
             print(f"\n  [{ticker}] no data from {source}.")
             md.append(f"\n## {ticker}\n\n_No data from {source}._\n")
@@ -2227,8 +2237,12 @@ def main(argv: List[str] = None):
     pmt.add_argument("--ticker", action="append", dest="tickers", default=None,
                      help="ticker to test (repeatable; default SPY)")
     pmt.add_argument("--years", type=int, default=12)
-    pmt.add_argument("--atr-stop", type=float, default=3.0, dest="atr_stop",
-                     help="catastrophe stop in ATRs (0 disables; default 3)")
+    pmt.add_argument("--atr-stop", type=float, default=0.0, dest="atr_stop",
+                     help="catastrophe stop in ATRs (0 disables; default off)")
+    pmt.add_argument("--exit-mode", default="slow", choices=["slow", "any"],
+                     dest="exit_mode",
+                     help="slow = exit only on 200-day break (patient, default); "
+                          "any = exit when any timeframe breaks (whipsaws)")
     pmt.add_argument("--out-dir", default=".", dest="out_dir")
     pmt.add_argument("--trades", action="store_true", dest="show_trades",
                      help="print the round-trips")
@@ -2299,7 +2313,7 @@ def main(argv: List[str] = None):
         return
     if args.cmd == "mtf":
         _run_mtf(args.source, args.tickers or ["SPY"], args.years, args.atr_stop,
-                 args.out_dir, args.show_trades)
+                 args.out_dir, args.show_trades, args.exit_mode)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,

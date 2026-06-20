@@ -95,10 +95,17 @@ def run_mtf(adapter, ticker: str, years: int = 12,
             as_of: Optional[pd.Timestamp] = None,
             cost: Optional[CostModel] = None,
             atr_stop_mult: Optional[float] = 3.0,
+            slow_exit: bool = True,
             start_equity: float = 10_000.0) -> Optional[MTFResult]:
     """Backtest the long/flat multi-timeframe model on a single ticker and
     compare it to buy-and-hold. `atr_stop_mult=None` disables the catastrophe
-    stop (pure trend-break exits)."""
+    stop (pure trend-break exits).
+
+    Exit asymmetry (the anti-whipsaw fix):
+      * slow_exit=True  (default): ENTER only when all three timeframes align,
+        but EXIT only when the LONG-term trend breaks (close < 200-SMA). You
+        ride through normal pullbacks instead of getting chopped out on them.
+      * slow_exit=False: exit the moment alignment breaks (twitchy; whipsaws)."""
     as_of = as_of or pd.Timestamp.now("UTC").normalize()
     cost = cost or DEFAULT_COSTS
     start = as_of - pd.Timedelta(days=int(years * 365.25) + 300)
@@ -117,6 +124,8 @@ def run_mtf(adapter, ticker: str, years: int = 12,
     atr = df["atr14"].to_numpy()
     aligned = ((df["close"] > df["ema20"]) & (df["close"] > df["sma50"])
                & (df["close"] > df["sma200"])).to_numpy()
+    # the slow regime: stay long until the long-term trend itself breaks
+    regime_ok = (df["close"] > df["sma200"]).to_numpy()
     dates = df.index
 
     n = len(df)
@@ -129,9 +138,12 @@ def run_mtf(adapter, ticker: str, years: int = 12,
     equity_curve = np.empty(n)
     trips: List[RoundTrip] = []
     worst_hold_gap = 0.0
+    invested_days = 0
 
     for i in range(1, n):
-        target = bool(aligned[i - 1])      # decided on the prior completed bar
+        # decided on the PRIOR completed bar (no look-ahead)
+        entry_ok = bool(aligned[i - 1])                 # strict: all timeframes agree
+        stay_ok = bool(regime_ok[i - 1]) if slow_exit else entry_ok  # patient exit
 
         # --- catastrophe / gap protection while holding ---
         if pos == 1 and atr_stop_mult is not None:
@@ -156,14 +168,14 @@ def run_mtf(adapter, ticker: str, years: int = 12,
                 pos, shares = 0, 0.0
 
         # --- trend-driven entries/exits at this bar's open ---
-        if pos == 0 and target:
+        if pos == 0 and entry_ok:
             entry_price = cost.effective_entry(openp[i], True)
             shares = cash / entry_price
             entry_i = i
             stop_level = (openp[i] - atr_stop_mult * atr[i]) \
                 if atr_stop_mult is not None else -np.inf
             pos = 1
-        elif pos == 1 and not target:
+        elif pos == 1 and not stay_ok:
             exit_fill = cost.effective_exit(openp[i], True)
             cash = shares * exit_fill
             trips.append(RoundTrip(
@@ -177,6 +189,7 @@ def run_mtf(adapter, ticker: str, years: int = 12,
                 stop_level = max(stop_level, close[i] - atr_stop_mult * atr[i])
 
         equity_curve[i] = shares * close[i] if pos == 1 else cash
+        invested_days += pos
         if pos == 1 and i > entry_i:
             gap = (openp[i] - close[i - 1]) / close[i - 1]
             worst_hold_gap = min(worst_hold_gap, gap)
@@ -210,7 +223,7 @@ def run_mtf(adapter, ticker: str, years: int = 12,
         strat_cagr=((cash / start_equity) ** (1 / yrs) - 1.0) * 100.0 if yrs > 0 else 0.0,
         strat_max_dd=_max_dd(equity_curve) * 100.0,
         strat_vol=s_vol * 100.0, strat_sharpe=s_sharpe,
-        pct_time_invested=float(np.mean([1 if e else 0 for e in aligned]) * 100.0),
+        pct_time_invested=float(invested_days / max(n - 1, 1) * 100.0),
         n_trades=len(trips),
         win_rate=(len(wins) / len(trips) * 100.0) if trips else 0.0,
         avg_win_pct=float(np.mean([t.return_pct for t in wins])) if wins else 0.0,
