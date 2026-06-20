@@ -32,6 +32,9 @@ def get_adapter(source: Optional[str] = None, **kwargs) -> DataAdapter:
     if source == "stooq":
         from .stooq_adapter import StooqAdapter
         return StooqAdapter(**kwargs)
+    if source in ("yahoo", "yfinance"):
+        from .yahoo_adapter import YahooAdapter
+        return YahooAdapter(**kwargs)
     if source == "csv":
         from .csv_adapter import CSVAdapter
         root = kwargs.pop("root", None) or os.getenv("SCANNER_CSV_ROOT", "./data")
