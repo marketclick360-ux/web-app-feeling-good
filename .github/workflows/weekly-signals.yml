@@ -32,13 +32,21 @@ jobs:
           mkdir -p signals_out
           python -m scanner.cli mtf --signal --source yahoo \
             --ticker SPY  --ticker QQQ  --ticker DIA  --ticker IWM \
+            --ticker VTI  --ticker MDY  --ticker IWF  --ticker IWD \
             --ticker XLK  --ticker XLV  --ticker XLF  --ticker XLE \
             --ticker XLY  --ticker XLP  --ticker XLI  --ticker XLU \
-            --ticker XLB  --ticker XLRE --ticker SMH  --ticker GLD \
-            --ticker TLT  --ticker AAPL --ticker MSFT --ticker NVDA \
-            --ticker AMZN --ticker GOOGL --ticker META --ticker AVGO \
-            --ticker COST --ticker WMT  --ticker JPM  --ticker HD \
-            --ticker UNH  --ticker LLY \
+            --ticker XLB  --ticker XLRE --ticker XLC  --ticker SMH \
+            --ticker SOXX --ticker XBI  --ticker KRE  --ticker XOP \
+            --ticker ITB  --ticker EFA  --ticker EEM  --ticker TLT \
+            --ticker HYG  --ticker LQD  --ticker GLD  --ticker SLV \
+            --ticker AAPL --ticker MSFT --ticker NVDA --ticker AMZN \
+            --ticker GOOGL --ticker META --ticker AVGO --ticker TSLA \
+            --ticker NFLX --ticker AMD  --ticker CRM  --ticker ORCL \
+            --ticker ADBE --ticker QCOM --ticker TXN  --ticker COST \
+            --ticker WMT  --ticker JPM  --ticker BAC  --ticker V \
+            --ticker MA   --ticker UNH  --ticker LLY  --ticker HD \
+            --ticker MCD  --ticker KO   --ticker PEP  --ticker CAT \
+            --ticker DIS \
             --out-dir signals_out | tee signals_out/console.txt
       - name: Print the watchlist to the log
         run: |
