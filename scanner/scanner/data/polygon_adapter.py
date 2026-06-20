@@ -42,13 +42,15 @@ class PolygonAdapter(DataAdapter):
     survivorship_free = True  # delisted tickers remain queryable
 
     def __init__(self, api_key: Optional[str] = None, cache_dir: str = ".polygon_cache",
-                 max_retries: int = 4, pause: float = 0.25):
-        self.api_key = api_key or os.getenv("POLYGON_API_KEY")
+                 max_retries: int = 4, pause: float = 0.25,
+                 base_url: Optional[str] = None, key_env: str = "POLYGON_API_KEY"):
+        self.api_key = api_key or os.getenv(key_env)
         if not self.api_key:
             raise RuntimeError(
-                "POLYGON_API_KEY not set. Export it or pass api_key=. "
+                f"{key_env} not set. Export it or pass api_key=. "
                 "Alternatively use the csv or synthetic adapter (no key needed)."
             )
+        self.base = base_url or _BASE
         self.cache_dir = cache_dir
         self.max_retries = max_retries
         self.pause = pause
@@ -85,7 +87,7 @@ class PolygonAdapter(DataAdapter):
             with open(cache) as fh:
                 payload = json.load(fh)
         else:
-            url = (f"{_BASE}/v2/aggs/ticker/{symbol.upper()}/range/{mult}/{span}/"
+            url = (f"{self.base}/v2/aggs/ticker/{symbol.upper()}/range/{mult}/{span}/"
                    f"{start.date()}/{end.date()}")
             payload = self._get(url, {"adjusted": "true", "sort": "asc", "limit": 50000})
             with open(cache, "w") as fh:
@@ -110,7 +112,7 @@ class PolygonAdapter(DataAdapter):
 
     def is_tradable(self, symbol, as_of=None) -> bool:
         try:
-            info = self._get(f"{_BASE}/v3/reference/tickers/{symbol.upper()}", {})
+            info = self._get(f"{self.base}/v3/reference/tickers/{symbol.upper()}", {})
         except Exception:
             return False
         res = info.get("results", {})
@@ -119,3 +121,19 @@ class PolygonAdapter(DataAdapter):
         if as_of is not None and res.get("delisted_utc"):
             return as_of < pd.Timestamp(res["delisted_utc"])
         return bool(res.get("active", True))
+
+
+_MASSIVE_BASE = "https://api.massive.com"
+
+
+class MassiveAdapter(PolygonAdapter):
+    """Massive.com — the rebrand of Polygon.io. Identical REST API
+    (/v2/aggs/ticker/... with an apiKey query param); only the host differs.
+    Reads MASSIVE_API_KEY, falling back to POLYGON_API_KEY for old setups."""
+    name = "massive"
+
+    def __init__(self, api_key: Optional[str] = None,
+                 cache_dir: str = ".massive_cache", **kwargs):
+        key = api_key or os.getenv("MASSIVE_API_KEY") or os.getenv("POLYGON_API_KEY")
+        super().__init__(api_key=key, cache_dir=cache_dir,
+                         base_url=_MASSIVE_BASE, key_env="MASSIVE_API_KEY", **kwargs)

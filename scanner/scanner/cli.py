@@ -188,7 +188,7 @@ def _print_risk_controls(risk: RiskConfig):
 
 def _run(source: str, n_symbols: int, fast: bool, years: int = 10,
          etf_only: bool = False, timeframe: int = 1):
-    real = source in ("polygon", "csv", "schwab", "stooq")
+    real = source in ("polygon", "massive", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     if fast:
@@ -273,7 +273,7 @@ def _tradability_map(adapter, universe, as_of, account):
 
 def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account,
               timeframe=1):
-    real = source in ("polygon", "csv", "schwab", "stooq")
+    real = source in ("polygon", "massive", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     if fast:
@@ -506,7 +506,7 @@ _LOG_KEYS = ("date", "symbol", "setup", "direction")
 def _run_log(source, n_symbols, years, small_account, etf_only, account,
              backfill_days, out_path, timeframe=1):
     import os
-    real = source in ("polygon", "csv", "schwab", "stooq")
+    real = source in ("polygon", "massive", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     adapter = wrap_timeframe(get_adapter(source), timeframe)
@@ -658,7 +658,7 @@ def _journal_timeframe(rows) -> int:
 def _run_review(source, years, in_path, out_path, since=None, only_setup=None,
                 by="setup", show_trades=False):
     import os
-    real = source in ("polygon", "csv", "schwab", "stooq")
+    real = source in ("polygon", "massive", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     as_of = pd.Timestamp.now("UTC").normalize()
@@ -825,7 +825,7 @@ def _run_concentration(source, years, in_path, out_path, since=None,
     or carried by a single ticker (e.g. SLV) or a single hot period?
     """
     import os
-    real = source in ("polygon", "csv", "schwab", "stooq")
+    real = source in ("polygon", "massive", "csv", "schwab", "stooq")
     cfg = PipelineConfig()
     cfg.years = years
     as_of = pd.Timestamp.now("UTC").normalize()
@@ -1198,7 +1198,7 @@ def main(argv: List[str] = None):
     for cmd in ("demo", "research", "scan"):
         p = sub.add_parser(cmd)
         p.add_argument("--source", default="synthetic" if cmd == "demo" else None,
-                       choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                       choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
         p.add_argument("--symbols", type=int, default=20,
                        help="number of candidate symbols to scan")
         p.add_argument("--years", type=int, default=10,
@@ -1214,7 +1214,7 @@ def main(argv: List[str] = None):
     pe = sub.add_parser("edge", help="validate setup families, grade, bucket, "
                                      "then surface current candidates")
     pe.add_argument("--source", default="stooq",
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
     pe.add_argument("--symbols", type=int, default=30)
     pe.add_argument("--years", type=int, default=12)
     pe.add_argument("--fast", action="store_true")
@@ -1228,7 +1228,7 @@ def main(argv: List[str] = None):
 
     pl = sub.add_parser("log", help="backfill + append a paper signal journal (CSV)")
     pl.add_argument("--source", default="stooq",
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
     pl.add_argument("--symbols", type=int, default=30)
     pl.add_argument("--years", type=int, default=3,
                     help="history depth for indicator warmup")
@@ -1245,7 +1245,7 @@ def main(argv: List[str] = None):
 
     pr = sub.add_parser("review", help="score how logged paper candidates played out")
     pr.add_argument("--source", default="stooq",
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
     pr.add_argument("--years", type=int, default=3)
     pr.add_argument("--in", default="signal_log.csv", dest="in_path",
                     help="journal CSV to review")
@@ -1265,7 +1265,7 @@ def main(argv: List[str] = None):
     pc = sub.add_parser("concentration",
                         help="is a setup a broad edge, or one ticker / one rally?")
     pc.add_argument("--source", default="stooq",
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
     pc.add_argument("--years", type=int, default=12)
     pc.add_argument("--in", default="signal_log.csv", dest="in_path",
                     help="journal CSV to analyze")
@@ -1281,7 +1281,7 @@ def main(argv: List[str] = None):
     pp = sub.add_parser("plan",
                         help="dates, time-to-next-signal, money required, highlights")
     pp.add_argument("--source", default="stooq",
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
     pp.add_argument("--years", type=int, default=3)
     pp.add_argument("--in", default="signal_log.csv", dest="in_path",
                     help="journal CSV to plan from")
@@ -1297,7 +1297,7 @@ def main(argv: List[str] = None):
     pm = sub.add_parser("compare",
                         help="run the backtest on two data feeds; trust what passes BOTH")
     pm.add_argument("--sources", nargs="+", default=["stooq", "polygon"],
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"],
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"],
                     help="two or more data feeds to cross-check (default: stooq polygon)")
     pm.add_argument("--symbols", type=int, default=30)
     pm.add_argument("--years", type=int, default=4)

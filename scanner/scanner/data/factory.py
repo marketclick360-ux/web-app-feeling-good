@@ -20,6 +20,9 @@ def get_adapter(source: Optional[str] = None, **kwargs) -> DataAdapter:
     if source == "polygon":
         from .polygon_adapter import PolygonAdapter
         return PolygonAdapter(**kwargs)
+    if source == "massive":
+        from .polygon_adapter import MassiveAdapter
+        return MassiveAdapter(**kwargs)
     if source == "schwab":
         from .schwab_adapter import SchwabAdapter
         return SchwabAdapter(**kwargs)

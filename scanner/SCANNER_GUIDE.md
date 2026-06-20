@@ -117,7 +117,13 @@ GLD  long  volume_breakout 161.08 158.91          1.3%   161.08 157.99 170.35  8
 |---|---|---|---|---|
 | **stooq** | Free | No | 0 min (default) | Backtesting |
 | **schwab** | Free | Yes | keys + token.json | Live signals |
-| **polygon** | Free tier | Yes (1 key) | ~5 min | 2nd opinion (use `--years 2`) |
+| **massive** | Free tier | Yes (1 key) | ~5 min | 2nd opinion (Polygon's new name) |
+| **polygon** | Free tier | Yes (1 key) | ~5 min | same as massive, old address |
+
+**Massive = Polygon.** Polygon.io rebranded to **Massive** (massive.com). Same API,
+same key. Use `--source massive` and set your key once:
+`echo 'export MASSIVE_API_KEY=your_key' >> ~/.zshrc`, then `source ~/.zshrc`.
+Two-feed cross-check: `compare --sources stooq massive`.
 
 ---
 
