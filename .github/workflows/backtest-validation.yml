@@ -1,0 +1,54 @@
+name: backtest-validation
+
+# Runs the FULL backtest-gate validation on REAL data (Yahoo by default) on a
+# GitHub-hosted runner, which has internet access — so you can get your
+# BACKTEST_VALIDATION.md without a local terminal. Trigger it from the Actions
+# tab ("Run workflow") or it can be triggered via the API. The report is
+# printed to the log AND uploaded as a downloadable artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Data source"
+        default: "yahoo"
+        type: choice
+        options: ["yahoo", "stooq"]
+      years:
+        description: "Years of history"
+        default: "12"
+      symbols:
+        description: "Number of symbols"
+        default: "30"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scanner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps (+ yfinance for the Yahoo source)
+        run: pip install -r requirements.txt yfinance
+      - name: Run backtest validation on real data
+        run: |
+          python -m scanner.cli validate \
+            --source "${{ github.event.inputs.source }}" \
+            --years "${{ github.event.inputs.years }}" \
+            --symbols "${{ github.event.inputs.symbols }}" \
+            --small-account --etf-only --fast \
+            --out-dir validation_out | tee validation_out_console.txt
+      - name: Print the report to the log
+        run: |
+          echo "==================== BACKTEST_VALIDATION.md ===================="
+          cat validation_out/BACKTEST_VALIDATION.md || echo "(no report written)"
+      - name: Upload report + CSVs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-validation
+          path: scanner/validation_out/
