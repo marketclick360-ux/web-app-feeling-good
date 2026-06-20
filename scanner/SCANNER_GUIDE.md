@@ -134,6 +134,35 @@ Two-feed cross-check: `compare --sources stooq massive`.
 
 ---
 
+## 6b. Beat buy-and-hold (the `beat_spy.py` tool)
+This is the tool for your "beat buy-and-hold" goal. It compares simple low-risk
+rules against just holding SPY, and shows **in-sample AND out-of-sample** so a
+tweak that only works on old data is exposed.
+```
+python3 beat_spy.py --source massive --equity SPLG --years 12
+```
+**Tweak the knobs and re-run** (then look ONLY at the OUT-OF-SAMPLE block):
+```
+python3 beat_spy.py --source massive --years 12 --ma 150 --buffer 3 --mom 150
+```
+- `--ma` = moving-average length (200 default; try 150 / 250)
+- `--buffer` = % cushion before switching (cuts whipsaws)
+- `--mom` = momentum lookback in days
+
+**How to read it — the honest definition of "beat":**
+- **MaxDD** (max drawdown) = the worst crash. **Smaller = better.**
+- **Calmar** = return per unit of crash. **Higher = better.**
+- Beating SPY on **raw return** is rare and usually luck. Beating it on
+  **drawdown / Calmar** (a smoother ride) is the achievable, real win — exactly
+  the "low-risk, small-account" goal.
+- **Trust only what still looks good in the OUT-OF-SAMPLE block.** If a setting
+  wins in-sample but loses out-of-sample, you curve-fit it — throw it out.
+
+Today's in-or-out signal (check monthly, act only when it flips):
+```
+python3 beat_spy.py --source massive --equity SPLG --signal
+```
+
 ## 7. Golden rules
 1. Backtest first. Always.
 2. Trust only what passes **two feeds** (`compare`).

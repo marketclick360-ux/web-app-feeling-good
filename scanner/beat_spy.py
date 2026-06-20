@@ -59,19 +59,19 @@ def strat_buy_hold(eq, bond):
     return pd.Series("EQ", index=eq.index)
 
 
-def strat_200d_timing(eq, bond):
-    sma = eq["close"].rolling(200).mean()
+def strat_200d_timing(eq, bond, ma=200):
+    sma = eq["close"].rolling(ma).mean()
     pos = pd.Series("CASH", index=eq.index)
     pos[eq["close"] > sma] = "EQ"
     return _month_end_ffill(pos)
 
 
-def strat_200d_buffer(eq, bond, band=0.015):
+def strat_200d_buffer(eq, bond, band=0.015, ma=200):
     """200-day timing with a confirmation BUFFER + hysteresis: only go to cash
     when price is band% BELOW the MA, only re-enter when band% ABOVE it; hold
     the prior state in the dead zone. This cuts the whipsaws that hurt the plain
     200-day rule in choppy markets."""
-    sma = eq["close"].rolling(200).mean()
+    sma = eq["close"].rolling(ma).mean()
     pos, cur = [], "CASH"
     for c, m in zip(eq["close"], sma):
         if m != m:                       # NaN warmup
@@ -91,10 +91,10 @@ def strat_abs_momentum(eq, bond, lookback=200):
     return _month_end_ffill(pos)
 
 
-def strat_spy_or_bonds(eq, bond):
+def strat_spy_or_bonds(eq, bond, ma=200):
     if bond is None:
         return None
-    sma = eq["close"].rolling(200).mean()
+    sma = eq["close"].rolling(ma).mean()
     pos = pd.Series("BOND", index=eq.index)
     pos[eq["close"] > sma] = "EQ"
     return _month_end_ffill(pos)
@@ -214,7 +214,21 @@ def sector_rotation_returns(basket, index, lookback=126, top_n=3,
     return daily
 
 
-def evaluate(eq, bond, args, label, idx=None, extra=None):
+def build_strategies(ma=200, band=0.015, mom=200):
+    """Assemble the strategy set with the chosen knobs so they're tweakable
+    from the command line (MA length, buffer %, momentum lookback)."""
+    from functools import partial
+    return {
+        "buy_hold_SPY": strat_buy_hold,
+        f"SPY_{ma}d_timing": partial(strat_200d_timing, ma=ma),
+        f"SPY_{ma}d_buffer": partial(strat_200d_buffer, band=band, ma=ma),
+        f"SPY_abs_momentum": partial(strat_abs_momentum, lookback=mom),
+        f"SPY_or_BONDS": partial(strat_spy_or_bonds, ma=ma),
+        "dual_momentum": partial(strat_dual_momentum, lookback=mom),
+    }
+
+
+def evaluate(eq, bond, args, label, idx=None, extra=None, strategies=None):
     e = eq if idx is None else eq.loc[idx]
     b = None if bond is None else bond.loc[bond.index.intersection(e.index)]
     yrs = max((len(e) - 1) / TRADING_DAYS, 1e-9)
@@ -223,7 +237,7 @@ def evaluate(eq, bond, args, label, idx=None, extra=None):
           f"{'Calmar':>6} {'TotRet':>9} {'tr/yr':>6} {'%inMkt':>6}")
     print("  " + "-" * 74)
     rows = {}
-    for name, fn in STRATEGIES.items():
+    for name, fn in (strategies or STRATEGIES).items():
         pos = fn(e, b)
         if pos is None:
             continue
@@ -245,10 +259,17 @@ def evaluate(eq, bond, args, label, idx=None, extra=None):
 def main():
     ap = argparse.ArgumentParser(description="Compare low-risk strategies vs SPY buy-and-hold")
     ap.add_argument("--source", default="synthetic",
-                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
     ap.add_argument("--equity", default="SPY")
     ap.add_argument("--bond", default="AGG")
     ap.add_argument("--years", type=int, default=12)
+    ap.add_argument("--ma", type=int, default=200,
+                    help="moving-average length for the timing rules (default 200; "
+                         "try 150 or 250 — judge on OUT-OF-SAMPLE, not in-sample)")
+    ap.add_argument("--buffer", type=float, default=1.5,
+                    help="buffer %% around the MA before switching (default 1.5)")
+    ap.add_argument("--mom", type=int, default=200,
+                    help="momentum lookback in days for the momentum rules (default 200)")
     ap.add_argument("--cash-yield", type=float, default=0.04, dest="cash_yield",
                     help="annual T-bill/cash yield earned when out of the market")
     ap.add_argument("--div-yield", type=float, default=0.017, dest="div_yield",
@@ -313,14 +334,15 @@ def main():
         extra["sector_rotation"] = rot
         print(f"  Sector rotation: top-3 of {len(basket)} sector ETFs by 6-mo momentum")
 
-    full = evaluate(eq, bond, args, "FULL PERIOD", extra=extra)
+    strategies = build_strategies(ma=args.ma, band=args.buffer / 100.0, mom=args.mom)
+    full = evaluate(eq, bond, args, "FULL PERIOD", extra=extra, strategies=strategies)
 
     # in-sample / out-of-sample split (first 60% / last 40%)
     split = eq.index[int(len(eq) * 0.6)]
     evaluate(eq, bond, args, "IN-SAMPLE (first 60%)",
-             idx=eq.index[eq.index <= split], extra=extra)
+             idx=eq.index[eq.index <= split], extra=extra, strategies=strategies)
     oos = evaluate(eq, bond, args, "OUT-OF-SAMPLE (last 40%)",
-                   idx=eq.index[eq.index > split], extra=extra)
+                   idx=eq.index[eq.index > split], extra=extra, strategies=strategies)
 
     # honest verdict
     print("\n" + "=" * 80)
