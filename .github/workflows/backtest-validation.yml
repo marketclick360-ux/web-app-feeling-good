@@ -24,6 +24,7 @@ on:
   # Also runs whenever THIS workflow file changes — so editing it kicks off a
   # fresh validation run (handy when workflow_dispatch isn't available on a
   # feature branch). Other commits do NOT trigger it.
+  # (re-trigger: mtf v2 patient/slow-exit run)
   push:
     paths:
       - '.github/workflows/backtest-validation.yml'
