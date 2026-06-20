@@ -269,6 +269,140 @@ def evaluate(eq, bond, args, label, idx=None, extra=None, strategies=None):
     return rows
 
 
+def _alloc_action(alloc, args):
+    if alloc == "EQ":
+        return f"IN — hold {args.equity} (stocks)", "✅"
+    if alloc == "BOND":
+        return f"DEFENSIVE — hold {args.bond} (bonds)", "🟡"
+    return "OUT — hold cash (e.g. SGOV)", "🛑"
+
+
+def _raw_daily(key, eq, bond, args):
+    """Daily in/out (EQ|BOND|CASH) from each rule's LATEST reading — no monthly
+    smoothing — so the live signal reflects today's actual price, not a stale
+    month-end decision."""
+    c = eq["close"]
+    if key in ("200d_timing", "spy_or_bonds"):
+        sma = c.rolling(args.ma).mean()
+        alt = "CASH" if key == "200d_timing" else "BOND"
+        return pd.Series(np.where(c > sma, "EQ", alt), index=c.index)
+    if key == "200d_buffer":
+        sma = c.rolling(args.ma).mean()
+        band = args.buffer / 100.0
+        out, cur = [], "CASH"
+        for px, m in zip(c, sma):
+            if m != m:
+                cur = "CASH"
+            elif px > m * (1 + band):
+                cur = "EQ"
+            elif px < m * (1 - band):
+                cur = "CASH"
+            out.append(cur)
+        return pd.Series(out, index=c.index)
+    if key == "abs_momentum":
+        r = c / c.shift(args.mom) - 1
+        return pd.Series(np.where(r > 0, "EQ", "CASH"), index=c.index)
+    if key == "dual_momentum":
+        if bond is None:
+            return None
+        bc = bond["close"].reindex(c.index).ffill()
+        em = c / c.shift(args.mom) - 1
+        bm = bc / bc.shift(args.mom) - 1
+        choose_eq = (em > 0) & (em >= bm)
+        choose_bond = (~choose_eq) & (bm > 0)
+        return pd.Series(np.where(choose_eq, "EQ", np.where(choose_bond, "BOND", "CASH")),
+                         index=c.index)
+    return None
+
+
+def _one_signal(key, eq, bond, args):
+    """Compute ONE strategy's CURRENT allocation (from the latest close) + the
+    exact rule and numbers it used, and whether it flipped since last month."""
+    raw = _raw_daily(key, eq, bond, args)
+    if raw is None:
+        return None
+    c = eq["close"]
+    close = float(c.iloc[-1])
+    last_bar = eq.index[-1].date()
+
+    if key in ("200d_timing", "200d_buffer", "spy_or_bonds"):
+        sma = float(c.rolling(args.ma).mean().iloc[-1])
+        pct = (close / sma - 1) * 100
+        detail = f"close ${close:,.2f}  vs  {args.ma}-day avg ${sma:,.2f}  ({pct:+.1f}%)"
+        if key == "200d_timing":
+            rule = f"{args.equity} close vs its {args.ma}-day moving average"
+        elif key == "200d_buffer":
+            rule = (f"{args.equity} vs {args.ma}-day MA with a ±{args.buffer:.1f}% "
+                    "buffer (only flips once it clears the buffer)")
+        else:
+            rule = (f"hold {args.equity} when above its {args.ma}-day MA, "
+                    f"else {args.bond} (bonds)")
+    elif key == "abs_momentum":
+        prev = float(c.shift(args.mom).iloc[-1])
+        ret = (close / prev - 1) * 100 if prev else float("nan")
+        rule = (f"{args.equity}'s return over the last {args.mom} trading days "
+                "vs 0% (go to cash if negative)")
+        detail = f"{args.mom}-day return {ret:+.1f}%   (threshold 0% = cash)"
+    elif key == "dual_momentum":
+        bc = bond["close"].reindex(eq.index).ffill()
+        em = (close / float(c.shift(args.mom).iloc[-1]) - 1) * 100
+        bm = (float(bc.iloc[-1]) / float(bc.shift(args.mom).iloc[-1]) - 1) * 100
+        win = (args.equity if (em > 0 and em >= bm)
+               else (args.bond if bm > 0 else "cash"))
+        rule = (f"hold the STRONGER of {args.equity}/{args.bond} by {args.mom}-day "
+                "momentum, if it's positive (else cash)")
+        detail = (f"{args.equity} {em:+.1f}%  vs  {args.bond} {bm:+.1f}%  "
+                  f"→ current winner: {win}")
+    else:
+        return None
+
+    alloc = str(raw.iloc[-1])
+    me = raw.resample("ME").last().dropna()
+    changed = bool(len(me) >= 2 and me.iloc[-1] != me.iloc[-2])
+    return dict(key=key, alloc=alloc, rule=rule, detail=detail,
+                last_bar=last_bar, changed=changed)
+
+
+def _print_signal_report(keys, eq, bond, args):
+    nxt = pd.Timestamp(eq.index[-1]).tz_localize(None) + pd.offsets.MonthBegin(1)
+    while nxt.weekday() >= 5:
+        nxt += pd.Timedelta(days=1)
+    print("=" * 66)
+    print(f"  MONTHLY SIGNAL(S) — {args.equity}   (as of last close "
+          f"{eq.index[-1].date()})")
+    print("=" * 66)
+    print("  ⚠ These are ETF TIMING / REGIME signals (in-market vs defensive),")
+    print("    NOT 3R trade setups. Paper-trade first; history, not the future.")
+    sigs = []
+    for k in keys:
+        s = _one_signal(k, eq, bond, args)
+        if s is None:
+            continue
+        sigs.append(s)
+        action, icon = _alloc_action(s["alloc"], args)
+        flip = "  ⟳ CHANGED since last month — ACT" if s["changed"] else \
+               "  (no change — do nothing)"
+        print("\n  " + "-" * 62)
+        print(f"  {icon} {s['key']:<14}  →  {action}{flip}")
+        print(f"     rule : {s['rule']}")
+        print(f"     now  : {s['detail']}")
+    print("\n  " + "-" * 62)
+    if len(sigs) > 1:
+        ineq = [s["key"] for s in sigs if s["alloc"] == "EQ"]
+        n_on = len(ineq)
+        if n_on == len(sigs):
+            print("  GREEN LIGHT: every strategy is risk-ON (in stocks). Cleanest signal.")
+        elif n_on == 0:
+            print("  RED LIGHT: every strategy is DEFENSIVE/cash. Stay out.")
+        else:
+            print(f"  MIXED: {n_on}/{len(sigs)} say risk-ON. Be cautious — they "
+                  "disagree, so the trend is borderline.")
+    print(f"  Next check: ~{nxt.date()} (about a month out). Only ACT when a "
+          "signal flips.")
+    print("  Reminder: the backtest's best framework was abs_momentum, but "
+          "200d_timing is the steadier defensive overlay — watch them together.")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Compare low-risk strategies vs SPY buy-and-hold")
     ap.add_argument("--source", default="synthetic",
@@ -292,7 +426,12 @@ def main():
     ap.add_argument("--cost-bps", type=float, default=5.0, dest="cost_bps",
                     help="per-switch cost (spread+slippage+commission), bps")
     ap.add_argument("--signal", action="store_true",
-                    help="just print today's 200-day timing signal (monthly check)")
+                    help="print today's timing signal(s) for the monthly check")
+    ap.add_argument("--strategy", default=None,
+                    choices=["200d_timing", "200d_buffer", "abs_momentum",
+                             "dual_momentum", "spy_or_bonds", "all"],
+                    help="which strategy's signal to show (default 200d_timing); "
+                         "'all' shows every strategy side by side")
     args = ap.parse_args()
 
     adapter = get_adapter(args.source)
@@ -304,27 +443,13 @@ def main():
             raise SystemExit(
             f"\n  No price data for {args.equity} from {args.source}.\n"
             f"  • {args.source} may not carry that ticker. Try a common one:\n"
-            f"      python3 beat_spy.py --source stooq --equity SPY --years 12\n"
-            f"  • or use your Massive key:  --source massive --equity SPLG\n")
-        close = float(eq["close"].iloc[-1])
-        sma200 = float(eq["close"].rolling(200).mean().iloc[-1])
-        pct = (close / sma200 - 1) * 100
-        in_mkt = close > sma200
-        print("=" * 60)
-        print(f"  200-DAY TIMING SIGNAL — {args.equity}")
-        print(f"  as of last close {eq.index[-1].date()}")
-        print("=" * 60)
-        print(f"  Close:        ${close:,.2f}")
-        print(f"  200-day avg:  ${sma200:,.2f}")
-        print(f"  Distance:     {pct:+.1f}%  ({'ABOVE' if in_mkt else 'BELOW'})")
-        print("-" * 60)
-        if in_mkt:
-            print(f"  ✅ SIGNAL: IN THE MARKET — hold {args.equity}")
-        else:
-            print(f"  🛑 SIGNAL: OUT — hold cash / T-bill ETF (e.g. SGOV)")
-        print("-" * 60)
-        print("  Check once a month. Only act when the signal FLIPS.")
-        print("  (Paper-trade first. This estimates history, not the future.)")
+            f"      python3 beat_spy.py --source yahoo --equity SPY\n")
+        bond = load(adapter, args.bond, max(args.years, 2), as_of)
+        keys = (["200d_timing", "200d_buffer", "abs_momentum",
+                 "dual_momentum", "spy_or_bonds"]
+                if args.strategy == "all"
+                else [args.strategy or "200d_timing"])
+        _print_signal_report(keys, eq, bond, args)
         return
 
     eq = load(adapter, args.equity, args.years, as_of)
