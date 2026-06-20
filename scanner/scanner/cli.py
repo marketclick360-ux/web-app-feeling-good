@@ -395,6 +395,111 @@ def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account,
           "Paper-trade first; size 0% → 0.25% only after forward evidence.")
 
 
+def _edge_universe(adapter, as_of, small_account, etf_only, n_symbols):
+    """Same universe selection edge uses, factored so compare can reuse it."""
+    if small_account:
+        ucfg = small_account_config()
+        pool = small_account_etf_candidates() if etf_only else \
+            (small_account_etf_candidates() + default_candidates())
+    else:
+        ucfg = UniverseConfig()
+        pool = etf_candidates() if etf_only else default_candidates()
+    candidates = pool[:n_symbols]
+    try:
+        universe = filter_universe(adapter, as_of, ucfg, candidates)
+    except Exception as exc:
+        print(f"[universe] filter failed ({exc}); using raw candidates")
+        universe = candidates
+    return universe or candidates
+
+
+def _run_compare(sources, n_symbols, fast, years, small_account, etf_only,
+                 account, timeframe=1):
+    """Run the SAME backtest + validation on two (or more) independent data
+    sources and show the grades side by side. A setup that passes on BOTH feeds
+    is far more likely to be a real edge than a one-source data quirk."""
+    cfg = PipelineConfig()
+    cfg.years = years
+    if fast:
+        cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    print("=" * 78)
+    print("  CROSS-CHECK — same backtest on two data feeds (agreement = trust)")
+    print("=" * 78)
+    print(f"  Sources: {', '.join(sources)}   Years: {years}   "
+          f"{'small-account ' if small_account else ''}"
+          f"{'ETF-only' if etf_only else 'all'}")
+    print("  A setup graded A/B on BOTH feeds is a real candidate. Passing on only")
+    print("  one feed is a red flag (a data artifact, not an edge). HYPOTHETICAL.")
+    print("=" * 78)
+
+    # family -> {source: EdgeReport}
+    by_family = {}
+    ok_sources = []
+    for src in sources:
+        try:
+            adapter = wrap_timeframe(get_adapter(src), timeframe)
+            universe = _edge_universe(adapter, as_of, small_account, etf_only,
+                                      n_symbols)
+            print(f"\n  [{src}] backtesting {len(universe)} symbols…")
+            results = research(adapter, universe, cfg=cfg, as_of=as_of)
+            reports = edge_mod.build_reports(results, cfg)
+        except Exception as exc:
+            print(f"  [{src}] UNAVAILABLE — {exc}")
+            continue
+        ok_sources.append(src)
+        for r in reports:
+            by_family.setdefault(r.family, {})[src] = r
+
+    if len(ok_sources) < 2:
+        print("\n  Need at least TWO working sources to cross-check. "
+              "Fix the unavailable one (e.g. set POLYGON_API_KEY) and re-run.")
+        return
+
+    def _passed(rep):
+        return rep is not None and rep.bucket.split(".")[0] in ("A", "B")
+
+    print("\n  SIDE-BY-SIDE (grade · OOS trades):")
+    head = f"  {'family':<28}" + "".join(f"{s:<16}" for s in ok_sources) + "verdict"
+    print(head)
+    print("  " + "-" * (len(head)))
+    rows_sorted = sorted(by_family.items(),
+                         key=lambda kv: -sum(_passed(kv[1].get(s)) for s in ok_sources))
+    confirmed = []
+    for fam, per in rows_sorted:
+        cells = ""
+        passes = 0
+        for s in ok_sources:
+            rep = per.get(s)
+            if rep is None:
+                cells += f"{'—':<16}"
+            else:
+                g = rep.grade
+                n = rep.oos_trades
+                cells += f"{g + ' n=' + str(n):<16}"
+                passes += int(_passed(rep))
+        if passes == len(ok_sources):
+            verdict = "✅ BOTH — candidate"
+            confirmed.append(fam)
+        elif passes > 0:
+            only = [s for s in ok_sources if _passed(per.get(s))]
+            verdict = f"⚠ only {', '.join(only)}"
+        else:
+            verdict = "— rejected by both"
+        print(f"  {fam:<28}{cells}{verdict}")
+
+    print("\n  VERDICT")
+    if confirmed:
+        print(f"    Confirmed on ALL feeds (worth forward-testing): "
+              f"{', '.join(confirmed)}")
+    else:
+        print("    No setup passed on every feed. Nothing is cross-confirmed — "
+              "do NOT forward-test a one-feed result.")
+    print("    Reminder: agreement raises confidence, it does not prove profit. "
+          "Forward-test on paper before any real money.")
+
+
 _LOG_KEYS = ("date", "symbol", "setup", "direction")
 
 
@@ -1108,7 +1213,7 @@ def main(argv: List[str] = None):
 
     pe = sub.add_parser("edge", help="validate setup families, grade, bucket, "
                                      "then surface current candidates")
-    pe.add_argument("--source", default="synthetic",
+    pe.add_argument("--source", default="stooq",
                     choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
     pe.add_argument("--symbols", type=int, default=30)
     pe.add_argument("--years", type=int, default=12)
@@ -1122,7 +1227,7 @@ def main(argv: List[str] = None):
                     help="candle size in trading days (1=daily, 2=two-day)")
 
     pl = sub.add_parser("log", help="backfill + append a paper signal journal (CSV)")
-    pl.add_argument("--source", default="synthetic",
+    pl.add_argument("--source", default="stooq",
                     choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
     pl.add_argument("--symbols", type=int, default=30)
     pl.add_argument("--years", type=int, default=3,
@@ -1139,7 +1244,7 @@ def main(argv: List[str] = None):
                          "Recorded in the journal so review/concentration match it.")
 
     pr = sub.add_parser("review", help="score how logged paper candidates played out")
-    pr.add_argument("--source", default="synthetic",
+    pr.add_argument("--source", default="stooq",
                     choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
     pr.add_argument("--years", type=int, default=3)
     pr.add_argument("--in", default="signal_log.csv", dest="in_path",
@@ -1159,7 +1264,7 @@ def main(argv: List[str] = None):
 
     pc = sub.add_parser("concentration",
                         help="is a setup a broad edge, or one ticker / one rally?")
-    pc.add_argument("--source", default="synthetic",
+    pc.add_argument("--source", default="stooq",
                     choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
     pc.add_argument("--years", type=int, default=12)
     pc.add_argument("--in", default="signal_log.csv", dest="in_path",
@@ -1175,7 +1280,7 @@ def main(argv: List[str] = None):
 
     pp = sub.add_parser("plan",
                         help="dates, time-to-next-signal, money required, highlights")
-    pp.add_argument("--source", default="synthetic",
+    pp.add_argument("--source", default="stooq",
                     choices=["synthetic", "csv", "polygon", "schwab", "stooq"])
     pp.add_argument("--years", type=int, default=3)
     pp.add_argument("--in", default="signal_log.csv", dest="in_path",
@@ -1189,7 +1294,25 @@ def main(argv: List[str] = None):
     pp.add_argument("--risk-pct", type=float, default=0.01, dest="risk_pct",
                     help="fraction of the account risked per trade (default 0.01 = 1%%)")
 
+    pm = sub.add_parser("compare",
+                        help="run the backtest on two data feeds; trust what passes BOTH")
+    pm.add_argument("--sources", nargs="+", default=["stooq", "polygon"],
+                    choices=["synthetic", "csv", "polygon", "schwab", "stooq"],
+                    help="two or more data feeds to cross-check (default: stooq polygon)")
+    pm.add_argument("--symbols", type=int, default=30)
+    pm.add_argument("--years", type=int, default=4)
+    pm.add_argument("--fast", action="store_true")
+    pm.add_argument("--etf-only", action="store_true", dest="etf_only")
+    pm.add_argument("--small-account", action="store_true", dest="small_account")
+    pm.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
+    pm.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
+
     args = ap.parse_args(argv)
+    if args.cmd == "compare":
+        _run_compare(args.sources, args.symbols, args.fast, args.years,
+                     args.small_account, args.etf_only, args.account,
+                     args.timeframe)
+        return
     if args.cmd == "edge":
         _run_edge(args.source, args.symbols, args.fast, args.years,
                   args.small_account, args.etf_only, args.account, args.timeframe)

@@ -68,5 +68,21 @@ python -m scanner.cli edge   --source schwab --small-account --etf-only --fast
 python beat_spy.py           --source schwab --signal --equity SPLG
 ```
 
+## Free backtesting with no keys — `stooq` is now the default
+For BACKTESTING you don't need Schwab at all. `stooq` is free, needs no API key,
+and is the default `--source`, so this just works:
+```bash
+python -m scanner.cli edge --small-account --etf-only --fast      # uses stooq
+```
+
+## Two opinions — cross-check two data feeds with `compare`
+Trust a setup only if it passes on TWO independent feeds. Add a free Polygon key
+(`export POLYGON_API_KEY=...`), then:
+```bash
+python -m scanner.cli compare --sources stooq polygon --small-account --etf-only --fast
+```
+It prints each setup's grade on both feeds and flags which passed BOTH. Anything
+that passes on only one feed is a data quirk, not an edge.
+
 `git pull` always gets my latest changes — no more ZIP downloads, and your
 `token.json` / `signal_log.csv` stay in place (they're gitignored).
