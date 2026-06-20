@@ -210,6 +210,90 @@ def _param_sensitivity(setup_cls, frames, regime_by_sym, context, cfg: PipelineC
     return expectancies, configs, perf_rows
 
 
+def _mfe_mae(sig: Signal, df: pd.DataFrame):
+    """Maximum favorable / adverse excursion of a trade, in R units. Looks only
+    at the trade's own holding window (fill bar through time-stop), so no
+    look-ahead beyond the trade itself."""
+    idx = df.index
+    pos = int(idx.searchsorted(sig.signal_time, side="right"))  # first bar AFTER signal
+    if pos >= len(df):
+        return None
+    entry = float(df["open"].iloc[pos])
+    risk = abs(entry - sig.stop)
+    if risk <= 0:
+        return None
+    end = min(pos + sig.time_stop_bars, len(df))
+    win = df.iloc[pos:end]
+    if win.empty:
+        return None
+    if sig.direction is Direction.LONG:
+        mfe = (float(win["high"].max()) - entry) / risk
+        mae = (entry - float(win["low"].min())) / risk
+    else:
+        mfe = (entry - float(win["low"].min())) / risk
+        mae = (float(win["high"].max()) - entry) / risk
+    return mfe, mae
+
+
+def exit_research(adapter: DataAdapter, symbols: List[str],
+                  cfg: Optional[PipelineConfig] = None,
+                  as_of: Optional[pd.Timestamp] = None,
+                  targets=(1.5, 2.0, 2.5, 3.0),
+                  setup_names: Optional[List[str]] = None) -> Dict[str, dict]:
+    """For the SAME entries, test several exit targets and measure how far trades
+    actually travel (MFE). Research only — does not change live rules. Honours
+    cfg.market_filter (200-day SPY overlay)."""
+    cfg = cfg or PipelineConfig()
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    setup_names = setup_names or list(DEFAULT_RESEARCH_SETUPS)
+
+    frames, _ = _load_universe_frames(adapter, symbols, cfg, as_of)
+    if not frames:
+        return {}
+    bench_raw = adapter.get_bars(cfg.benchmark, "1d",
+                                 start=as_of - pd.Timedelta(days=int(cfg.years*365.25)+260),
+                                 end=as_of, as_of=as_of).df
+    bench = ind.enrich_daily(bench_raw)
+    reg_df = regime_mod.classify(bench_raw)
+    context = {"benchmark": bench,
+               "sector_close": _sector_close_map(adapter, list(frames), cfg, as_of)}
+    regime_by_sym = {sym: reg_df["regime"].reindex(df.index).ffill().fillna("UNKNOWN")
+                     for sym, df in frames.items()}
+    risk_on = None
+    if cfg.market_filter and "sma200" in bench:
+        risk_on = (bench["close"] > bench["sma200"])
+
+    out: Dict[str, dict] = {}
+    for name in setup_names:
+        base = ALL_SETUPS[name]()
+        # MFE/MAE on the (target-independent) entries
+        mfes, maes = [], []
+        for sym, df in frames.items():
+            sigs = base.generate(df, regime_by_sym.get(sym), sym, context)
+            if risk_on is not None and sigs:
+                ro = risk_on.reindex(df.index).ffill().fillna(False)
+                sigs = [s for s in sigs if bool(ro.get(s.signal_time, False))]
+            for s in sigs:
+                r = _mfe_mae(s, df)
+                if r:
+                    mfes.append(r[0])
+                    maes.append(r[1])
+        # target sweep (OOS) — same entries, different exits
+        sweep, trades_by_t = {}, {}
+        for t in targets:
+            try:
+                trades, *_ = _backtest_setup(ALL_SETUPS[name](planned_r=t),
+                                             frames, regime_by_sym, context, cfg)
+            except TypeError:
+                continue
+            _, oos_t, _ = time_splits(trades)
+            sweep[t] = metrics.summary(oos_t)
+            trades_by_t[t] = oos_t
+        out[name] = {"mfe": np.array(mfes), "mae": np.array(maes),
+                     "sweep": sweep, "trades": trades_by_t}
+    return out
+
+
 def research(adapter: DataAdapter, symbols: List[str],
              setup_names: Optional[List[str]] = None,
              cfg: Optional[PipelineConfig] = None,

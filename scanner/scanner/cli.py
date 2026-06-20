@@ -25,7 +25,7 @@ from . import tradability as trad_mod
 from .data import get_adapter
 from .timeframe import wrap_timeframe
 from .pipeline import (PipelineConfig, research, live_signals, build_signal_log,
-                       evaluate_logged_signals, SetupResult, SECTOR_MAP)
+                       evaluate_logged_signals, exit_research, SetupResult, SECTOR_MAP)
 from .backtest import metrics
 from .backtest.engine import trades_to_frame
 from .rank import SetupEvidence, build_table, to_markdown
@@ -1558,6 +1558,117 @@ def _write_validation_md(path, source, years, n_syms, rows, candidates):
         fh.write("\n".join(L) + "\n")
 
 
+def _run_exits(source, n_symbols, years, small_account, etf_only, fast,
+               only_setups, out_dir, market_filter=False):
+    """Exit-target research: SAME entries, test 1.5R/2R/2.5R/3R exits, and
+    measure how far trades actually travel (MFE). Research only — does NOT
+    change live rules. Writes EXIT_RESEARCH.md."""
+    import os
+    import numpy as np
+    cfg = PipelineConfig()
+    cfg.years = years
+    cfg.market_filter = market_filter
+    if fast:
+        cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+    universe = _edge_universe(adapter, as_of, small_account, etf_only, n_symbols)
+    targets = (1.5, 2.0, 2.5, 3.0)
+
+    print("=" * 80)
+    print("  EXIT-TARGET RESEARCH — same entries, which exit works best?")
+    print("=" * 80)
+    print(f"  Source: {source}   Universe: {len(universe)}   Years: {years}"
+          + ("   OVERLAY: 200-day filter ON" if market_filter else ""))
+    print("  RESEARCH ONLY — does not change live rules. OOS metrics; not validated.")
+    print("=" * 80)
+
+    res = exit_research(adapter, universe, cfg=cfg, as_of=as_of, targets=targets,
+                        setup_names=only_setups)
+    if not res:
+        _warn_no_data(source, adapter)
+        return
+
+    md = ["# Exit-Target Research\n",
+          f"- Source: {source} | Universe: {len(universe)} | History: {years}y"
+          + (" | overlay: 200-day market filter ON" if market_filter else ""),
+          "- Research only — same ENTRIES, different EXITS. Not a live rule change.\n"]
+    thresholds = [1.0, 1.5, 2.0, 2.5, 3.0]
+    all_trade_rows = []
+    for name, d in res.items():
+        mfe = d["mfe"]
+        sweep = d["sweep"]
+        n = len(mfe)
+        print(f"\n### {name}   ({n} entries)")
+        md.append(f"\n## {name}  ({n} entries)\n")
+        if n:
+            reach = {t: float((mfe >= t).mean()) for t in thresholds}
+            line = "  Reached: " + "  ".join(f"{t}R {reach[t]:.0%}" for t in thresholds)
+            print(line)
+            print(f"  Median MFE {np.median(mfe):.2f}R | median MAE {np.median(d['mae']):.2f}R")
+            md.append("**How far trades travel (MFE):** "
+                      + ", ".join(f"{t}R {reach[t]:.0%}" for t in thresholds)
+                      + f"  (median MFE {np.median(mfe):.2f}R).\n")
+        # sweep table
+        print(f"  {'target':>7} {'n':>4} {'win%':>5} {'avgW':>6} {'avgL':>6} "
+              f"{'exp(R)':>7} {'PF':>5} {'maxDD':>6}")
+        md.append("\n| Target | n | Win% | AvgW | AvgL | Exp(R) | PF | MaxDD |")
+        md.append("|--:|--:|--:|--:|--:|--:|--:|--:|")
+        best_t, best_exp = None, -1e9
+        for t in targets:
+            m = sweep.get(t)
+            if not m or not m.get("n_trades"):
+                continue
+            exp = m.get("expectancy_r", 0.0)
+            if exp > best_exp:
+                best_exp, best_t = exp, t
+            pf = m.get("profit_factor", 0.0)
+            pf_s = "∞" if pf == float("inf") else f"{pf:.2f}"
+            print(f"  {t:>6}R {m['n_trades']:>4} {m.get('win_rate',0):>5.0%} "
+                  f"{m.get('avg_winner_r',0):>6.2f} {m.get('avg_loser_r',0):>6.2f} "
+                  f"{exp:>7.3f} {pf_s:>5} {m.get('max_drawdown_r',0):>6.1f}")
+            md.append(f"| {t}R | {m['n_trades']} | {m.get('win_rate',0):.0%} | "
+                      f"{m.get('avg_winner_r',0):.2f} | {m.get('avg_loser_r',0):.2f} | "
+                      f"{exp:.3f} | {pf_s} | {m.get('max_drawdown_r',0):.1f} |")
+        if best_t is not None:
+            verdict = (f"best OOS exit = {best_t}R (exp {best_exp:+.3f}R)"
+                       + ("" if best_exp > 0 else " — still negative"))
+            print(f"  → {verdict}")
+            md.append(f"\n**Best OOS exit: {best_t}R** (expectancy {best_exp:+.3f}R)."
+                      + ("" if best_exp > 0 else " Still negative — no edge from re-targeting.")
+                      + "\n")
+            # the ACTUAL trades at the best target (entry, exit, days, R)
+            bt = d.get("trades", {}).get(best_t, [])
+            if bt:
+                tf = trades_to_frame(bt)
+                tf["setup"] = name
+                tf["target_R"] = best_t
+                all_trade_rows.append(tf)
+                _print_trade_table(tf, f"{name} — actual trades at {best_t}R target")
+
+    md.append("\n## How to read this\n- MFE = how far a trade went in your favor "
+              "(in R) before exit. If few trades reach 3R, a 3R target is too "
+              "ambitious.\n- A positive OOS expectancy here is PROMISING, not "
+              "proven — it still must pass concentration + placebo + cost stress "
+              "(run `validate`).\n- Pick the lowest target that is clearly "
+              "positive AND that trades actually reach.\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "EXIT_RESEARCH.md") if out_dir else "EXIT_RESEARCH.md"
+    with open(path, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+    # every actual trade at each setup's best target — entry/exit/days/R
+    if all_trade_rows:
+        combined = pd.concat(all_trade_rows, ignore_index=True)
+        tidy = _trade_outcomes_frame(combined)
+        tpath = os.path.join(out_dir, "exit_trades.csv") if out_dir else "exit_trades.csv"
+        tidy.to_csv(tpath, index=False)
+        print(f"\n  Wrote {tpath} — EVERY actual trade (ticker, entry/exit date & "
+              f"price, days held, R, reason).")
+    print(f"  Wrote {path}. RESEARCH ONLY — if a target looks positive, "
+          "confirm with `validate` (concentration/placebo/cost) before paper.")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1708,6 +1819,20 @@ def main(argv: List[str] = None):
                          "its 200-day average (risk-on)")
     pv.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
 
+    pex = sub.add_parser("exits",
+                         help="research 1.5R/2R/2.5R/3R exits + MFE on the same entries")
+    pex.add_argument("--source", default="yahoo",
+                     choices=["synthetic", "csv", "polygon", "massive", "massive_files", "schwab", "stooq", "yahoo"])
+    pex.add_argument("--symbols", type=int, default=30)
+    pex.add_argument("--years", type=int, default=6)
+    pex.add_argument("--fast", action="store_true")
+    pex.add_argument("--etf-only", action="store_true", dest="etf_only")
+    pex.add_argument("--small-account", action="store_true", dest="small_account")
+    pex.add_argument("--setup", action="append", dest="only_setups", default=None,
+                     help="restrict to a setup family (repeatable)")
+    pex.add_argument("--out-dir", default=".", dest="out_dir")
+    pex.add_argument("--market-filter", action="store_true", dest="market_filter")
+
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
     prp.add_argument("--source", default="stooq",
@@ -1761,6 +1886,11 @@ def main(argv: List[str] = None):
         _run_validate(args.source, args.symbols, args.years, args.small_account,
                       args.etf_only, args.account, args.fast, args.only_setups,
                       args.out_dir, args.timeframe, args.market_filter)
+        return
+    if args.cmd == "exits":
+        _run_exits(args.source, args.symbols, args.years, args.small_account,
+                   args.etf_only, args.fast, args.only_setups, args.out_dir,
+                   args.market_filter)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,

@@ -44,16 +44,18 @@ jobs:
       - name: Run backtest validation on real data
         run: |
           SRC="${{ github.event.inputs.source || 'yahoo' }}"
-          YRS="${{ github.event.inputs.years || '12' }}"
+          YRS="${{ github.event.inputs.years || '6' }}"
           SYM="${{ github.event.inputs.symbols || '15' }}"
-          python -m scanner.cli validate \
+          python -m scanner.cli exits \
             --source "$SRC" --years "$YRS" --symbols "$SYM" \
-            --small-account --etf-only --fast --market-filter \
+            --small-account --etf-only --fast \
             --out-dir validation_out | tee validation_out_console.txt
-      - name: Print the report to the log
+      - name: Print the reports to the log
         run: |
+          echo "==================== EXIT_RESEARCH.md ===================="
+          cat validation_out/EXIT_RESEARCH.md 2>/dev/null || true
           echo "==================== BACKTEST_VALIDATION.md ===================="
-          cat validation_out/BACKTEST_VALIDATION.md || echo "(no report written)"
+          cat validation_out/BACKTEST_VALIDATION.md 2>/dev/null || true
       - name: Upload report + CSVs
         if: always()
         uses: actions/upload-artifact@v4
