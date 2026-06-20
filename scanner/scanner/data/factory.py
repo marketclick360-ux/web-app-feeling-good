@@ -23,6 +23,9 @@ def get_adapter(source: Optional[str] = None, **kwargs) -> DataAdapter:
     if source == "massive":
         from .polygon_adapter import MassiveAdapter
         return MassiveAdapter(**kwargs)
+    if source in ("massive_files", "massive-s3", "massivefiles"):
+        from .massive_files_adapter import MassiveFlatFilesAdapter
+        return MassiveFlatFilesAdapter(**kwargs)
     if source == "schwab":
         from .schwab_adapter import SchwabAdapter
         return SchwabAdapter(**kwargs)

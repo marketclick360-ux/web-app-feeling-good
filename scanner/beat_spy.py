@@ -272,7 +272,8 @@ def evaluate(eq, bond, args, label, idx=None, extra=None, strategies=None):
 def main():
     ap = argparse.ArgumentParser(description="Compare low-risk strategies vs SPY buy-and-hold")
     ap.add_argument("--source", default="synthetic",
-                    choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
+                    choices=["synthetic", "csv", "polygon", "massive",
+                             "massive_files", "schwab", "stooq"])
     ap.add_argument("--equity", default="SPY")
     ap.add_argument("--bond", default="AGG")
     ap.add_argument("--years", type=int, default=12)

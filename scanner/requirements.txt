@@ -4,3 +4,6 @@ PyYAML>=6.0
 # Optional, only needed for the Polygon data adapter (live/historical data):
 #   pip install requests
 requests>=2.28
+# Optional, only needed for the Massive Flat Files (S3) adapter:
+#   pip install boto3
+boto3>=1.26
