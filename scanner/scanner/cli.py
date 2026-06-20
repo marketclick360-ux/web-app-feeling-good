@@ -26,6 +26,7 @@ from .data import get_adapter
 from .timeframe import wrap_timeframe
 from .pipeline import (PipelineConfig, research, live_signals, build_signal_log,
                        evaluate_logged_signals, exit_research, SetupResult, SECTOR_MAP)
+from . import defensive as defensive_mod
 from .backtest import metrics
 from .backtest.engine import trades_to_frame
 from .rank import SetupEvidence, build_table, to_markdown
@@ -1669,6 +1670,248 @@ def _run_exits(source, n_symbols, years, small_account, etf_only, fast,
           "confirm with `validate` (concentration/placebo/cost) before paper.")
 
 
+def _fmt_pf(pf):
+    return "inf" if pf == float("inf") else f"{pf:.2f}"
+
+
+def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
+                   only_setups, out_dir, risk_pct, max_open, month_stop):
+    """Defensive swing-trading model: hold the SAME entries, search the 6 exit
+    models x 4 risk filters for the version that loses least when wrong while
+    keeping drawdown low and expectancy positive. Then sweep the risk controls
+    on the best survivor. Writes DEFENSIVE_MODEL.md + CSVs. Nothing here is a
+    live-trading green light."""
+    import os
+    cfg = PipelineConfig()
+    cfg.years = years
+    if fast:
+        cfg.n_boot, cfg.placebo_runs, cfg.param_perturb = 400, 30, (0.9, 1.1)
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+    universe = _edge_universe(adapter, as_of, small_account, etf_only, n_symbols)
+    ms = None if month_stop == 0 else -abs(month_stop)
+    rc = defensive_mod.RiskControls(risk_pct=risk_pct, max_open=max_open,
+                                    month_stop_r=ms)
+
+    print("=" * 82)
+    print("  DEFENSIVE SWING-TRADING MODEL — same entries, smarter exits + risk rules")
+    print("=" * 82)
+    print(f"  Source: {source}   Universe: {len(universe)}   Years: {years}")
+    print(f"  Risk controls: {risk_pct:.1%}/trade · max {max_open} open · "
+          f"1 new/month · 10% position cap · "
+          + (f"stop month after {ms:.0f}R" if ms else "no monthly stop"))
+    print("  RESEARCH ONLY. Entries are NOT changed/optimized. No per-ticker tuning.")
+    print("=" * 82)
+
+    res = defensive_mod.run_defensive(
+        adapter, universe, cfg=cfg, as_of=as_of, setup_names=only_setups, rc=rc)
+    if not res.combos or res.n_symbols == 0:
+        _warn_no_data(source, adapter)
+        return
+
+    print(f"\n  {res.n_entries} total entries across {res.n_symbols} symbols "
+          f"(out-of-sample = most recent 40%).\n")
+
+    # ---- the 24-row matrix (6 exits x 4 filters) ----
+    hdr = (f"  {'exit model':<17} {'filter':<13} {'n':>4} {'win%':>5} "
+           f"{'expR':>6} {'PF':>5} {'ddR':>5} {'strk':>4} {'wrst':>6} "
+           f"{'bestTk%':>7} {'label':<12}")
+    print(hdr)
+    print("  " + "-" * 104)
+    md = ["# Defensive Swing-Trading Model\n",
+          f"- **Source:** {source} · **Universe:** {res.n_symbols} symbols · "
+          f"**History:** {years}y · **Entries:** {res.n_entries} "
+          "(unchanged — exits/risk only)",
+          f"- **Risk controls:** {risk_pct:.1%}/trade · max {max_open} open · "
+          f"1 new trade/month · 10% position cap · "
+          + (f"stop new trades the rest of a month once it is {ms:.0f}R\n"
+             if ms else "no monthly circuit-breaker\n"),
+          "> Out-of-sample = most recent 40% of trades. Entries are held FIXED "
+          "and never optimized per ticker. Realism: next-open fills, "
+          "slippage+spread both sides, gap-through-stop = actual loss, "
+          "conservative same-bar, time stop. **Not a live-trading green light.**\n",
+          "## Exit × filter matrix (out-of-sample)\n",
+          "| Exit model | Filter | n | Win% | Exp(R) | PF | MaxDD(R) | "
+          "Worst streak | Worst loss(R) | Best-ticker % | Exp w/o best | Label |",
+          "|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|"]
+
+    for c in sorted(res.combos,
+                    key=lambda x: (defensive_mod.EXIT_MODELS.index(x["exit_model"]),
+                                   defensive_mod.RISK_FILTERS.index(x["filter"]))):
+        m, conc = c["metrics"], c["concentration"]
+        n = m.get("n", 0)
+        if n == 0:
+            print(f"  {c['exit_model']:<17} {c['filter']:<13} {0:>4} "
+                  f"{'—':>5} {'—':>6} {'—':>5} {'—':>5} {'—':>4} {'—':>6} "
+                  f"{'—':>7} {c['label']:<12}")
+            md.append(f"| {c['exit_model']} | {c['filter']} | 0 | — | — | — | — "
+                      f"| — | — | — | — | {c['label']} |")
+            continue
+        print(f"  {c['exit_model']:<17} {c['filter']:<13} {n:>4} "
+              f"{m['win_rate']:>5.0%} {m['expectancy_r']:>6.3f} "
+              f"{_fmt_pf(m['profit_factor']):>5} {m['max_dd_r']:>5.1f} "
+              f"{m['worst_streak']:>4} {m['worst_loss_r']:>6.2f} "
+              f"{conc['best_share']:>6.0%} {c['label']:<12}")
+        md.append(
+            f"| {c['exit_model']} | {c['filter']} | {n} | {m['win_rate']:.0%} | "
+            f"{m['expectancy_r']:+.3f} | {_fmt_pf(m['profit_factor'])} | "
+            f"{m['max_dd_r']:.1f} | {m['worst_streak']} | {m['worst_loss_r']:.2f} | "
+            f"{conc['best_ticker']} {conc['best_share']:.0%} | "
+            f"{conc['exp_without_best']:+.3f} | {c['label']} |")
+
+    # ---- verdict / best survivor ----
+    survivors = [c for c in res.combos if c["label"] != "REJECTED"
+                 and c["metrics"].get("n", 0) > 0]
+    md.append("\n## Verdict\n")
+    if not survivors:
+        msg = ("**No exit × filter combination survived.** Every version is "
+               "REJECTED or STATISTICALLY INCONCLUSIVE. Holding these entries "
+               "fixed, no exit model or risk filter turns them into a positive, "
+               "concentration-resilient edge. That is the scanner protecting you "
+               "— not a failure.")
+        print("\n  " + "=" * 78)
+        print("  RESULT: no combination survived. Best entries we have do not")
+        print("  become a real edge by changing exits or filters alone.")
+        print("  " + "=" * 78)
+        md.append(msg + "\n")
+    else:
+        print("\n  Survivors (not REJECTED), best first:")
+        md.append("These combinations were NOT rejected (ranked by expectancy, "
+                  "then drawdown). They are candidates for PAPER tracking only:\n")
+        md.append("| Exit model | Filter | n | Exp(R) | PF | MaxDD(R) | Label |")
+        md.append("|---|---|--:|--:|--:|--:|---|")
+        for c in sorted(survivors, key=lambda x: -x["metrics"]["expectancy_r"])[:8]:
+            m = c["metrics"]
+            print(f"    {c['exit_model']:<17} {c['filter']:<13} "
+                  f"exp {m['expectancy_r']:+.3f}R  PF {_fmt_pf(m['profit_factor'])}  "
+                  f"DD {m['max_dd_r']:.1f}R  [{c['label']}]")
+            md.append(f"| {c['exit_model']} | {c['filter']} | {m['n']} | "
+                      f"{m['expectancy_r']:+.3f} | {_fmt_pf(m['profit_factor'])} | "
+                      f"{m['max_dd_r']:.1f} | {c['label']} |")
+
+    # ---- detail on the single best combo: MFE, portfolio, risk-control sweep,
+    #      per-setup breakdown, and the ACTUAL trades ----
+    best = res.best
+    all_trade_rows = []
+    if best is not None and best["metrics"].get("n", 0) > 0:
+        m, conc, port = best["metrics"], best["concentration"], best["portfolio"]
+        title = f"{best['exit_model']} + {best['filter']} filter"
+        print(f"\n  Best by the defensive objective: {title}  [{best['label']}]")
+        md.append(f"\n## Closest to the goal: {title}\n")
+        md.append(f"_{best['reason']}_\n")
+        md.append("**How far trades actually travel (MFE):** "
+                  f"reach +1R {m['pct_reach_1R']:.0%}, +1.5R {m['pct_reach_1_5R']:.0%}, "
+                  f"+2R {m['pct_reach_2R']:.0%}, +2.5R {m['pct_reach_2_5R']:.0%}.\n")
+        md.append(f"**When wrong:** avg loser {m['avg_loss_r']:.2f}R, worst single "
+                  f"loss {m['worst_loss_r']:.2f}R, gap-through-stop losses on "
+                  f"{m['gap_tail_rate']:.0%} of trades ({m['n_gap_stops']} trades).\n")
+        md.append(f"**Concentration:** best ticker {conc['best_ticker']} carries "
+                  f"{conc['best_share']:.0%} of gross profit; expectancy WITHOUT it "
+                  f"= {conc['exp_without_best']:+.3f}R "
+                  f"({'still positive' if conc['exp_without_best']>0 else 'goes negative — concentration trap'}).\n")
+        if port.get("n_taken", 0) > 0:
+            md.append("**Portfolio with the risk controls applied:** "
+                      f"{port['n_taken']} trades taken, "
+                      f"{port['total_return_pct']:+.1f}% total on a "
+                      f"${port['start_equity']:,.0f} account, "
+                      f"max drawdown {port['max_dd_pct']:.1f}%, "
+                      f"{port['pct_profitable_months']:.0f}% of "
+                      f"{port['n_months']} months profitable "
+                      f"(worst month ${port['worst_month']:,.0f}).\n")
+
+        # risk-control sensitivity on the best combo
+        rows_for_sweep = best["all_trades"]
+        oos_for_sweep = defensive_mod._oos_rows(rows_for_sweep)
+        md.append("\n### Risk-control sensitivity (same combo, different controls)\n")
+        md.append("| Risk/trade | Max open | Monthly stop | Trades | Return% | "
+                  "MaxDD% | % months + |")
+        md.append("|--:|--:|--:|--:|--:|--:|--:|")
+        print("\n  Risk-control sensitivity (best combo):")
+        for rp in (0.005, 0.01, 0.02):
+            for mo in (2, 3):
+                for stop in (-2.0, -3.0, None):
+                    rc2 = defensive_mod.RiskControls(risk_pct=rp, max_open=mo,
+                                                     month_stop_r=stop)
+                    p = defensive_mod.portfolio_replay(oos_for_sweep, rc2)
+                    if p.get("n_taken", 0) == 0:
+                        continue
+                    stop_s = "none" if stop is None else f"{stop:.0f}R"
+                    md.append(f"| {rp:.1%} | {mo} | {stop_s} | {p['n_taken']} | "
+                              f"{p['total_return_pct']:+.1f} | {p['max_dd_pct']:.1f} | "
+                              f"{p['pct_profitable_months']:.0f} |")
+        # per-setup breakdown for the best combo (which entries carry it)
+        bdf = pd.DataFrame(best["trades"])
+        if not bdf.empty:
+            md.append("\n### Which entries carry it (per-setup, best combo)\n")
+            md.append("| Setup | n | Win% | Exp(R) |")
+            md.append("|---|--:|--:|--:|")
+            for name, g in bdf.groupby("setup"):
+                r = g["realized_r"]
+                md.append(f"| {name} | {len(g)} | {(r>0).mean():.0%} | "
+                          f"{r.mean():+.3f} |")
+            # actual trades (entry/exit/days/R) — the user always wants to SEE them
+            tf = bdf.rename(columns={}).copy()
+            tf["bars_held"] = tf["bars_held"].astype(int)
+            tf["target"] = ""
+            tf["stop"] = ""
+            _print_trade_table(tf, f"{title} — actual out-of-sample trades")
+            all_trade_rows.append(tf.assign(exit_model=best["exit_model"],
+                                            filter=best["filter"]))
+
+    # ---- write deliverables ----
+    md.append("\n## How to read this\n"
+              "- **Goal:** the version that loses least when wrong, low drawdown, "
+              "positive expectancy.\n"
+              "- A label of **REJECTED** means it failed a hard gate (negative "
+              "expectancy, PF < 1.30, or the edge is concentration-driven).\n"
+              "- **STATISTICALLY INCONCLUSIVE** = not enough trades (or the "
+              "confidence interval includes zero) to claim anything.\n"
+              "- **TENTATIVE / PAPER-TRACK ONLY** = passed the gates at this "
+              "sample; the ONLY honest next step is paper trading, never real "
+              "money yet.\n- Nothing here is proven. No claim is being made that "
+              "any version is profitable live.\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    mpath = os.path.join(out_dir, "DEFENSIVE_MODEL.md") if out_dir else "DEFENSIVE_MODEL.md"
+    with open(mpath, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+
+    # matrix CSV (one row per exit×filter)
+    mat_rows = []
+    for c in res.combos:
+        m, conc, port = c["metrics"], c["concentration"], c["portfolio"]
+        mat_rows.append({
+            "exit_model": c["exit_model"], "filter": c["filter"],
+            "label": c["label"], "n": m.get("n", 0),
+            "win_rate": round(m.get("win_rate", 0), 4),
+            "expectancy_r": round(m.get("expectancy_r", 0), 4),
+            "profit_factor": round(m.get("profit_factor", 0), 3)
+                if m.get("profit_factor") != float("inf") else "inf",
+            "max_dd_r": round(m.get("max_dd_r", 0), 2),
+            "worst_streak": m.get("worst_streak", 0),
+            "worst_loss_r": round(m.get("worst_loss_r", 0), 2),
+            "avg_loss_r": round(m.get("avg_loss_r", 0), 3),
+            "gap_tail_rate": round(m.get("gap_tail_rate", 0), 4),
+            "best_ticker": conc.get("best_ticker", ""),
+            "best_ticker_share": round(conc.get("best_share", 0), 4),
+            "exp_without_best": round(conc.get("exp_without_best", 0), 4),
+            "port_return_pct": round(port.get("total_return_pct", 0), 2),
+            "port_max_dd_pct": round(port.get("max_dd_pct", 0), 2),
+            "port_pct_profitable_months": round(port.get("pct_profitable_months", 0), 1),
+        })
+    cpath = os.path.join(out_dir, "defensive_matrix.csv") if out_dir else "defensive_matrix.csv"
+    pd.DataFrame(mat_rows).to_csv(cpath, index=False)
+
+    if all_trade_rows:
+        combined = pd.concat(all_trade_rows, ignore_index=True)
+        tidy = _trade_outcomes_frame(combined)
+        tpath = os.path.join(out_dir, "defensive_trades.csv") if out_dir else "defensive_trades.csv"
+        tidy.to_csv(tpath, index=False)
+        print(f"\n  Wrote {tpath} — every actual trade of the best combo.")
+    print(f"  Wrote {mpath} and {cpath}.")
+    print("  RESEARCH ONLY — paper-track a survivor before any real money.")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1833,6 +2076,27 @@ def main(argv: List[str] = None):
     pex.add_argument("--out-dir", default=".", dest="out_dir")
     pex.add_argument("--market-filter", action="store_true", dest="market_filter")
 
+    pdf = sub.add_parser("defensive",
+                         help="defensive model: same entries, search 6 exits x 4 "
+                              "risk filters for the version that loses least")
+    pdf.add_argument("--source", default="yahoo",
+                     choices=["synthetic", "csv", "polygon", "massive", "massive_files", "schwab", "stooq", "yahoo"])
+    pdf.add_argument("--symbols", type=int, default=30)
+    pdf.add_argument("--years", type=int, default=6)
+    pdf.add_argument("--fast", action="store_true")
+    pdf.add_argument("--etf-only", action="store_true", dest="etf_only")
+    pdf.add_argument("--small-account", action="store_true", dest="small_account")
+    pdf.add_argument("--setup", action="append", dest="only_setups", default=None,
+                     help="restrict to a setup family (repeatable)")
+    pdf.add_argument("--out-dir", default=".", dest="out_dir")
+    pdf.add_argument("--risk-pct", type=float, default=0.01, dest="risk_pct",
+                     help="fixed-fractional account risk per trade (default 1%%)")
+    pdf.add_argument("--max-open", type=int, default=2, dest="max_open",
+                     help="max simultaneous open positions (default 2)")
+    pdf.add_argument("--month-stop", type=float, default=2.0, dest="month_stop",
+                     help="halt new trades the rest of a month once it is down "
+                          "this many R (default 2; use 0 to disable)")
+
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
     prp.add_argument("--source", default="stooq",
@@ -1891,6 +2155,11 @@ def main(argv: List[str] = None):
         _run_exits(args.source, args.symbols, args.years, args.small_account,
                    args.etf_only, args.fast, args.only_setups, args.out_dir,
                    args.market_filter)
+        return
+    if args.cmd == "defensive":
+        _run_defensive(args.source, args.symbols, args.years, args.small_account,
+                       args.etf_only, args.fast, args.only_setups, args.out_dir,
+                       args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,

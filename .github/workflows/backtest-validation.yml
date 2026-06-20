@@ -41,21 +41,32 @@ jobs:
           python-version: '3.11'
       - name: Install deps (+ yfinance for the Yahoo source)
         run: pip install -r requirements.txt yfinance
-      - name: Run backtest validation on real data
+      - name: Run exit-target research on real data
         run: |
+          mkdir -p validation_out
           SRC="${{ github.event.inputs.source || 'yahoo' }}"
           YRS="${{ github.event.inputs.years || '6' }}"
-          SYM="${{ github.event.inputs.symbols || '15' }}"
+          SYM="${{ github.event.inputs.symbols || '30' }}"
           python -m scanner.cli exits \
             --source "$SRC" --years "$YRS" --symbols "$SYM" \
             --small-account --etf-only --fast \
-            --out-dir validation_out | tee validation_out_console.txt
+            --out-dir validation_out | tee validation_out/exits_console.txt
+      - name: Run the DEFENSIVE swing model (6 exits x 4 filters + risk controls)
+        run: |
+          mkdir -p validation_out
+          SRC="${{ github.event.inputs.source || 'yahoo' }}"
+          YRS="${{ github.event.inputs.years || '6' }}"
+          SYM="${{ github.event.inputs.symbols || '30' }}"
+          python -m scanner.cli defensive \
+            --source "$SRC" --years "$YRS" --symbols "$SYM" \
+            --small-account --etf-only --fast \
+            --out-dir validation_out | tee validation_out/defensive_console.txt
       - name: Print the reports to the log
         run: |
+          echo "==================== DEFENSIVE_MODEL.md ===================="
+          cat validation_out/DEFENSIVE_MODEL.md 2>/dev/null || true
           echo "==================== EXIT_RESEARCH.md ===================="
           cat validation_out/EXIT_RESEARCH.md 2>/dev/null || true
-          echo "==================== BACKTEST_VALIDATION.md ===================="
-          cat validation_out/BACKTEST_VALIDATION.md 2>/dev/null || true
       - name: Upload report + CSVs
         if: always()
         uses: actions/upload-artifact@v4

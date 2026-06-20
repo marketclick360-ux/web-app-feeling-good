@@ -56,7 +56,11 @@ class Verdict:
     warnings: List[str] = field(default_factory=list)
 
 
-def evaluate(e: Evidence) -> Verdict:
+def evaluate(e: Evidence, min_planned_r: float = None) -> Verdict:
+    # `min_planned_r` lets a caller relax the hard design gate (e.g. the
+    # defensive-exit research deliberately tests 2R targets). Defaults to the
+    # module constant (3.0) so the strict `validate`/`research` path is unchanged.
+    min_planned_r = MIN_PLANNED_R if min_planned_r is None else min_planned_r
     reasons, warnings = [], []
 
     # ---- GATE 0: no out-of-sample sample at all ----
@@ -68,10 +72,10 @@ def evaluate(e: Evidence) -> Verdict:
                         "no edge statistics computed"], [])
 
     # ---- GATE 1: hard 3R design rule (checked BEFORE any performance test) ----
-    if e.planned_target_r < MIN_PLANNED_R:
+    if e.planned_target_r < min_planned_r:
         return Verdict(LABEL_REJECTED,
                        [f"planned target {e.planned_target_r:.2f}R < "
-                        f"{MIN_PLANNED_R:.1f}R minimum (design rule, pre-backtest)"],
+                        f"{min_planned_r:.1f}R minimum (design rule, pre-backtest)"],
                        [])
 
     # ---- GATE 2: insufficient sample -> inconclusive, no edge claims ----
