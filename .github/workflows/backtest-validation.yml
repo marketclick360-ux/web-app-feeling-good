@@ -7,6 +7,7 @@ name: backtest-validation
 # printed to the log AND uploaded as a downloadable artifact.
 
 on:
+  # Manual trigger (Actions tab) once the workflow is on the default branch.
   workflow_dispatch:
     inputs:
       source:
@@ -20,6 +21,12 @@ on:
       symbols:
         description: "Number of symbols"
         default: "30"
+  # Also runs whenever THIS workflow file changes — so editing it kicks off a
+  # fresh validation run (handy when workflow_dispatch isn't available on a
+  # feature branch). Other commits do NOT trigger it.
+  push:
+    paths:
+      - '.github/workflows/backtest-validation.yml'
 
 jobs:
   validate:
@@ -36,10 +43,11 @@ jobs:
         run: pip install -r requirements.txt yfinance
       - name: Run backtest validation on real data
         run: |
+          SRC="${{ github.event.inputs.source || 'yahoo' }}"
+          YRS="${{ github.event.inputs.years || '12' }}"
+          SYM="${{ github.event.inputs.symbols || '30' }}"
           python -m scanner.cli validate \
-            --source "${{ github.event.inputs.source }}" \
-            --years "${{ github.event.inputs.years }}" \
-            --symbols "${{ github.event.inputs.symbols }}" \
+            --source "$SRC" --years "$YRS" --symbols "$SYM" \
             --small-account --etf-only --fast \
             --out-dir validation_out | tee validation_out_console.txt
       - name: Print the report to the log
