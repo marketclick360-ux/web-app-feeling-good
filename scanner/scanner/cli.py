@@ -1258,6 +1258,111 @@ def _run_plan(source, years, in_path, out_path, since=None, account=2000.0,
           "signals will differ.")
 
 
+# --------------------------------------------------------------------------
+# Expectancy: the MEASURED win rate vs breakeven, and the dollar math.
+# --------------------------------------------------------------------------
+
+def _run_expectancy(source, years, in_path, since=None, risk_dollars=67.0,
+                    only_setup=None, assumed_win=None):
+    """Turn the backtested/journal outcomes into the numbers that decide whether
+    a 3R-style approach actually makes money: the MEASURED win rate, the
+    breakeven win rate it must clear, expectancy per trade, and the dollar
+    result — measured from realized R (after costs/gaps), never assumed."""
+    import os
+    cfg = PipelineConfig()
+    cfg.years = years
+    as_of = pd.Timestamp.now("UTC").normalize()
+    if not os.path.exists(in_path):
+        print(f"No journal found at {in_path}. Run `log` first (then `review`).")
+        return
+    rows = pd.read_csv(in_path).to_dict("records")
+    if since:
+        rows = [r for r in rows if str(r.get("date", "")) >= since]
+    if only_setup:
+        rows = [r for r in rows if str(r.get("setup")) == only_setup]
+    tf = _journal_timeframe(rows)
+    adapter = wrap_timeframe(get_adapter(source), tf)
+
+    print("=" * 78)
+    print("  EXPECTANCY — the MEASURED win rate and what it's worth in dollars")
+    print("=" * 78)
+    print(f"  Journal: {in_path}   Source: {source}"
+          + (f"   Setup: {only_setup}" if only_setup else "   (all setups)"))
+    print(f"  Risk per trade assumed: ${risk_dollars:,.0f}  (so a +1R win is "
+          f"${risk_dollars:,.0f}, a +3R win is ${risk_dollars*3:,.0f})")
+    print("  Win rate is MEASURED from realized outcomes (after costs/gaps), "
+          "not assumed.")
+    print("=" * 78)
+
+    trades = evaluate_logged_signals(adapter, rows, cfg, as_of)
+    if not trades:
+        print("\n  No CLOSED trades yet to measure. Run `log` on real data "
+              "(--source yahoo), wait for some to resolve, then re-run.")
+        return
+    df = trades_to_frame(trades)
+    r = df["realized_r"].astype(float)
+    n = len(r)
+    wins = r[r > 0]
+    losses = r[r <= 0]
+    win_rate = len(wins) / n
+    avg_win = float(wins.mean()) if len(wins) else 0.0
+    avg_loss = float(losses.mean()) if len(losses) else 0.0       # negative
+    exp_r = float(r.mean())
+    gross_w = float(wins.sum())
+    gross_l = float(-losses.sum())
+    pf = gross_w / gross_l if gross_l > 0 else float("inf")
+
+    # Breakeven win rate given how trades ACTUALLY pay (realized avg win/loss),
+    # which is the honest version — not the planned 3R.
+    denom = avg_win + abs(avg_loss)
+    breakeven = (abs(avg_loss) / denom) if denom > 0 else float("nan")
+
+    print(f"\n  MEASURED over {n} closed trades:")
+    print(f"    Win rate           : {win_rate:.1%}   ({len(wins)} wins / "
+          f"{len(losses)} losses)")
+    print(f"    Avg win / avg loss : +{avg_win:.2f}R / {avg_loss:.2f}R  "
+          f"(realized payoff ≈ {avg_win/abs(avg_loss):.1f} : 1)" if avg_loss else "")
+    print(f"    Expectancy         : {exp_r:+.3f}R per trade  "
+          f"(${exp_r*risk_dollars:+,.0f} per trade)")
+    print(f"    Profit factor      : {pf:.2f}" if pf != float('inf') else
+          "    Profit factor      : ∞")
+
+    print(f"\n  THE TEST — does your win rate clear breakeven?")
+    if breakeven == breakeven:
+        margin = win_rate - breakeven
+        verdict = ("ABOVE breakeven ✅" if margin > 0 else "BELOW breakeven ❌")
+        print(f"    Breakeven win rate : {breakeven:.1%}  (given your realized "
+              f"+{avg_win:.1f}R / {avg_loss:.1f}R payoff)")
+        print(f"    You are at         : {win_rate:.1%}  → {verdict} "
+              f"by {margin:+.1%}")
+
+    print(f"\n  DOLLAR PROJECTION (at the MEASURED {win_rate:.0%} win rate, "
+          f"${risk_dollars:,.0f} risk/trade):")
+    print(f"    Per trade : ${exp_r*risk_dollars:+,.0f}")
+    print(f"    Per 10    : ${exp_r*risk_dollars*10:+,.0f}")
+    print(f"    Per 100   : ${exp_r*risk_dollars*100:+,.0f}")
+
+    if assumed_win is not None and len(wins) and len(losses):
+        # what-if: same realized payoff, but the win rate YOU assume
+        w = assumed_win
+        e = w * avg_win + (1 - w) * avg_loss
+        print(f"\n  WHAT-IF at {w:.0%} win rate (same payoff): "
+              f"{e:+.3f}R = ${e*risk_dollars:+,.0f}/trade, "
+              f"${e*risk_dollars*100:+,.0f} per 100 trades.")
+
+    print(f"\n  HONEST CHECK:")
+    if n < params.MIN_OOS_TRADES:
+        print(f"    ⚠ Only {n} trades — STATISTICALLY INCONCLUSIVE. A win rate "
+              f"from < {params.MIN_OOS_TRADES} trades can be luck. Backtest more "
+              "history (`edge --source yahoo`) and paper-track before trusting it.")
+    else:
+        print(f"    {n} trades is a usable sample, but still PAPER evidence. "
+              "Confirm it holds across different periods before real money.")
+    print("    This is the realized win rate AFTER costs/gaps — the honest number. "
+          "Assume nothing; this is the one to trust only once it's backtested AND "
+          "holds up forward.")
+
+
 def main(argv: List[str] = None):
     ap = argparse.ArgumentParser(description="Rule-based market scanner")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1360,6 +1465,22 @@ def main(argv: List[str] = None):
     pp.add_argument("--risk-pct", type=float, default=0.01, dest="risk_pct",
                     help="fraction of the account risked per trade (default 0.01 = 1%%)")
 
+    px = sub.add_parser("expectancy",
+                        help="MEASURED win rate vs breakeven, and the dollar math")
+    px.add_argument("--source", default="yahoo",
+                    choices=["synthetic", "csv", "polygon", "massive", "massive_files", "schwab", "stooq", "yahoo"])
+    px.add_argument("--years", type=int, default=3)
+    px.add_argument("--in", default="signal_log.csv", dest="in_path",
+                    help="journal CSV to measure outcomes from")
+    px.add_argument("--since", default=None,
+                    help="only count signals on/after this date, e.g. 2026-01-01")
+    px.add_argument("--risk", type=float, default=67.0, dest="risk_dollars",
+                    help="dollars risked per trade (default 67; a +3R win = 3x this)")
+    px.add_argument("--setup", default=None, dest="only_setup",
+                    help="restrict to one setup family")
+    px.add_argument("--win", type=float, default=None,
+                    help="a what-if win rate to compare, e.g. 0.30 for 30%%")
+
     pm = sub.add_parser("compare",
                         help="run the backtest on two data feeds; trust what passes BOTH")
     pm.add_argument("--sources", nargs="+", default=["stooq", "polygon"],
@@ -1417,6 +1538,10 @@ def main(argv: List[str] = None):
     if args.cmd == "plan":
         _run_plan(args.source, args.years, args.in_path, args.out_path,
                   args.since, args.account, args.risk_pct)
+        return
+    if args.cmd == "expectancy":
+        _run_expectancy(args.source, args.years, args.in_path, args.since,
+                        args.risk_dollars, args.only_setup, args.win)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,
