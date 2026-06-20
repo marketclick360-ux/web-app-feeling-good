@@ -271,6 +271,32 @@ def _tradability_map(adapter, universe, as_of, account):
     return out
 
 
+def _warn_no_data(source, adapter):
+    """Print a clear, friendly 'the data did not load' message — so a data
+    glitch is never silently reported as 'no setups qualified'."""
+    base = getattr(adapter, "base", adapter)
+    rate_limited = getattr(base, "last_error", None) == "rate_limited"
+    print("\n" + "!" * 78)
+    print("  DATA FAILED TO LOAD — no price history came back for your symbols.")
+    print("!" * 78)
+    print("  This is NOT 'no good setups' — the backtest got ZERO data to test,")
+    print("  so every family shows grade F. The fix is about the data feed:")
+    if source == "stooq":
+        if rate_limited:
+            print("\n  • stooq RATE-LIMITED you. It throttles bursts of free downloads.")
+        else:
+            print("\n  • stooq returned nothing for these tickers (often rate-limiting).")
+        print("    What to do (any one):")
+        print("      1. Wait ~5 minutes and run it again (the limit resets).")
+        print("      2. Use your Massive key instead (handles many symbols cleanly):")
+        print("         export MASSIVE_API_KEY=your_key   then add  --source massive")
+        print("      3. Ask for fewer symbols, e.g.  --symbols 6")
+    else:
+        print(f"\n  • The '{source}' feed returned no data. Check the key/connection,")
+        print("    or try  --source stooq  (free) or  --source massive  (your key).")
+    print("\n  Nothing is wrong with the strategies — they just had no data to chew on.")
+
+
 def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account,
               timeframe=1):
     real = source in ("polygon", "massive", "csv", "schwab", "stooq")
@@ -311,6 +337,15 @@ def _run_edge(source, n_symbols, fast, years, small_account, etf_only, account,
 
     results = research(adapter, universe, cfg=cfg, as_of=as_of)
     reports = edge_mod.build_reports(results, cfg)
+
+    # Loud, honest failure: if NO symbol's price data actually loaded, every
+    # family is "grade F / NO SAMPLE" for a boring reason — the data didn't
+    # arrive — NOT because no edge exists. Say so plainly instead of pretending
+    # nothing qualified.
+    if reports and all(r.oos_trades == 0 and r.is_trades == 0 for r in reports):
+        _warn_no_data(source, adapter)
+        return
+
     trad = _tradability_map(adapter, universe, as_of, account) if real else {}
 
     # ---- per-family scorecards ----

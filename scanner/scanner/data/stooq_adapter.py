@@ -35,6 +35,7 @@ class StooqAdapter(DataAdapter):
         self.cache_dir = cache_dir
         self.pause = pause
         self.max_retries = max_retries
+        self.last_error = None   # "rate_limited" | "no_data" | None
         os.makedirs(cache_dir, exist_ok=True)
 
     def _stooq_symbol(self, symbol: str) -> str:
@@ -46,25 +47,44 @@ class StooqAdapter(DataAdapter):
 
     def _fetch(self, symbol: str) -> pd.DataFrame:
         cache = self._cache_path(symbol)
+        # Only trust a cache file that holds REAL data (a valid CSV header).
+        # Never read back a previously-cached error/rate-limit page.
         if os.path.exists(cache) and os.path.getsize(cache) > 0:
-            text = open(cache).read()
-        else:
-            import requests
-            params = {"s": self._stooq_symbol(symbol), "i": "d"}
-            text = ""
-            backoff = self.pause
-            for _ in range(self.max_retries):
-                resp = requests.get(_URL, params=params, timeout=30,
-                                    headers={"User-Agent": "Mozilla/5.0"})
-                if resp.status_code == 200 and "Date,Open" in resp.text:
-                    text = resp.text
-                    break
-                time.sleep(backoff)
-                backoff *= 2
+            cached = open(cache).read()
+            if "Date,Open" in cached:
+                text = cached
+                return self._parse(text)
+
+        import requests
+        params = {"s": self._stooq_symbol(symbol), "i": "d"}
+        text = ""
+        rate_limited = False
+        backoff = max(self.pause, 0.5)
+        for _ in range(self.max_retries):
+            resp = requests.get(_URL, params=params, timeout=30,
+                                headers={"User-Agent": "Mozilla/5.0"})
+            body = resp.text or ""
+            if resp.status_code == 200 and "Date,Open" in body:
+                text = body
+                break
+            # Stooq returns a plain-text notice when it throttles bulk requests.
+            if "Exceeded" in body or "limit" in body.lower():
+                rate_limited = True
+            time.sleep(backoff)
+            backoff *= 2
+        # Cache ONLY a valid response — never poison the cache with an error page.
+        if "Date,Open" in text:
             with open(cache, "w") as fh:
                 fh.write(text)
-            time.sleep(self.pause)
+        time.sleep(self.pause)
 
+        if "Date,Open" not in text:
+            self.last_error = ("rate_limited" if rate_limited else "no_data")
+            return pd.DataFrame(columns=OHLCV_COLUMNS,
+                                index=pd.DatetimeIndex([], tz="UTC"))
+        return self._parse(text)
+
+    def _parse(self, text: str) -> pd.DataFrame:
         if "Date,Open" not in text:
             return pd.DataFrame(columns=OHLCV_COLUMNS,
                                 index=pd.DatetimeIndex([], tz="UTC"))
