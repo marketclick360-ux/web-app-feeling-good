@@ -51,6 +51,14 @@ git pull
 | `concentration` | Checks if a setup's edge is real or just **one ticker** (the SLV trap). |
 | `plan` | Dates, time-to-next-signal, **money required**, and highlights. |
 
+### The one-line everything (easiest)
+```
+python -m scanner.cli report --small-account --etf-only --fast
+```
+`report` = **Part 1** backtest + double-test (what's PROVEN, the buckets) **then
+Part 2** today's actual candidate trades. Take only Part-2 trades whose setup is
+in an **A/B** bucket from Part 1.
+
 ### Copy-paste commands
 ```
 # 1) Backtest + double-test (free, no keys)

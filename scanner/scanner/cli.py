@@ -500,6 +500,37 @@ def _run_compare(sources, n_symbols, fast, years, small_account, etf_only,
           "Forward-test on paper before any real money.")
 
 
+def _run_report(source, n_symbols, fast, years, small_account, etf_only, account,
+                backfill_days, out_path, timeframe=1):
+    """One-line full picture: PART 1 backtests + validates (what's PROVEN), then
+    PART 2 lists today's candidates (what's AVAILABLE right now)."""
+    print("#" * 78)
+    print("#  FULL REPORT — Part 1: what PASSED the backtest   "
+          "Part 2: today's TRADES")
+    print("#" * 78)
+    print("\n\n========================  PART 1 of 2  ========================")
+    print("  BACKTEST + DOUBLE-TEST — which setups are proven enough to trade?")
+    print("  (look at the FAMILY BUCKETS: only A/B are worth acting on)")
+    print("==============================================================")
+    _run_edge(source, n_symbols, fast, years, small_account, etf_only, account,
+              timeframe)
+
+    print("\n\n========================  PART 2 of 2  ========================")
+    print("  TODAY'S CANDIDATES — the actual trades available right now")
+    print("  (only act on ones from A/B families above; paper first)")
+    print("==============================================================")
+    # log only needs a short history for indicator warm-up
+    _run_log(source, n_symbols, min(years, 3), small_account, etf_only, account,
+             backfill_days, out_path, timeframe)
+
+    print("\n" + "#" * 78)
+    print("#  HOW TO USE THIS REPORT")
+    print("#   1. Part 1 buckets = which STRATEGIES are proven (trust A/B only).")
+    print("#   2. Part 2 = today's TRADES. Take only those whose setup is A/B.")
+    print("#   3. Paper-trade first. Then `review` to see how they played out.")
+    print("#" * 78)
+
+
 _LOG_KEYS = ("date", "symbol", "setup", "direction")
 
 
@@ -1307,7 +1338,30 @@ def main(argv: List[str] = None):
     pm.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
     pm.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
 
+    prp = sub.add_parser("report",
+                         help="one line: what PASSED the backtest + today's TRADES")
+    prp.add_argument("--source", default="stooq",
+                     choices=["synthetic", "csv", "polygon", "massive", "schwab", "stooq"])
+    prp.add_argument("--symbols", type=int, default=30)
+    prp.add_argument("--years", type=int, default=10,
+                     help="backtest history depth (default 10)")
+    prp.add_argument("--fast", action="store_true",
+                     help="quicker run (smaller bootstrap/placebo counts)")
+    prp.add_argument("--etf-only", action="store_true", dest="etf_only")
+    prp.add_argument("--small-account", action="store_true", dest="small_account")
+    prp.add_argument("--account", type=float, default=trad_mod.DEFAULT_ACCOUNT)
+    prp.add_argument("--backfill-days", type=int, default=7, dest="backfill_days",
+                     help="how far back to list today's candidates (default 7)")
+    prp.add_argument("--out", default="signal_log.csv", dest="out_path",
+                     help="journal CSV for today's candidates")
+    prp.add_argument("--timeframe", type=int, default=1, choices=[1, 2, 3])
+
     args = ap.parse_args(argv)
+    if args.cmd == "report":
+        _run_report(args.source, args.symbols, args.fast, args.years,
+                    args.small_account, args.etf_only, args.account,
+                    args.backfill_days, args.out_path, args.timeframe)
+        return
     if args.cmd == "compare":
         _run_compare(args.sources, args.symbols, args.fast, args.years,
                      args.small_account, args.etf_only, args.account,
