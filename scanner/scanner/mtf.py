@@ -35,6 +35,56 @@ from . import indicators as ind
 from .costs import CostModel, DEFAULT_COSTS
 
 
+def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
+               years: int = 2):
+    """Today's status for one ticker under the patient multi-timeframe rule, for
+    a weekly paper-trading watchlist. Returns a dict or None (no data).
+
+    status:
+      BUY        -> alignment just turned ON (enter next open) — a fresh trigger
+      IN_UPTREND -> all three timeframes aligned (hold if you're in)
+      HOLD_200   -> above the 200-day but not fully aligned (trend not broken)
+      FLAT       -> below the 200-day; stand aside
+    """
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(max(years, 2) * 365.25) + 320)
+    raw = adapter.get_bars(ticker, "1d", start=start, end=as_of, as_of=as_of).df
+    if len(raw) < 220:
+        return None
+    df = ind.enrich_daily(raw).dropna(subset=["ema20", "sma50", "sma200"])
+    if len(df) < 2:
+        return None
+    last, prev = df.iloc[-1], df.iloc[-2]
+
+    def _aligned(row):
+        return bool(row["close"] > row["ema20"] and row["close"] > row["sma50"]
+                    and row["close"] > row["sma200"])
+    aligned_now, aligned_prev = _aligned(last), _aligned(prev)
+    above200 = bool(last["close"] > last["sma200"])
+    close = float(last["close"])
+    sma200 = float(last["sma200"])
+    if aligned_now and not aligned_prev:
+        status = "BUY"
+    elif aligned_now:
+        status = "IN_UPTREND"
+    elif above200:
+        status = "HOLD_200"
+    else:
+        status = "FLAT"
+    dist_to_exit = (close - sma200) / close * 100.0 if close else float("nan")
+    return {
+        "ticker": ticker, "status": status,
+        "date": str(df.index[-1].date()),
+        "close": round(close, 2),
+        "entry_next_open": round(close, 2),   # proxy until the bar exists
+        "exit_below": round(sma200, 2),       # exit when daily close < 200-day
+        "dist_to_exit_pct": round(dist_to_exit, 1),
+        "ema20": round(float(last["ema20"]), 2),
+        "sma50": round(float(last["sma50"]), 2),
+        "sma200": round(sma200, 2),
+    }
+
+
 @dataclass
 class RoundTrip:
     entry_date: str

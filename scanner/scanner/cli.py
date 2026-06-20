@@ -1928,6 +1928,76 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
+def _run_mtf_signal(source, tickers, out_dir):
+    """Weekly watchlist: today's BUY / hold / flat status for each ticker under
+    the patient multi-timeframe rule. Run it once a week (a Saturday job does
+    this automatically) and paper-trade the BUY rows."""
+    import os
+    from .mtf import mtf_signal
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+    order = {"BUY": 0, "IN_UPTREND": 1, "HOLD_200": 2, "FLAT": 3}
+    rows = []
+    for tk in tickers:
+        s = mtf_signal(adapter, tk, as_of=as_of)
+        if s:
+            rows.append(s)
+    if not rows:
+        _warn_no_data(source, adapter)
+        return
+    rows.sort(key=lambda r: (order.get(r["status"], 9), -r["dist_to_exit_pct"]))
+    buys = [r for r in rows if r["status"] == "BUY"]
+
+    print("=" * 80)
+    print("  WEEKLY SIGNALS — multi-timeframe trend watchlist")
+    print("=" * 80)
+    print(f"  Source: {source}   As of: {rows[0]['date']}   Tickers: {len(rows)}")
+    print("  BUY = trend just turned up (enter next open). Exit when the daily")
+    print("  close falls below the 200-day line. Paper-trade these first.")
+    print("=" * 80)
+    print(f"\n  {'ticker':<7}{'status':<12}{'close':>9}{'enter~':>9}"
+          f"{'exit<':>9}{'cushion':>9}")
+    print("  " + "-" * 56)
+    for r in rows:
+        print(f"  {r['ticker']:<7}{r['status']:<12}{r['close']:>9.2f}"
+              f"{r['entry_next_open']:>9.2f}{r['exit_below']:>9.2f}"
+              f"{r['dist_to_exit_pct']:>8.1f}%")
+    print(f"\n  THIS WEEK'S BUYS: " + (", ".join(b["ticker"] for b in buys)
+          if buys else "none — nothing freshly triggered; hold what you have."))
+    print("  'cushion' = how far above the 200-day exit line (your downside before "
+          "the trend rule takes you out).")
+
+    md = ["# Weekly Signals — multi-timeframe trend watchlist\n",
+          f"- **As of:** {rows[0]['date']} · **Source:** {source} · "
+          f"**Tickers:** {len(rows)}",
+          "- BUY = trend just turned up (enter next open). Exit when the daily "
+          "close falls below the 200-day line. **Paper-trade first.**\n",
+          f"## This week's BUYs: {', '.join(b['ticker'] for b in buys) if buys else 'none'}\n",
+          "| Ticker | Status | Close | Enter ~ | Exit if < | Cushion to exit |",
+          "|---|---|--:|--:|--:|--:|"]
+    for r in rows:
+        md.append(f"| {r['ticker']} | {r['status']} | {r['close']:.2f} | "
+                  f"{r['entry_next_open']:.2f} | {r['exit_below']:.2f} | "
+                  f"{r['dist_to_exit_pct']:.1f}% |")
+    md.append("\n## How to use this (paper trading)\n"
+              "1. Each Saturday, look at the **BUY** rows.\n"
+              "2. Paper-buy at Monday's open; write down the price.\n"
+              "3. Hold while the trend is intact; **paper-sell when the daily "
+              "close drops below the 'Exit if <' (200-day) level.**\n"
+              "4. Track every trade for a month before risking a cent.\n"
+              "- 'IN_UPTREND' = already trending up (you'd be holding). "
+              "'HOLD_200' = above the 200-day but pulling back. 'FLAT' = below "
+              "the 200-day, stay out.\n- Signals are lumpy: some weeks several "
+              "BUYs, many weeks none. That is normal and correct — you only buy "
+              "real trends.\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "WEEKLY_SIGNALS.md") if out_dir else "WEEKLY_SIGNALS.md"
+    with open(path, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+    print(f"\n  Wrote {path}. Paper-trade the BUY rows — no real money for a month.")
+
+
 def _run_mtf(source, tickers, years, atr_stop, out_dir, show_trades,
              exit_mode="slow"):
     """Single-ticker, multi-timeframe trend-alignment model vs buy-and-hold.
@@ -2280,6 +2350,9 @@ def main(argv: List[str] = None):
     pmt.add_argument("--out-dir", default=".", dest="out_dir")
     pmt.add_argument("--trades", action="store_true", dest="show_trades",
                      help="print the round-trips")
+    pmt.add_argument("--signal", action="store_true", dest="signal_mode",
+                     help="weekly watchlist: today's BUY/hold/flat per ticker "
+                          "(instead of a backtest)")
 
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
@@ -2346,8 +2419,11 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "mtf":
-        _run_mtf(args.source, args.tickers or ["SPY"], args.years, args.atr_stop,
-                 args.out_dir, args.show_trades, args.exit_mode)
+        if args.signal_mode:
+            _run_mtf_signal(args.source, args.tickers or ["SPY"], args.out_dir)
+        else:
+            _run_mtf(args.source, args.tickers or ["SPY"], args.years,
+                     args.atr_stop, args.out_dir, args.show_trades, args.exit_mode)
         return
     if args.cmd == "log":
         _run_log(args.source, args.symbols, args.years, args.small_account,

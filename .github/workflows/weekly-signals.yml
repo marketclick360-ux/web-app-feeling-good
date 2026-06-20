@@ -1,0 +1,52 @@
+name: weekly-signals
+
+# Posts your multi-timeframe trend watchlist once a week so you don't need a
+# terminal. Open the latest run (or download the WEEKLY_SIGNALS artifact) each
+# weekend and paper-trade the BUY rows. Runs every Saturday, and can be started
+# by hand from the Actions tab ("Run workflow"). Editing this file also kicks
+# off a run.
+
+on:
+  schedule:
+    - cron: '0 13 * * 6'   # Saturdays 13:00 UTC
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/weekly-signals.yml'
+
+jobs:
+  signals:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scanner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps (+ yfinance)
+        run: pip install -r requirements.txt yfinance
+      - name: Generate this week's signals
+        run: |
+          mkdir -p signals_out
+          python -m scanner.cli mtf --signal --source yahoo \
+            --ticker SPY  --ticker QQQ  --ticker DIA  --ticker IWM \
+            --ticker XLK  --ticker XLV  --ticker XLF  --ticker XLE \
+            --ticker XLY  --ticker XLP  --ticker XLI  --ticker XLU \
+            --ticker XLB  --ticker XLRE --ticker SMH  --ticker GLD \
+            --ticker TLT  --ticker AAPL --ticker MSFT --ticker NVDA \
+            --ticker AMZN --ticker GOOGL --ticker META --ticker AVGO \
+            --ticker COST --ticker WMT  --ticker JPM  --ticker HD \
+            --ticker UNH  --ticker LLY \
+            --out-dir signals_out | tee signals_out/console.txt
+      - name: Print the watchlist to the log
+        run: |
+          echo "==================== WEEKLY_SIGNALS.md ===================="
+          cat signals_out/WEEKLY_SIGNALS.md 2>/dev/null || true
+      - name: Upload the watchlist
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-signals
+          path: scanner/signals_out/
