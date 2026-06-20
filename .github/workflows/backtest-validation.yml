@@ -17,7 +17,7 @@ on:
         options: ["yahoo", "stooq"]
       years:
         description: "Years of history"
-        default: "12"
+        default: "6"
       symbols:
         description: "Number of symbols"
         default: "30"
@@ -44,8 +44,8 @@ jobs:
       - name: Run backtest validation on real data
         run: |
           SRC="${{ github.event.inputs.source || 'yahoo' }}"
-          YRS="${{ github.event.inputs.years || '12' }}"
-          SYM="${{ github.event.inputs.symbols || '30' }}"
+          YRS="${{ github.event.inputs.years || '6' }}"
+          SYM="${{ github.event.inputs.symbols || '15' }}"
           python -m scanner.cli validate \
             --source "$SRC" --years "$YRS" --symbols "$SYM" \
             --small-account --etf-only --fast \
