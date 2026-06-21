@@ -1947,10 +1947,12 @@ def _run_mtf_signal(source, tickers, out_dir):
         return
     rows.sort(key=lambda r: (0 if r.get("deep") else 1,
                              0 if r.get("strong") else 1,
+                             0 if r.get("watch") else 1,
                              order.get(r["status"], 9), -r["dist_to_exit_pct"]))
     buys = [r for r in rows if r["status"] == "BUY"]
     strong = [r for r in rows if r.get("strong")]
     deep = [r for r in rows if r.get("deep")]
+    watch = [r for r in rows if r.get("watch")]
 
     def _sup(r):
         if r.get("support") in ("", None):
@@ -1970,7 +1972,8 @@ def _run_mtf_signal(source, tickers, out_dir):
           f"{'cushion':>8}   support (touches over years, distance)")
     print("  " + "-" * 80)
     for r in rows:
-        mark = "🪨" if r.get("deep") else ("★ " if r.get("strong") else "  ")
+        mark = ("🪨" if r.get("deep") else "★ " if r.get("strong")
+                else "👀" if r.get("watch") else "  ")
         print(f"  {r['ticker']:<7}{mark:<3}{r['status']:<11}{r['close']:>9.2f}"
               f"{r['exit_below']:>9.2f}{r['dist_to_exit_pct']:>7.1f}%   {_sup(r)}")
     print(f"\n  🪨 DEEP SUPPORT (uptrend at a floor held for YEARS): "
@@ -1979,6 +1982,10 @@ def _run_mtf_signal(source, tickers, out_dir):
              if deep else "none this week"))
     print(f"  ★ STRONG (uptrend at support): "
           + (", ".join(r["ticker"] for r in strong) if strong else "none"))
+    print(f"  👀 WATCH (beaten-down, parked on a multi-year floor — NOT a buy yet): "
+          + (", ".join(f"{r['ticker']}({r['support_span_years']:.0f}y,"
+                       f"{r['support_touches']}x)" for r in watch)
+             if watch else "none"))
     print(f"  Fresh BUYs: " + (", ".join(b["ticker"] for b in buys)
           if buys else "none freshly triggered."))
 
@@ -1994,6 +2001,11 @@ def _run_mtf_signal(source, tickers, out_dir):
           + (", ".join(f"{r['ticker']} ({r['support_span_years']:.0f}y, "
                        f"{r['support_touches']}x)" for r in deep)
              if deep else "none this week") + "\n",
+          f"## 👀 Watch (beaten-down, parked on a multi-year floor — early "
+          f"heads-up, NOT a buy yet): "
+          + (", ".join(f"{r['ticker']} ({r['support_span_years']:.0f}y, "
+                       f"{r['support_touches']}x)" for r in watch)
+             if watch else "none this week") + "\n",
           f"## ★ Strong setups (uptrend at support): "
           f"{', '.join(r['ticker'] for r in strong) if strong else 'none this week'}\n",
           f"## This week's fresh BUYs: "
@@ -2002,13 +2014,19 @@ def _run_mtf_signal(source, tickers, out_dir):
           "Support (touches × years, dist) |",
           "|---|:-:|---|--:|--:|--:|---|"]
     for r in rows:
-        mark = "🪨" if r.get("deep") else ("★" if r.get("strong") else "")
+        mark = ("🪨" if r.get("deep") else "★" if r.get("strong")
+                else "👀" if r.get("watch") else "")
         md.append(f"| {r['ticker']} | {mark} | "
                   f"{r['status']} | {r['close']:.2f} | {r['exit_below']:.2f} | "
                   f"{r['dist_to_exit_pct']:.1f}% | {_sup(r)} |")
     md.append("\n## How to use this (paper trading)\n"
               "1. Each Saturday, prefer the **🪨 DEEP** rows first (uptrend at a "
               "floor that has held for years), then **★ STRONG**, then fresh **BUY**.\n"
+              "1b. The **👀 WATCH** rows are beaten-down names sitting on a "
+              "multi-year floor — **NOT buys yet** (they're below their 200-day). "
+              "Watch them: if one turns back up (becomes a BUY) while still on "
+              "that floor, it graduates to a 🪨 DEEP buy. That is your early "
+              "heads-up for a big-base opportunity.\n"
               "2. Paper-buy at Monday's open; write down the price.\n"
               "3. Hold while the trend is intact; **paper-sell when the daily "
               "close drops below the 'Exit if <' (200-day) level.**\n"

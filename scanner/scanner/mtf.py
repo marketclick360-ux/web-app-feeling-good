@@ -141,11 +141,21 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
     # STRONG = trend intact (above the 200-day) AND pressed against real support
     strong = bool(above200 and near_strong)
     span_years = sup["span_years"] if sup else 0.0
+    touches = sup["touches"] if sup else 0
+    dist_sup = sup["dist_pct"] if sup else float("nan")
+    deep_floor = bool(sup and touches >= 3 and span_years >= 3.0)
     # DEEP = a STRONG setup whose floor has held for YEARS (>=3y span and >=3
     # touches) — the super-strong, long-standing support the user wants
-    deep = bool(strong and span_years >= 3.0 and sup["touches"] >= 3)
+    deep = bool(strong and deep_floor)
+    # WATCH = a beaten-down name (below its 200-day, so NOT a buy yet) that is
+    # parked ON a multi-year floor. Early heads-up: if it reclaims the trend
+    # while holding this floor it becomes a prime DEEP buy. Allow price to sit
+    # just below the floor (-2%) since these are testing it.
+    watch = bool((not above200) and deep_floor
+                 and dist_sup == dist_sup and -2.0 <= dist_sup <= 3.0)
     return {
         "ticker": ticker, "status": status, "strong": strong, "deep": deep,
+        "watch": watch,
         "date": str(df.index[-1].date()),
         "close": round(close, 2),
         "entry_next_open": round(close, 2),   # proxy until the bar exists
