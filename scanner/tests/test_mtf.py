@@ -121,3 +121,25 @@ def test_volume_study_bigger_moves_on_higher_volume():
     moves = {b["bucket"]: b["median_move"] for b in s["buckets"]}
     # the highest-volume bucket should move more than the lowest one
     assert moves[s["buckets"][-1]["bucket"]] > moves[s["buckets"][0]["bucket"]]
+
+
+def test_seasonality_finds_a_strong_month():
+    from scanner.mtf import seasonality
+    # 15 years of daily bars with a strong December seasonal bump
+    idx = pd.bdate_range("2009-01-02", periods=15 * 252, tz="UTC")
+    base = np.linspace(100, 300, len(idx))
+    bump = np.where(idx.month == 12, 1.0, 0.0)  # extra lift in December
+    close = base + np.cumsum(bump) * 0.5
+    df = pd.DataFrame({"open": close, "high": close, "low": close,
+                       "close": close, "volume": 1e6}, index=idx)
+
+    class _A:
+        def get_bars(self, *a, **k):
+            class _B:
+                pass
+            b = _B(); b.df = df; return b
+
+    s = seasonality(_A(), "TEST", as_of=pd.Timestamp("2024-01-15", tz="UTC"))
+    assert s is not None and len(s["rows"]) == 12
+    assert s["best"][0]["month"] in ("Dec", "Jan")  # the bump shows up
+    assert "current" in s

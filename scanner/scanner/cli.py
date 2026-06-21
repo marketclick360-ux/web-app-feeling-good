@@ -1928,6 +1928,82 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
+def _run_mtf_context(source, tickers, out_dir):
+    """Per-ticker context that's unique to each name: next EARNINGS date,
+    seasonal CYCLES (best/worst months), and recent NEWS headlines. Earnings/
+    news come from Yahoo (best-effort); seasonality is computed from history."""
+    import os
+    from .mtf import seasonality, yahoo_extras
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+    use_yahoo = source == "yahoo"
+
+    print("=" * 82)
+    print("  CONTEXT — earnings · cycles (seasonality) · news, per ticker")
+    print("=" * 82)
+    if not use_yahoo:
+        print("  (earnings/news need --source yahoo; showing seasonality only)")
+    print("=" * 82)
+
+    md = ["# Context — earnings · cycles · news\n",
+          f"- **Source:** {source} · **As of:** {as_of.date()}",
+          "- **Earnings** = next report date (none for ETFs). **Cycles** = how "
+          "each calendar month has historically performed. **News** = recent "
+          "headlines (informational — NOT a signal). Small samples; not a "
+          "forecast.\n"]
+    any_data = False
+    for tk in tickers:
+        seas = seasonality(adapter, tk, as_of=as_of)
+        extra = yahoo_extras(tk) if use_yahoo else {"next_earnings": None, "news": []}
+        if seas is None and not extra["news"]:
+            print(f"\n  [{tk}] no data.")
+            continue
+        any_data = True
+        earn = extra.get("next_earnings") or "—"
+        print(f"\n  ### {tk}")
+        print(f"  Earnings (next): {earn}")
+        md.append(f"\n## {tk}\n")
+        md.append(f"- **Next earnings:** {earn}")
+        if seas:
+            best = ", ".join(f"{b['month']} ({b['avg']:+.1f}%, {b['pct_pos']:.0f}% up)"
+                             for b in seas["best"][:2])
+            worst = ", ".join(f"{w['month']} ({w['avg']:+.1f}%)"
+                              for w in seas["worst"][:2])
+            cur = seas.get("current")
+            cur_s = (f"{seas['current_month']}: avg {cur['avg']:+.1f}%, "
+                     f"{cur['pct_pos']:.0f}% up over {cur['n']}y" if cur
+                     else f"{seas['current_month']}: n/a")
+            print(f"  Cycles — strongest months: {best}")
+            print(f"           weakest months: {worst}")
+            print(f"           this month ({cur_s})")
+            md.append(f"- **Cycles — strongest months:** {best}")
+            md.append(f"- **Cycles — weakest months:** {worst}")
+            md.append(f"- **This month** — {cur_s}")
+        if extra["news"]:
+            print("  News:")
+            md.append("- **Recent news:**")
+            for h in extra["news"][:3]:
+                print(f"    • {h}")
+                md.append(f"  - {h}")
+
+    md.append("\n## How to read this\n"
+              "- **Earnings:** expect a bigger, less predictable move around this "
+              "date — many traders avoid holding a fresh position through it.\n"
+              "- **Cycles:** a tailwind/headwind, not a trigger — strongest in "
+              "the months that have historically been positive most often.\n"
+              "- **News:** context only. Headlines are noisy and already in the "
+              "price; never trade on a headline alone.\n")
+    if any_data:
+        if out_dir not in (".", ""):
+            os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, "CONTEXT.md") if out_dir else "CONTEXT.md"
+        with open(path, "w") as fh:
+            fh.write("\n".join(md) + "\n")
+        print(f"\n  Wrote {path}.")
+    else:
+        _warn_no_data(source, adapter)
+
+
 def _run_mtf_volume(source, tickers, out_dir):
     """How much volume it takes to move each ticker: typical daily move by
     relative-volume bucket, the 'needle-mover' level, and breakout follow-through
@@ -2604,6 +2680,9 @@ def main(argv: List[str] = None):
     pmt.add_argument("--volume", action="store_true", dest="volume_mode",
                      help="how much volume it takes to move each ticker "
                           "(move by volume bucket + breakout follow-through)")
+    pmt.add_argument("--context", action="store_true", dest="context_mode",
+                     help="per-ticker earnings date, seasonal cycles, and "
+                          "recent news headlines")
 
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
@@ -2670,7 +2749,9 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "mtf":
-        if args.volume_mode:
+        if args.context_mode:
+            _run_mtf_context(args.source, args.tickers or ["SPY"], args.out_dir)
+        elif args.volume_mode:
             _run_mtf_volume(args.source, args.tickers or ["SPY"], args.out_dir)
         elif args.history_mode:
             _run_mtf_history(args.source, args.tickers or ["SPY"], args.out_dir)

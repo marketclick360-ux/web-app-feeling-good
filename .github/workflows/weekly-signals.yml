@@ -63,6 +63,13 @@ jobs:
             --ticker TLT --ticker LQD --ticker XOP \
             --ticker SPY --ticker QQQ --ticker XLK --ticker NVDA \
             --out-dir signals_out | tee signals_out/volume_console.txt
+      - name: Context — earnings, cycles, news (mover names)
+        run: |
+          python -m scanner.cli mtf --context --source yahoo \
+            --ticker DIS --ticker PEP --ticker HD --ticker CRM \
+            --ticker NVDA --ticker XOP --ticker AAPL --ticker MSFT \
+            --ticker SPY --ticker QQQ \
+            --out-dir signals_out | tee signals_out/context_console.txt
       - name: Print the watchlist to the log
         run: |
           echo "==================== WEEKLY_SIGNALS.md ===================="
@@ -71,6 +78,8 @@ jobs:
           cat signals_out/SUPPORT_HISTORY.md 2>/dev/null || true
           echo "==================== VOLUME_STUDY.md ===================="
           cat signals_out/VOLUME_STUDY.md 2>/dev/null || true
+          echo "==================== CONTEXT.md ===================="
+          cat signals_out/CONTEXT.md 2>/dev/null || true
       - name: Upload the watchlist
         if: always()
         uses: actions/upload-artifact@v4

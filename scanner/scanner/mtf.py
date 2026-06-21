@@ -297,6 +297,80 @@ def support_history(adapter, ticker: str, as_of=None, years: int = 25,
     return base
 
 
+_MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def seasonality(adapter, ticker: str, as_of=None, years: int = 15):
+    """Cycle/seasonality: each calendar month's average return and how often it
+    was positive, from history. Returns best/worst months and the current
+    month's tendency. Descriptive — small per-month samples."""
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(years * 365.25) + 60)
+    raw = adapter.get_bars(ticker, "1d", start=start, end=as_of, as_of=as_of).df
+    if len(raw) < 400:
+        return None
+    monthly = raw["close"].resample("ME").last()
+    mret = monthly.pct_change().dropna() * 100.0
+    rows = []
+    for m in range(1, 13):
+        vals = mret[mret.index.month == m]
+        if len(vals) >= 3:
+            rows.append({"month": _MONTHS[m], "m": m,
+                         "avg": round(float(vals.mean()), 1),
+                         "pct_pos": round(float((vals > 0).mean()) * 100.0, 0),
+                         "n": int(len(vals))})
+    if not rows:
+        return None
+    ordered = sorted(rows, key=lambda r: r["avg"], reverse=True)
+    cur = next((r for r in rows if r["m"] == as_of.month), None)
+    return {"ticker": ticker, "rows": rows,
+            "best": ordered[:3], "worst": ordered[-3:][::-1],
+            "current": cur, "current_month": _MONTHS[as_of.month]}
+
+
+def yahoo_extras(ticker: str):
+    """Best-effort next-earnings date and a few recent headlines via yfinance.
+    Never raises — returns {'next_earnings': str|None, 'news': [str,...]}.
+    Earnings is None for ETFs (no earnings)."""
+    out = {"next_earnings": None, "news": []}
+    try:
+        import yfinance as yf
+    except Exception:
+        return out
+    try:
+        t = yf.Ticker(ticker)
+    except Exception:
+        return out
+    try:
+        ed = t.get_earnings_dates(limit=16)
+        if ed is not None and len(ed):
+            now = pd.Timestamp.now(tz=ed.index.tz) if ed.index.tz else pd.Timestamp.now()
+            fut = [d for d in ed.index if d > now]
+            if fut:
+                out["next_earnings"] = str(min(fut).date())
+    except Exception:
+        pass
+    if out["next_earnings"] is None:
+        try:
+            cal = t.calendar
+            ev = cal.get("Earnings Date") if isinstance(cal, dict) else None
+            if ev:
+                out["next_earnings"] = str(ev[0] if isinstance(ev, (list, tuple)) else ev)
+        except Exception:
+            pass
+    try:
+        for it in (t.news or [])[:4]:
+            title = it.get("title")
+            if not title and isinstance(it.get("content"), dict):
+                title = it["content"].get("title")
+            if title:
+                out["news"].append(str(title))
+    except Exception:
+        pass
+    return out
+
+
 def volume_study(adapter, ticker: str, as_of=None, years: int = 12):
     """How much volume it takes to move a ticker. Buckets every day by relative
     volume (that day's volume / its 20-day average) and reports the typical
