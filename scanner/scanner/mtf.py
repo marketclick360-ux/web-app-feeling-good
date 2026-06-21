@@ -153,6 +153,21 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
     # just below the floor (-2%) since these are testing it.
     watch = bool((not above200) and deep_floor
                  and dist_sup == dist_sup and -2.0 <= dist_sup <= 3.0)
+    # Suggested stop: a daily CLOSE below the floor by ~1.5x ATR (a volatility
+    # buffer so a normal dip doesn't shake you out). No floor near -> fall back
+    # to ~2x ATR below price. risk% is entry-to-stop, what you'd lose if hit.
+    atr = float(last["atr14"]) if last["atr14"] == last["atr14"] else float("nan")
+    floor_ref = sup["level"] if sup else float("nan")
+    if floor_ref == floor_ref and floor_ref < close and atr == atr:
+        stop = floor_ref - 1.5 * atr
+    elif atr == atr:
+        stop = close - 2.0 * atr
+    else:
+        stop = float("nan")
+    risk_pct = (close - stop) / close * 100.0 if (stop == stop and close) else float("nan")
+    vol_shares = float(last["volume"]) if last["volume"] == last["volume"] else float("nan")
+    dvol = float(last["adv20"]) if "adv20" in last and last["adv20"] == last["adv20"] \
+        else float("nan")
     return {
         "ticker": ticker, "status": status, "strong": strong, "deep": deep,
         "watch": watch,
@@ -161,6 +176,11 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
         "entry_next_open": round(close, 2),   # proxy until the bar exists
         "exit_below": round(sma200, 2),       # exit when daily close < 200-day
         "dist_to_exit_pct": round(dist_to_exit, 1),
+        "suggested_stop": round(stop, 2) if stop == stop else "",
+        "risk_pct": round(risk_pct, 1) if risk_pct == risk_pct else "",
+        "atr": round(atr, 2) if atr == atr else "",
+        "volume_m": round(vol_shares / 1e6, 1) if vol_shares == vol_shares else "",
+        "dollar_vol_m": round(dvol / 1e6, 0) if dvol == dvol else "",
         "support": sup["level"] if sup else "",
         "support_touches": sup["touches"] if sup else 0,
         "support_span_years": span_years,

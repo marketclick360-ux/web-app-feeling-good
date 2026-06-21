@@ -2057,14 +2057,20 @@ def _run_mtf_signal(source, tickers, out_dir):
     print("  falls below the 200-day. ★ = uptrend at support. 🪨 DEEP = floor that")
     print("  has held for YEARS (the strongest support). Paper-trade first.")
     print("=" * 84)
-    print(f"\n  {'tkr':<7}{'':<3}{'status':<11}{'close':>9}{'exit<':>9}"
-          f"{'cushion':>8}   support (touches over years, distance)")
-    print("  " + "-" * 80)
+    def _num(v, w, dec=2):
+        return f"{v:>{w}.{dec}f}" if isinstance(v, (int, float)) else f"{'—':>{w}}"
+
+    print(f"\n  {'tkr':<7}{'':<3}{'status':<11}{'close':>9}{'stop':>9}{'risk':>6}"
+          f"{'vol(M)':>9}   support (touches × years, dist)")
+    print("  " + "-" * 86)
     for r in rows:
         mark = ("🪨" if r.get("deep") else "★ " if r.get("strong")
                 else "👀" if r.get("watch") else "  ")
+        risk = (f"{r['risk_pct']:>5.1f}%" if isinstance(r.get("risk_pct"), (int, float))
+                else f"{'—':>6}")
         print(f"  {r['ticker']:<7}{mark:<3}{r['status']:<11}{r['close']:>9.2f}"
-              f"{r['exit_below']:>9.2f}{r['dist_to_exit_pct']:>7.1f}%   {_sup(r)}")
+              f"{_num(r.get('suggested_stop'), 9)}{risk}"
+              f"{_num(r.get('volume_m'), 9, 1)}   {_sup(r)}")
     print(f"\n  🪨 DEEP SUPPORT (uptrend at a floor held for YEARS): "
           + (", ".join(f"{r['ticker']}({r['support_span_years']:.0f}y,"
                        f"{r['support_touches']}x)" for r in deep)
@@ -2099,15 +2105,23 @@ def _run_mtf_signal(source, tickers, out_dir):
           f"{', '.join(r['ticker'] for r in strong) if strong else 'none this week'}\n",
           f"## This week's fresh BUYs: "
           f"{', '.join(b['ticker'] for b in buys) if buys else 'none'}\n",
-          "| Ticker | | Status | Close | Exit if < | Cushion | "
-          "Support (touches × years, dist) |",
-          "|---|:-:|---|--:|--:|--:|---|"]
+          "| Ticker | | Status | Close | Stop | Risk % | Exit if < | "
+          "Vol (M sh) | $Vol/day | Support (touches × years, dist) |",
+          "|---|:-:|---|--:|--:|--:|--:|--:|--:|---|"]
+
+    def _md(v, dec=2):
+        return f"{v:.{dec}f}" if isinstance(v, (int, float)) else "—"
     for r in rows:
         mark = ("🪨" if r.get("deep") else "★" if r.get("strong")
                 else "👀" if r.get("watch") else "")
+        risk = (f"{r['risk_pct']:.1f}%" if isinstance(r.get("risk_pct"), (int, float))
+                else "—")
+        dvol = (f"${r['dollar_vol_m']:.0f}M" if isinstance(r.get("dollar_vol_m"), (int, float))
+                else "—")
         md.append(f"| {r['ticker']} | {mark} | "
-                  f"{r['status']} | {r['close']:.2f} | {r['exit_below']:.2f} | "
-                  f"{r['dist_to_exit_pct']:.1f}% | {_sup(r)} |")
+                  f"{r['status']} | {r['close']:.2f} | {_md(r.get('suggested_stop'))} | "
+                  f"{risk} | {r['exit_below']:.2f} | {_md(r.get('volume_m'), 1)} | "
+                  f"{dvol} | {_sup(r)} |")
     md.append("\n## How to use this (paper trading)\n"
               "1. Each Saturday, prefer the **🪨 DEEP** rows first (uptrend at a "
               "floor that has held for years), then **★ STRONG**, then fresh **BUY**.\n"
@@ -2120,6 +2134,13 @@ def _run_mtf_signal(source, tickers, out_dir):
               "3. Hold while the trend is intact; **paper-sell when the daily "
               "close drops below the 'Exit if <' (200-day) level.**\n"
               "4. Track every trade for a month before risking a cent.\n"
+              "- **Stop** = a suggested exit on a daily CLOSE below this price "
+              "(the floor minus ~1.5× the average daily range, so a normal dip "
+              "doesn't shake you out). **Risk %** = what you'd lose from entry to "
+              "that stop — size so that is ~1% of your account. For names that "
+              "historically dip more (see SUPPORT_HISTORY), give the stop extra room.\n"
+              "- **Vol (M sh)** = the latest day's actual share volume (millions); "
+              "**$Vol/day** = typical dollar volume (liquidity).\n"
               "- **Support (touches × years, dist)** = nearest floor below price, "
               "how many times it has held, over how many years, and how far price "
               "is above it. A floor touched many times across **years** that price "
