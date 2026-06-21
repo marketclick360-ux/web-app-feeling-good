@@ -35,6 +35,44 @@ from . import indicators as ind
 from .costs import CostModel, DEFAULT_COSTS
 
 
+def _support_zones(df, window: int = 5, tol_pct: float = 2.0,
+                   lookback: int = 400):
+    """Pivot-low support zones from recent bars. A pivot low is a bar whose low
+    is the lowest in a +/- `window` neighbourhood; nearby pivots (within
+    `tol_pct`) are clustered into one zone and the touch count is how many
+    pivots fell in it. More touches = stronger support. Returns
+    [(level, touches), ...]."""
+    sub = df.tail(lookback)
+    lows = sub["low"].to_numpy()
+    n = len(lows)
+    pivots = [float(lows[i]) for i in range(window, n - window)
+              if lows[i] == lows[i - window:i + window + 1].min()]
+    zones = []
+    for p in sorted(pivots):
+        for z in zones:
+            if abs(p - z["level"]) / z["level"] <= tol_pct / 100.0:
+                z["prices"].append(p)
+                z["level"] = sum(z["prices"]) / len(z["prices"])
+                break
+        else:
+            zones.append({"level": p, "prices": [p]})
+    return [(round(z["level"], 2), len(z["prices"])) for z in zones]
+
+
+def _nearest_support(df, price, near_pct: float = 3.0, min_touches: int = 2):
+    """Nearest support at/below `price`, plus whether price is near a STRONG
+    (multi-touch) support. Returns (level, touches, dist_pct, near_strong)."""
+    zones = _support_zones(df)
+    below = [(lvl, t) for lvl, t in zones if lvl <= price * 1.005]
+    if not below:
+        return float("nan"), 0, float("nan"), False
+    level, touches = max(below, key=lambda x: x[0])
+    dist = (price - level) / price * 100.0 if price else float("nan")
+    near_strong = bool(dist == dist and 0 <= dist <= near_pct
+                       and touches >= min_touches)
+    return level, touches, round(dist, 1), near_strong
+
+
 def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
                years: int = 2):
     """Today's status for one ticker under the patient multi-timeframe rule, for
@@ -45,6 +83,9 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
       IN_UPTREND -> all three timeframes aligned (hold if you're in)
       HOLD_200   -> above the 200-day but not fully aligned (trend not broken)
       FLAT       -> below the 200-day; stand aside
+
+    A signal is STRONG when the trend is up (above the 200-day) AND price is
+    pulling back to a multi-touch support zone — a low-risk entry near a floor.
     """
     as_of = as_of or pd.Timestamp.now("UTC").normalize()
     start = as_of - pd.Timedelta(days=int(max(years, 2) * 365.25) + 320)
@@ -72,13 +113,19 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
     else:
         status = "FLAT"
     dist_to_exit = (close - sma200) / close * 100.0 if close else float("nan")
+    support, touches, dist_sup, near_strong = _nearest_support(df, close)
+    # STRONG = trend intact (above the 200-day) AND pressed against real support
+    strong = bool(above200 and near_strong)
     return {
-        "ticker": ticker, "status": status,
+        "ticker": ticker, "status": status, "strong": strong,
         "date": str(df.index[-1].date()),
         "close": round(close, 2),
         "entry_next_open": round(close, 2),   # proxy until the bar exists
         "exit_below": round(sma200, 2),       # exit when daily close < 200-day
         "dist_to_exit_pct": round(dist_to_exit, 1),
+        "support": support if support == support else "",
+        "support_touches": touches,
+        "dist_to_support_pct": dist_sup if dist_sup == dist_sup else "",
         "ema20": round(float(last["ema20"]), 2),
         "sma50": round(float(last["sma50"]), 2),
         "sma200": round(sma200, 2),

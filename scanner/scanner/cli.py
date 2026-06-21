@@ -1945,51 +1945,68 @@ def _run_mtf_signal(source, tickers, out_dir):
     if not rows:
         _warn_no_data(source, adapter)
         return
-    rows.sort(key=lambda r: (order.get(r["status"], 9), -r["dist_to_exit_pct"]))
+    rows.sort(key=lambda r: (0 if r.get("strong") else 1,
+                             order.get(r["status"], 9), -r["dist_to_exit_pct"]))
     buys = [r for r in rows if r["status"] == "BUY"]
+    strong = [r for r in rows if r.get("strong")]
+
+    def _sup(r):
+        if r.get("support") in ("", None):
+            return "—"
+        return f"{r['support']:.2f}({r['support_touches']}t,{r['dist_to_support_pct']}%)"
 
     print("=" * 80)
     print("  WEEKLY SIGNALS — multi-timeframe trend watchlist")
     print("=" * 80)
     print(f"  Source: {source}   As of: {rows[0]['date']}   Tickers: {len(rows)}")
     print("  BUY = trend just turned up (enter next open). Exit when the daily")
-    print("  close falls below the 200-day line. Paper-trade these first.")
+    print("  close falls below the 200-day. ★STRONG = uptrend pulling back to a")
+    print("  multi-touch support floor (lowest-risk entry). Paper-trade first.")
     print("=" * 80)
-    print(f"\n  {'ticker':<7}{'status':<12}{'close':>9}{'enter~':>9}"
-          f"{'exit<':>9}{'cushion':>9}")
-    print("  " + "-" * 56)
+    print(f"\n  {'tkr':<7}{'★':<2}{'status':<11}{'close':>9}{'exit<':>9}"
+          f"{'cushion':>8}   support(touches,dist)")
+    print("  " + "-" * 68)
     for r in rows:
-        print(f"  {r['ticker']:<7}{r['status']:<12}{r['close']:>9.2f}"
-              f"{r['entry_next_open']:>9.2f}{r['exit_below']:>9.2f}"
-              f"{r['dist_to_exit_pct']:>8.1f}%")
-    print(f"\n  THIS WEEK'S BUYS: " + (", ".join(b["ticker"] for b in buys)
-          if buys else "none — nothing freshly triggered; hold what you have."))
-    print("  'cushion' = how far above the 200-day exit line (your downside before "
-          "the trend rule takes you out).")
+        star = "★" if r.get("strong") else " "
+        print(f"  {r['ticker']:<7}{star:<2}{r['status']:<11}{r['close']:>9.2f}"
+              f"{r['exit_below']:>9.2f}{r['dist_to_exit_pct']:>7.1f}%   {_sup(r)}")
+    print(f"\n  ★ STRONG SETUPS (uptrend AT support): "
+          + (", ".join(r["ticker"] for r in strong) if strong else "none this week"))
+    print(f"  THIS WEEK'S BUYS: " + (", ".join(b["ticker"] for b in buys)
+          if buys else "none freshly triggered."))
 
     md = ["# Weekly Signals — multi-timeframe trend watchlist\n",
           f"- **As of:** {rows[0]['date']} · **Source:** {source} · "
           f"**Tickers:** {len(rows)}",
           "- BUY = trend just turned up (enter next open). Exit when the daily "
-          "close falls below the 200-day line. **Paper-trade first.**\n",
-          f"## This week's BUYs: {', '.join(b['ticker'] for b in buys) if buys else 'none'}\n",
-          "| Ticker | Status | Close | Enter ~ | Exit if < | Cushion to exit |",
-          "|---|---|--:|--:|--:|--:|"]
+          "close falls below the 200-day line.",
+          "- **★ STRONG** = trend is up AND price is pulling back to a multi-touch "
+          "**support** floor — the lowest-risk entries. **Paper-trade first.**\n",
+          f"## ★ Strong setups (uptrend at support): "
+          f"{', '.join(r['ticker'] for r in strong) if strong else 'none this week'}\n",
+          f"## This week's fresh BUYs: "
+          f"{', '.join(b['ticker'] for b in buys) if buys else 'none'}\n",
+          "| Ticker | ★ | Status | Close | Exit if < | Cushion | "
+          "Support (touches, dist) |",
+          "|---|:-:|---|--:|--:|--:|---|"]
     for r in rows:
-        md.append(f"| {r['ticker']} | {r['status']} | {r['close']:.2f} | "
-                  f"{r['entry_next_open']:.2f} | {r['exit_below']:.2f} | "
-                  f"{r['dist_to_exit_pct']:.1f}% |")
+        md.append(f"| {r['ticker']} | {'★' if r.get('strong') else ''} | "
+                  f"{r['status']} | {r['close']:.2f} | {r['exit_below']:.2f} | "
+                  f"{r['dist_to_exit_pct']:.1f}% | {_sup(r)} |")
     md.append("\n## How to use this (paper trading)\n"
-              "1. Each Saturday, look at the **BUY** rows.\n"
+              "1. Each Saturday, prefer the **★ STRONG** rows (uptrend pulling "
+              "back to support) and the fresh **BUY** rows.\n"
               "2. Paper-buy at Monday's open; write down the price.\n"
               "3. Hold while the trend is intact; **paper-sell when the daily "
               "close drops below the 'Exit if <' (200-day) level.**\n"
               "4. Track every trade for a month before risking a cent.\n"
-              "- 'IN_UPTREND' = already trending up (you'd be holding). "
-              "'HOLD_200' = above the 200-day but pulling back. 'FLAT' = below "
-              "the 200-day, stay out.\n- Signals are lumpy: some weeks several "
-              "BUYs, many weeks none. That is normal and correct — you only buy "
-              "real trends.\n")
+              "- **Support (touches, dist)** = nearest floor below price, how many "
+              "times it has held, and how far price is above it. Near a "
+              "many-touch floor in an uptrend = a strong, low-risk entry.\n"
+              "- 'IN_UPTREND' = already trending up. 'HOLD_200' = above the "
+              "200-day but pulling back. 'FLAT' = below the 200-day, stay out.\n"
+              "- Signals are lumpy: some weeks several, many weeks none. That is "
+              "normal — you only buy real trends near real support.\n")
     if out_dir not in (".", ""):
         os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "WEEKLY_SIGNALS.md") if out_dir else "WEEKLY_SIGNALS.md"

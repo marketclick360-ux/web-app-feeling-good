@@ -63,3 +63,20 @@ def test_max_dd_helper():
     eq = np.array([100, 120, 90, 110, 80, 130])
     # worst peak->trough is 120 -> 80 = 33.3%
     assert abs(_max_dd(eq) - (40 / 120)) < 1e-9
+
+
+def test_support_zone_counts_touches():
+    from scanner.mtf import _support_zones, _nearest_support
+    # build a saw-tooth that bounces off ~100 three times, between peaks at ~110
+    seg_down = np.linspace(110, 100, 8)
+    seg_up = np.linspace(100, 110, 8)
+    close = np.concatenate([seg_down, seg_up, seg_down, seg_up, seg_down, seg_up])
+    idx = pd.bdate_range("2022-01-03", periods=len(close), tz="UTC")
+    df = pd.DataFrame({"open": close, "high": close + 0.5,
+                       "low": close - 0.2, "close": close}, index=idx)
+    zones = _support_zones(df, window=3, tol_pct=2.0, lookback=200)
+    # a ~99.8 support zone should be found with multiple touches
+    near = [z for z in zones if abs(z[0] - 99.8) < 3]
+    assert near and max(t for _, t in near) >= 2
+    level, touches, dist, near_strong = _nearest_support(df, price=101.0)
+    assert touches >= 2 and 0 <= dist <= 5
