@@ -1962,9 +1962,12 @@ def _run_mtf_history(source, tickers, out_dir):
         any_data = True
         liq = (f"${s['adv_dollar_m']:.0f}M/day" if s.get("adv_dollar_m") else "n/a")
         if not s.get("has_floor"):
-            print(f"\n  {tk}: no 3+ touch, multi-year floor near price. "
-                  f"Liquidity {liq} · daily move ~{s['atr_pct']}%.")
-            md.append(f"\n## {tk}\n\n_No 3+ touch multi-year floor near price._ "
+            far = s.get("nearest_floor_pct")
+            note = (f"price is ~{far:.0f}% above its nearest multi-year floor "
+                    "(not near support)" if isinstance(far, (int, float))
+                    else "no 3+ touch multi-year floor near price")
+            print(f"\n  {tk}: {note}. Liquidity {liq} · daily move ~{s['atr_pct']}%.")
+            md.append(f"\n## {tk}\n\n_{note[0].upper()}{note[1:]}._ "
                       f"Liquidity {liq}, typical daily move ~{s['atr_pct']}%.\n")
             continue
         print(f"\n  ### {tk}  — floor {s['floor']} (held {s['touches']}x over "

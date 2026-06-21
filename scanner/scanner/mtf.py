@@ -208,6 +208,11 @@ def support_history(adapter, ticker: str, as_of=None, years: int = 25,
     if len(raw) < 300:
         return None
     df = ind.enrich_daily(raw)
+    # drop warmup / any trailing rows with missing indicators so the latest-bar
+    # ATR / liquidity readings are valid (this is what caused the "nan" rows)
+    df = df.dropna(subset=["close", "atr14", "adv20"])
+    if len(df) < 300:
+        return None
     close = df["close"]
     price = float(close.iloc[-1])
     lows = df["low"].to_numpy()
@@ -215,7 +220,7 @@ def support_history(adapter, ticker: str, as_of=None, years: int = 25,
     idx = df.index
     n = len(df)
     atr_pct = (float(df["atr14"].iloc[-1]) / price * 100.0) if price else float("nan")
-    adv_dollar = float(df["adv20"].iloc[-1]) if "adv20" in df else float("nan")
+    adv_dollar = float(df["adv20"].iloc[-1])
 
     pivots = [(float(lows[i]), i) for i in range(window, n - window)
               if lows[i] == lows[i - window:i + window + 1].min()]
@@ -240,9 +245,16 @@ def support_history(adapter, ticker: str, as_of=None, years: int = 25,
     if not strong:
         return base
 
-    below = [z for z in strong if z["level"] <= price * 1.02]
-    anchor = (max(below, key=lambda z: z["level"]) if below
-              else min(strong, key=lambda z: abs(z["level"] - price)))
+    # Only anchor to a floor price could realistically be trading against right
+    # now: within ~25% below to ~5% above today's price. This ignores ancient,
+    # dividend-adjusted lows (e.g. a bond ETF's $38 print from 20 years ago)
+    # that price is nowhere near. If nothing qualifies, there is no nearby floor.
+    cand = [z for z in strong if price * 0.75 <= z["level"] <= price * 1.05]
+    if not cand:
+        base["nearest_floor_pct"] = round(
+            min((price - z["level"]) / price * 100.0 for z in strong), 1)
+        return base
+    anchor = min(cand, key=lambda z: abs(z["level"] - price))
     level = anchor["level"]
 
     ev = []
