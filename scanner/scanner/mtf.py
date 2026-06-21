@@ -172,6 +172,99 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
     }
 
 
+def support_history(adapter, ticker: str, as_of=None, years: int = 25,
+                    forward: int = 60, min_touches: int = 3,
+                    min_span_years: float = 3.0, window: int = 5,
+                    tol_pct: float = 2.0):
+    """How a ticker has historically behaved at its strongest multi-year floor.
+    Finds the anchor floor (a support zone touched >= min_touches over >=
+    min_span_years), then for every touch measures the forward `forward`-bar
+    behavior: how far it bounced, how long to the peak, the dip first, and
+    whether volume was above normal. Returns a stats dict (or None / has_floor
+    False). Descriptive history, NOT a prediction — samples are small."""
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(years * 365.25) + 320)
+    raw = adapter.get_bars(ticker, "1d", start=start, end=as_of, as_of=as_of).df
+    if len(raw) < 300:
+        return None
+    df = ind.enrich_daily(raw)
+    close = df["close"]
+    price = float(close.iloc[-1])
+    lows = df["low"].to_numpy()
+    vol = df["volume"].to_numpy()
+    idx = df.index
+    n = len(df)
+    atr_pct = (float(df["atr14"].iloc[-1]) / price * 100.0) if price else float("nan")
+    adv_dollar = float(df["adv20"].iloc[-1]) if "adv20" in df else float("nan")
+
+    pivots = [(float(lows[i]), i) for i in range(window, n - window)
+              if lows[i] == lows[i - window:i + window + 1].min()]
+    zones = []
+    for p, i in sorted(pivots, key=lambda x: x[0]):
+        for z in zones:
+            if abs(p - z["level"]) / z["level"] <= tol_pct / 100.0:
+                z["idx"].append(i)
+                z["level"] = sum(float(lows[j]) for j in z["idx"]) / len(z["idx"])
+                break
+        else:
+            zones.append({"level": p, "idx": [i]})
+
+    def _span(z):
+        ts = [idx[j] for j in z["idx"]]
+        return (max(ts) - min(ts)).days / 365.25
+    strong = [z for z in zones
+              if len(z["idx"]) >= min_touches and _span(z) >= min_span_years]
+    base = {"ticker": ticker, "has_floor": False, "price": round(price, 2),
+            "atr_pct": round(atr_pct, 1),
+            "adv_dollar_m": round(adv_dollar / 1e6, 0) if adv_dollar == adv_dollar else None}
+    if not strong:
+        return base
+
+    below = [z for z in strong if z["level"] <= price * 1.02]
+    anchor = (max(below, key=lambda z: z["level"]) if below
+              else min(strong, key=lambda z: abs(z["level"] - price)))
+    level = anchor["level"]
+
+    ev = []
+    for i in sorted(anchor["idx"]):
+        if i + forward >= n or i < 20:
+            continue
+        entry = float(close.iloc[i])
+        win = df.iloc[i + 1:i + 1 + forward]
+        highs = win["high"].to_numpy()
+        max_gain = (float(highs.max()) - entry) / entry * 100.0
+        max_dd = (float(win["low"].min()) - entry) / entry * 100.0
+        days_to_peak = int(highs.argmax()) + 1
+        base_vol = vol[i - 20:i].mean()
+        vol_ratio = float(vol[i] / base_vol) if base_vol > 0 else float("nan")
+        ev.append({"date": idx[i].date().isoformat(), "max_gain": max_gain,
+                   "max_dd": max_dd, "days_to_peak": days_to_peak,
+                   "vol_ratio": vol_ratio})
+    if not ev:
+        return base
+
+    g = np.array([e["max_gain"] for e in ev])
+    d = np.array([e["days_to_peak"] for e in ev])
+    dd = np.array([e["max_dd"] for e in ev])
+    vr = np.array([e["vol_ratio"] for e in ev if e["vol_ratio"] == e["vol_ratio"]])
+    base.update({
+        "has_floor": True, "floor": round(level, 2),
+        "touches": len(anchor["idx"]), "span_years": round(_span(anchor), 1),
+        "n_events": len(ev),
+        "median_gain": round(float(np.median(g)), 1),
+        "best_gain": round(float(g.max()), 1),
+        "worst_gain": round(float(g.min()), 1),
+        "median_days_to_peak": int(np.median(d)),
+        "median_dip": round(float(np.median(dd)), 1),
+        "pct_bounced_5": round(float((g >= 5).mean()) * 100.0, 0),
+        "pct_broke_8": round(float((dd <= -8).mean()) * 100.0, 0),
+        "median_vol_ratio": round(float(np.median(vr)), 1) if len(vr) else None,
+        "dist_to_floor_pct": round((price - level) / price * 100.0, 1),
+        "events": ev,
+    })
+    return base
+
+
 @dataclass
 class RoundTrip:
     entry_date: str

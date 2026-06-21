@@ -1928,6 +1928,95 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
+def _run_mtf_history(source, tickers, out_dir):
+    """How each ticker has historically behaved at its strongest multi-year
+    floor: how far it bounced, how long, the dip first, volume confirmation,
+    plus liquidity and typical daily move. Descriptive history, not a forecast."""
+    import os
+    from .mtf import support_history
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    print("=" * 82)
+    print("  SUPPORT BEHAVIOR — how each name has acted at its big multi-year floor")
+    print("=" * 82)
+    print("  Every time price tested the floor, what happened next (forward ~3 months).")
+    print("  Descriptive HISTORY, not a prediction. Small samples — read as tendencies.")
+    print("=" * 82)
+
+    md = ["# Support Behavior — history at the big multi-year floor\n",
+          f"- **Source:** {source} · **As of:** {as_of.date()}",
+          "- For each ticker: its strongest floor (3+ touches over 3+ years) and "
+          "how price behaved the ~3 months after each touch. **History, not a "
+          "forecast — small samples.**\n"]
+    any_data = False
+    for tk in tickers:
+        try:
+            s = support_history(adapter, tk, as_of=as_of)
+        except Exception as exc:
+            s = None
+            print(f"\n  [{tk}] error: {exc}")
+        if s is None:
+            print(f"\n  [{tk}] no data from {source}.")
+            continue
+        any_data = True
+        liq = (f"${s['adv_dollar_m']:.0f}M/day" if s.get("adv_dollar_m") else "n/a")
+        if not s.get("has_floor"):
+            print(f"\n  {tk}: no 3+ touch, multi-year floor near price. "
+                  f"Liquidity {liq} · daily move ~{s['atr_pct']}%.")
+            md.append(f"\n## {tk}\n\n_No 3+ touch multi-year floor near price._ "
+                      f"Liquidity {liq}, typical daily move ~{s['atr_pct']}%.\n")
+            continue
+        print(f"\n  ### {tk}  — floor {s['floor']} (held {s['touches']}x over "
+              f"{s['span_years']:.0f}y, price {s['dist_to_floor_pct']}% above it)")
+        print(f"  Tested {s['n_events']} times. When it tested this floor:")
+        print(f"    bounced 5%+ within ~3mo : {s['pct_bounced_5']:.0f}% of the time")
+        print(f"    typical move up         : +{s['median_gain']:.1f}%  "
+              f"(best +{s['best_gain']:.0f}%, worst {s['worst_gain']:.0f}%)")
+        print(f"    typical time to the top : {s['median_days_to_peak']} trading days")
+        print(f"    typical dip first       : {s['median_dip']:.1f}%")
+        print(f"    broke down (>8% lower)  : {s['pct_broke_8']:.0f}% of the time")
+        vr = s.get("median_vol_ratio")
+        print(f"    volume on the test      : "
+              + (f"{vr:.1f}x normal "
+                 + ("(above average — real buyers)" if vr and vr >= 1.1
+                    else "(about normal)") if vr else "n/a"))
+        print(f"    liquidity {liq} · typical daily move (ATR) ~{s['atr_pct']}%")
+
+        md.append(f"\n## {tk} — floor {s['floor']} (held {s['touches']}× over "
+                  f"{s['span_years']:.0f}y; price {s['dist_to_floor_pct']}% above)\n")
+        md.append(f"Tested **{s['n_events']}** times. When price reached this floor:\n")
+        md.append(f"| Metric | Value |")
+        md.append(f"|---|---|")
+        md.append(f"| Bounced 5%+ within ~3 months | **{s['pct_bounced_5']:.0f}%** of tests |")
+        md.append(f"| Typical move up | **+{s['median_gain']:.1f}%** "
+                  f"(best +{s['best_gain']:.0f}%, worst {s['worst_gain']:.0f}%) |")
+        md.append(f"| Typical time to the peak | **{s['median_days_to_peak']} trading days** |")
+        md.append(f"| Typical dip first | {s['median_dip']:.1f}% |")
+        md.append(f"| Broke down (>8% lower) | {s['pct_broke_8']:.0f}% of tests |")
+        md.append(f"| Volume on the test | "
+                  + (f"{vr:.1f}× normal" if vr else "n/a") + " |")
+        md.append(f"| Liquidity | {liq} |")
+        md.append(f"| Typical daily move (ATR) | {s['atr_pct']}% |")
+
+    md.append("\n## How to read this\n"
+              "- **Bounced 5%+** = how reliable the floor has been. **Typical move "
+              "up / time to peak** = how much and how long when it worked. "
+              "**Volume above normal** on the test means real buyers showed up "
+              "(a better sign).\n- Small samples (a floor only gets tested a few "
+              "times). Treat as tendencies, not guarantees. History does not "
+              "predict the future.\n")
+    if any_data:
+        if out_dir not in (".", ""):
+            os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, "SUPPORT_HISTORY.md") if out_dir else "SUPPORT_HISTORY.md"
+        with open(path, "w") as fh:
+            fh.write("\n".join(md) + "\n")
+        print(f"\n  Wrote {path}. History only — not a prediction.")
+    else:
+        _warn_no_data(source, adapter)
+
+
 def _run_mtf_signal(source, tickers, out_dir):
     """Weekly watchlist: today's BUY / hold / flat status for each ticker under
     the patient multi-timeframe rule. Run it once a week (a Saturday job does
@@ -2402,6 +2491,9 @@ def main(argv: List[str] = None):
     pmt.add_argument("--signal", action="store_true", dest="signal_mode",
                      help="weekly watchlist: today's BUY/hold/flat per ticker "
                           "(instead of a backtest)")
+    pmt.add_argument("--history", action="store_true", dest="history_mode",
+                     help="how each ticker has behaved at its big multi-year "
+                          "floor (move size, time, volume, liquidity)")
 
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
@@ -2468,7 +2560,9 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "mtf":
-        if args.signal_mode:
+        if args.history_mode:
+            _run_mtf_history(args.source, args.tickers or ["SPY"], args.out_dir)
+        elif args.signal_mode:
             _run_mtf_signal(args.source, args.tickers or ["SPY"], args.out_dir)
         else:
             _run_mtf(args.source, args.tickers or ["SPY"], args.years,

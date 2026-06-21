@@ -81,3 +81,17 @@ def test_support_zone_counts_touches():
     sup = _nearest_support(df, price=101.0)
     assert sup is not None and sup["touches"] >= 2 and 0 <= sup["dist_pct"] <= 5
     assert sup["span_years"] >= 0 and "years_since_last" in sup
+
+
+def test_support_history_measures_a_multiyear_floor():
+    from scanner.mtf import support_history
+    # ~6 years of bars that repeatedly dip to ~100 and rally to ~120
+    cycle = np.concatenate([np.linspace(120, 100, 30), np.linspace(100, 120, 30)])
+    close = np.tile(cycle, 26)[:1560]            # ~6 years of business days
+    adapter = _StubAdapter(close)
+    s = support_history(adapter, "TEST",
+                        as_of=pd.Timestamp("2014-02-01", tz="UTC"),
+                        years=25, min_span_years=2.0)
+    assert s is not None and s["has_floor"] is True
+    assert s["touches"] >= 3 and s["span_years"] >= 2
+    assert s["n_events"] >= 3 and "median_gain" in s and "median_days_to_peak" in s
