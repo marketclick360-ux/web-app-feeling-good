@@ -13,7 +13,7 @@ on:
   push:
     paths:
       - '.github/workflows/weekly-signals.yml'
-    # re-trigger: stop + risk %% + actual volume
+    # re-trigger: history fix (nearby-floor anchor)
 
 jobs:
   signals:
