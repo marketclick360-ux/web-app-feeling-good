@@ -1945,34 +1945,41 @@ def _run_mtf_signal(source, tickers, out_dir):
     if not rows:
         _warn_no_data(source, adapter)
         return
-    rows.sort(key=lambda r: (0 if r.get("strong") else 1,
+    rows.sort(key=lambda r: (0 if r.get("deep") else 1,
+                             0 if r.get("strong") else 1,
                              order.get(r["status"], 9), -r["dist_to_exit_pct"]))
     buys = [r for r in rows if r["status"] == "BUY"]
     strong = [r for r in rows if r.get("strong")]
+    deep = [r for r in rows if r.get("deep")]
 
     def _sup(r):
         if r.get("support") in ("", None):
             return "—"
-        return f"{r['support']:.2f}({r['support_touches']}t,{r['dist_to_support_pct']}%)"
+        return (f"{r['support']:.2f} ({r['support_touches']}x over "
+                f"{r['support_span_years']:.0f}y, {r['dist_to_support_pct']}% away)")
 
-    print("=" * 80)
+    print("=" * 84)
     print("  WEEKLY SIGNALS — multi-timeframe trend watchlist")
-    print("=" * 80)
+    print("=" * 84)
     print(f"  Source: {source}   As of: {rows[0]['date']}   Tickers: {len(rows)}")
-    print("  BUY = trend just turned up (enter next open). Exit when the daily")
-    print("  close falls below the 200-day. ★STRONG = uptrend pulling back to a")
-    print("  multi-touch support floor (lowest-risk entry). Paper-trade first.")
-    print("=" * 80)
-    print(f"\n  {'tkr':<7}{'★':<2}{'status':<11}{'close':>9}{'exit<':>9}"
-          f"{'cushion':>8}   support(touches,dist)")
-    print("  " + "-" * 68)
+    print("  BUY = trend turned up (enter next open). Exit when the daily close")
+    print("  falls below the 200-day. ★ = uptrend at support. 🪨 DEEP = floor that")
+    print("  has held for YEARS (the strongest support). Paper-trade first.")
+    print("=" * 84)
+    print(f"\n  {'tkr':<7}{'':<3}{'status':<11}{'close':>9}{'exit<':>9}"
+          f"{'cushion':>8}   support (touches over years, distance)")
+    print("  " + "-" * 80)
     for r in rows:
-        star = "★" if r.get("strong") else " "
-        print(f"  {r['ticker']:<7}{star:<2}{r['status']:<11}{r['close']:>9.2f}"
+        mark = "🪨" if r.get("deep") else ("★ " if r.get("strong") else "  ")
+        print(f"  {r['ticker']:<7}{mark:<3}{r['status']:<11}{r['close']:>9.2f}"
               f"{r['exit_below']:>9.2f}{r['dist_to_exit_pct']:>7.1f}%   {_sup(r)}")
-    print(f"\n  ★ STRONG SETUPS (uptrend AT support): "
-          + (", ".join(r["ticker"] for r in strong) if strong else "none this week"))
-    print(f"  THIS WEEK'S BUYS: " + (", ".join(b["ticker"] for b in buys)
+    print(f"\n  🪨 DEEP SUPPORT (uptrend at a floor held for YEARS): "
+          + (", ".join(f"{r['ticker']}({r['support_span_years']:.0f}y,"
+                       f"{r['support_touches']}x)" for r in deep)
+             if deep else "none this week"))
+    print(f"  ★ STRONG (uptrend at support): "
+          + (", ".join(r["ticker"] for r in strong) if strong else "none"))
+    print(f"  Fresh BUYs: " + (", ".join(b["ticker"] for b in buys)
           if buys else "none freshly triggered."))
 
     md = ["# Weekly Signals — multi-timeframe trend watchlist\n",
@@ -1980,29 +1987,36 @@ def _run_mtf_signal(source, tickers, out_dir):
           f"**Tickers:** {len(rows)}",
           "- BUY = trend just turned up (enter next open). Exit when the daily "
           "close falls below the 200-day line.",
-          "- **★ STRONG** = trend is up AND price is pulling back to a multi-touch "
-          "**support** floor — the lowest-risk entries. **Paper-trade first.**\n",
+          "- **★ STRONG** = uptrend pulling back to a multi-touch support floor. "
+          "**🪨 DEEP** = that floor has held for **years** (the strongest "
+          "support). **Paper-trade first.**\n",
+          f"## 🪨 Deep support (uptrend at a floor held for years): "
+          + (", ".join(f"{r['ticker']} ({r['support_span_years']:.0f}y, "
+                       f"{r['support_touches']}x)" for r in deep)
+             if deep else "none this week") + "\n",
           f"## ★ Strong setups (uptrend at support): "
           f"{', '.join(r['ticker'] for r in strong) if strong else 'none this week'}\n",
           f"## This week's fresh BUYs: "
           f"{', '.join(b['ticker'] for b in buys) if buys else 'none'}\n",
-          "| Ticker | ★ | Status | Close | Exit if < | Cushion | "
-          "Support (touches, dist) |",
+          "| Ticker | | Status | Close | Exit if < | Cushion | "
+          "Support (touches × years, dist) |",
           "|---|:-:|---|--:|--:|--:|---|"]
     for r in rows:
-        md.append(f"| {r['ticker']} | {'★' if r.get('strong') else ''} | "
+        mark = "🪨" if r.get("deep") else ("★" if r.get("strong") else "")
+        md.append(f"| {r['ticker']} | {mark} | "
                   f"{r['status']} | {r['close']:.2f} | {r['exit_below']:.2f} | "
                   f"{r['dist_to_exit_pct']:.1f}% | {_sup(r)} |")
     md.append("\n## How to use this (paper trading)\n"
-              "1. Each Saturday, prefer the **★ STRONG** rows (uptrend pulling "
-              "back to support) and the fresh **BUY** rows.\n"
+              "1. Each Saturday, prefer the **🪨 DEEP** rows first (uptrend at a "
+              "floor that has held for years), then **★ STRONG**, then fresh **BUY**.\n"
               "2. Paper-buy at Monday's open; write down the price.\n"
               "3. Hold while the trend is intact; **paper-sell when the daily "
               "close drops below the 'Exit if <' (200-day) level.**\n"
               "4. Track every trade for a month before risking a cent.\n"
-              "- **Support (touches, dist)** = nearest floor below price, how many "
-              "times it has held, and how far price is above it. Near a "
-              "many-touch floor in an uptrend = a strong, low-risk entry.\n"
+              "- **Support (touches × years, dist)** = nearest floor below price, "
+              "how many times it has held, over how many years, and how far price "
+              "is above it. A floor touched many times across **years** that price "
+              "is now returning to = the strongest, lowest-risk entry.\n"
               "- 'IN_UPTREND' = already trending up. 'HOLD_200' = above the "
               "200-day but pulling back. 'FLAT' = below the 200-day, stay out.\n"
               "- Signals are lumpy: some weeks several, many weeks none. That is "

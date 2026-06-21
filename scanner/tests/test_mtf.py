@@ -76,7 +76,8 @@ def test_support_zone_counts_touches():
                        "low": close - 0.2, "close": close}, index=idx)
     zones = _support_zones(df, window=3, tol_pct=2.0, lookback=200)
     # a ~99.8 support zone should be found with multiple touches
-    near = [z for z in zones if abs(z[0] - 99.8) < 3]
-    assert near and max(t for _, t in near) >= 2
-    level, touches, dist, near_strong = _nearest_support(df, price=101.0)
-    assert touches >= 2 and 0 <= dist <= 5
+    near = [z for z in zones if abs(z["level"] - 99.8) < 3]
+    assert near and max(z["touches"] for z in near) >= 2
+    sup = _nearest_support(df, price=101.0)
+    assert sup is not None and sup["touches"] >= 2 and 0 <= sup["dist_pct"] <= 5
+    assert sup["span_years"] >= 0 and "years_since_last" in sup

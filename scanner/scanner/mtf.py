@@ -36,41 +36,59 @@ from .costs import CostModel, DEFAULT_COSTS
 
 
 def _support_zones(df, window: int = 5, tol_pct: float = 2.0,
-                   lookback: int = 400):
-    """Pivot-low support zones from recent bars. A pivot low is a bar whose low
-    is the lowest in a +/- `window` neighbourhood; nearby pivots (within
-    `tol_pct`) are clustered into one zone and the touch count is how many
-    pivots fell in it. More touches = stronger support. Returns
-    [(level, touches), ...]."""
-    sub = df.tail(lookback)
+                   lookback=None):
+    """Pivot-low support zones over the available history (or the last
+    `lookback` bars). A pivot low is a bar whose low is the lowest in a +/-
+    `window` neighbourhood; nearby pivots (within `tol_pct`) are clustered into
+    one zone. For each zone we keep the touch count AND the dates of the first
+    and last touch, so we can tell a fresh dip from a floor that has held for
+    YEARS or decades. Returns a list of dicts:
+    {level, touches, first, last}."""
+    sub = df if lookback is None else df.tail(lookback)
     lows = sub["low"].to_numpy()
+    idx = sub.index
     n = len(lows)
-    pivots = [float(lows[i]) for i in range(window, n - window)
+    pivots = [(float(lows[i]), idx[i]) for i in range(window, n - window)
               if lows[i] == lows[i - window:i + window + 1].min()]
     zones = []
-    for p in sorted(pivots):
+    for p, ts in sorted(pivots, key=lambda x: x[0]):
         for z in zones:
             if abs(p - z["level"]) / z["level"] <= tol_pct / 100.0:
                 z["prices"].append(p)
+                z["times"].append(ts)
                 z["level"] = sum(z["prices"]) / len(z["prices"])
                 break
         else:
-            zones.append({"level": p, "prices": [p]})
-    return [(round(z["level"], 2), len(z["prices"])) for z in zones]
+            zones.append({"level": p, "prices": [p], "times": [ts]})
+    out = []
+    for z in zones:
+        ts = sorted(z["times"])
+        out.append({"level": round(z["level"], 2), "touches": len(z["prices"]),
+                    "first": ts[0], "last": ts[-1]})
+    return out
 
 
-def _nearest_support(df, price, near_pct: float = 3.0, min_touches: int = 2):
-    """Nearest support at/below `price`, plus whether price is near a STRONG
-    (multi-touch) support. Returns (level, touches, dist_pct, near_strong)."""
-    zones = _support_zones(df)
-    below = [(lvl, t) for lvl, t in zones if lvl <= price * 1.005]
-    if not below:
-        return float("nan"), 0, float("nan"), False
-    level, touches = max(below, key=lambda x: x[0])
-    dist = (price - level) / price * 100.0 if price else float("nan")
-    near_strong = bool(dist == dist and 0 <= dist <= near_pct
-                       and touches >= min_touches)
-    return level, touches, round(dist, 1), near_strong
+def _nearest_support(df, price, near_pct: float = 3.0, min_touches: int = 2,
+                     lookback=None):
+    """Nearest support at/below `price` over full history, with how STRONG and
+    how OLD it is. Returns a dict or None:
+    {level, touches, dist_pct, near_strong, span_years, years_since_last}.
+    span_years = first-to-last touch (how long the floor has held);
+    years_since_last = how long since price last visited it before now."""
+    zones = _support_zones(df, lookback=lookback)
+    below = [z for z in zones if z["level"] <= price * 1.005]
+    if not below or price <= 0:
+        return None
+    z = max(below, key=lambda z: z["level"])
+    dist = (price - z["level"]) / price * 100.0
+    last_bar = df.index[-1]
+    span_years = (z["last"] - z["first"]).days / 365.25
+    years_since_last = (last_bar - z["last"]).days / 365.25
+    near_strong = bool(0 <= dist <= near_pct and z["touches"] >= min_touches)
+    return {"level": z["level"], "touches": z["touches"],
+            "dist_pct": round(dist, 1), "near_strong": near_strong,
+            "span_years": round(span_years, 1),
+            "years_since_last": round(years_since_last, 1)}
 
 
 def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
@@ -86,9 +104,14 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
 
     A signal is STRONG when the trend is up (above the 200-day) AND price is
     pulling back to a multi-touch support zone — a low-risk entry near a floor.
+    It is DEEP (the strongest kind) when that floor has held for YEARS: many
+    touches spread over a long span. We pull the FULL available history so a
+    decades-old floor can be recognised.
     """
     as_of = as_of or pd.Timestamp.now("UTC").normalize()
-    start = as_of - pd.Timedelta(days=int(max(years, 2) * 365.25) + 320)
+    # pull deep history (up to ~25y) so support that has held for years/decades
+    # is visible — yfinance returns whatever exists for younger tickers
+    start = as_of - pd.Timedelta(days=int(max(years, 25) * 365.25) + 320)
     raw = adapter.get_bars(ticker, "1d", start=start, end=as_of, as_of=as_of).df
     if len(raw) < 220:
         return None
@@ -113,19 +136,26 @@ def mtf_signal(adapter, ticker: str, as_of: Optional[pd.Timestamp] = None,
     else:
         status = "FLAT"
     dist_to_exit = (close - sma200) / close * 100.0 if close else float("nan")
-    support, touches, dist_sup, near_strong = _nearest_support(df, close)
+    sup = _nearest_support(df, close)
+    near_strong = bool(sup and sup["near_strong"])
     # STRONG = trend intact (above the 200-day) AND pressed against real support
     strong = bool(above200 and near_strong)
+    span_years = sup["span_years"] if sup else 0.0
+    # DEEP = a STRONG setup whose floor has held for YEARS (>=3y span and >=3
+    # touches) — the super-strong, long-standing support the user wants
+    deep = bool(strong and span_years >= 3.0 and sup["touches"] >= 3)
     return {
-        "ticker": ticker, "status": status, "strong": strong,
+        "ticker": ticker, "status": status, "strong": strong, "deep": deep,
         "date": str(df.index[-1].date()),
         "close": round(close, 2),
         "entry_next_open": round(close, 2),   # proxy until the bar exists
         "exit_below": round(sma200, 2),       # exit when daily close < 200-day
         "dist_to_exit_pct": round(dist_to_exit, 1),
-        "support": support if support == support else "",
-        "support_touches": touches,
-        "dist_to_support_pct": dist_sup if dist_sup == dist_sup else "",
+        "support": sup["level"] if sup else "",
+        "support_touches": sup["touches"] if sup else 0,
+        "support_span_years": span_years,
+        "support_years_since_last": sup["years_since_last"] if sup else "",
+        "dist_to_support_pct": sup["dist_pct"] if sup else "",
         "ema20": round(float(last["ema20"]), 2),
         "sma50": round(float(last["sma50"]), 2),
         "sma200": round(sma200, 2),
