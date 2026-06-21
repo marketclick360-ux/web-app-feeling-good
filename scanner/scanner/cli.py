@@ -1928,6 +1928,89 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
+def _run_mtf_volume(source, tickers, out_dir):
+    """How much volume it takes to move each ticker: typical daily move by
+    relative-volume bucket, the 'needle-mover' level, and breakout follow-through
+    on heavy vs light volume. Descriptive history."""
+    import os
+    from .mtf import volume_study
+    adapter = get_adapter(source)
+    as_of = pd.Timestamp.now("UTC").normalize()
+
+    print("=" * 82)
+    print("  VOLUME → MOVE — how much volume it takes to move each name")
+    print("=" * 82)
+    print("  Days grouped by volume vs their own 20-day average. History, not a forecast.")
+    print("=" * 82)
+
+    md = ["# Volume → Move — how much volume moves each name\n",
+          f"- **Source:** {source} · **As of:** {as_of.date()}",
+          "- Each day grouped by **relative volume** (that day's volume ÷ its "
+          "20-day average); shows the typical absolute move in each bucket. "
+          "**History, not a forecast.**\n"]
+    any_data = False
+    for tk in tickers:
+        try:
+            s = volume_study(adapter, tk, as_of=as_of)
+        except Exception as exc:
+            s = None
+            print(f"\n  [{tk}] error: {exc}")
+        if s is None:
+            print(f"\n  [{tk}] no data from {source}.")
+            continue
+        any_data = True
+        line = "  ".join(f"{b['bucket']} {b['median_move']:.1f}%" for b in s["buckets"])
+        print(f"\n  ### {tk}  (quiet-day move ~{s['base_move']:.1f}%)")
+        print(f"  move by volume:  {line}")
+        if s["needle"]:
+            nb = s["needle"]
+            print(f"  → needle moves at ~{nb['bucket']} volume "
+                  f"(move ~{nb['median_move']:.1f}%, ~{nb['median_move']/max(s['base_move'],0.01):.1f}× a quiet day)")
+        if s["med_relvol_bigup"]:
+            print(f"  big up-days happen on ~{s['med_relvol_bigup']:.1f}× average volume")
+        bh, bl = s["breakout_heavy"], s["breakout_light"]
+        if bh and bl:
+            print(f"  breakouts (new 20-day high) followed through 10 days later: "
+                  f"heavy vol {bh['pct_pos']:.0f}% (median {bh['median_fwd']:+.1f}%) "
+                  f"vs light vol {bl['pct_pos']:.0f}% ({bl['median_fwd']:+.1f}%)")
+
+        md.append(f"\n## {tk}  (quiet-day move ~{s['base_move']:.1f}%)\n")
+        md.append("| Volume vs its 20-day avg | Typical daily move | Days |")
+        md.append("|---|--:|--:|")
+        for b in s["buckets"]:
+            md.append(f"| {b['bucket']} | {b['median_move']:.1f}% | {b['n']} |")
+        if s["needle"]:
+            nb = s["needle"]
+            md.append(f"\n**Needle-mover:** moves clearly pick up at **~{nb['bucket']} "
+                      f"volume** (~{nb['median_move']:.1f}% — about "
+                      f"{nb['median_move']/max(s['base_move'],0.01):.1f}× a quiet day).")
+        if s["med_relvol_bigup"]:
+            md.append(f"\n**Big up-days** happen on **~{s['med_relvol_bigup']:.1f}× "
+                      "average volume.**")
+        if bh and bl:
+            md.append(f"\n**Breakouts** (new 20-day high) that stuck 10 days later: "
+                      f"**heavy volume {bh['pct_pos']:.0f}%** (median {bh['median_fwd']:+.1f}%, "
+                      f"{bh['n']} cases) vs light volume {bl['pct_pos']:.0f}% "
+                      f"({bl['median_fwd']:+.1f}%, {bl['n']} cases).")
+
+    md.append("\n## How to read this\n"
+              "- **Quiet-day move** = the typical day on below-average volume. "
+              "The **needle-mover** is the volume level where the move clearly "
+              "jumps — that's the volume you want to see behind a breakout.\n"
+              "- **Breakouts on heavy volume** following through more than on light "
+              "volume = volume confirmation is real for that name.\n"
+              "- History, small windows in places — tendencies, not guarantees.\n")
+    if any_data:
+        if out_dir not in (".", ""):
+            os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, "VOLUME_STUDY.md") if out_dir else "VOLUME_STUDY.md"
+        with open(path, "w") as fh:
+            fh.write("\n".join(md) + "\n")
+        print(f"\n  Wrote {path}. History only — not a prediction.")
+    else:
+        _warn_no_data(source, adapter)
+
+
 def _run_mtf_history(source, tickers, out_dir):
     """How each ticker has historically behaved at its strongest multi-year
     floor: how far it bounced, how long, the dip first, volume confirmation,
@@ -2518,6 +2601,9 @@ def main(argv: List[str] = None):
     pmt.add_argument("--history", action="store_true", dest="history_mode",
                      help="how each ticker has behaved at its big multi-year "
                           "floor (move size, time, volume, liquidity)")
+    pmt.add_argument("--volume", action="store_true", dest="volume_mode",
+                     help="how much volume it takes to move each ticker "
+                          "(move by volume bucket + breakout follow-through)")
 
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
@@ -2584,7 +2670,9 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "mtf":
-        if args.history_mode:
+        if args.volume_mode:
+            _run_mtf_volume(args.source, args.tickers or ["SPY"], args.out_dir)
+        elif args.history_mode:
             _run_mtf_history(args.source, args.tickers or ["SPY"], args.out_dir)
         elif args.signal_mode:
             _run_mtf_signal(args.source, args.tickers or ["SPY"], args.out_dir)

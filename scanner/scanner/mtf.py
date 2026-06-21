@@ -297,6 +297,66 @@ def support_history(adapter, ticker: str, as_of=None, years: int = 25,
     return base
 
 
+def volume_study(adapter, ticker: str, as_of=None, years: int = 12):
+    """How much volume it takes to move a ticker. Buckets every day by relative
+    volume (that day's volume / its 20-day average) and reports the typical
+    absolute daily move in each bucket, the 'needle-mover' volume level (where
+    the move clearly jumps), the volume that big up-days happen on, and whether
+    breakouts follow through more on heavy volume. Descriptive history."""
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(years * 365.25) + 60)
+    raw = adapter.get_bars(ticker, "1d", start=start, end=as_of, as_of=as_of).df
+    if len(raw) < 300:
+        return None
+    df = ind.enrich_daily(raw).dropna(subset=["close", "volume", "atr14", "vol_sma20"])
+    if len(df) < 250:
+        return None
+    close = df["close"]
+    relvol = (df["volume"] / df["vol_sma20"]).to_numpy()
+    ret = close.pct_change().to_numpy() * 100.0
+    aret = np.abs(ret)
+    atrp = (df["atr14"] / close * 100.0).to_numpy()
+    valid = ~np.isnan(ret)
+
+    edges = [0.0, 0.7, 1.0, 1.5, 2.0, 3.0, np.inf]
+    labels = ["<0.7x", "0.7-1x", "1-1.5x", "1.5-2x", "2-3x", ">3x"]
+    buckets = []
+    for lo, hi, lab in zip(edges[:-1], edges[1:], labels):
+        m = valid & (relvol >= lo) & (relvol < hi)
+        if m.sum() >= 10:
+            buckets.append({"bucket": lab, "n": int(m.sum()),
+                            "median_move": round(float(np.median(aret[m])), 2),
+                            "median_signed": round(float(np.median(ret[m])), 2)})
+    low = valid & (relvol < 1.0)
+    base_move = float(np.median(aret[low])) if low.sum() else float("nan")
+    needle = None
+    for b in buckets:
+        if base_move == base_move and b["median_move"] >= 1.5 * base_move:
+            needle = b
+            break
+    big_up = valid & (ret > atrp)               # up more than ~1 ATR
+    med_relvol_bigup = (round(float(np.median(relvol[big_up])), 1)
+                        if big_up.sum() >= 10 else None)
+
+    hi20 = close.rolling(20).max().shift(1).to_numpy()
+    fwd = np.full(len(close), np.nan)
+    cv = close.to_numpy()
+    fwd[:-10] = cv[10:] / cv[:-10] - 1.0
+    bo = valid & (cv > hi20) & ~np.isnan(fwd)
+
+    def _bo(mask):
+        if mask.sum() < 5:
+            return None
+        return {"n": int(mask.sum()),
+                "pct_pos": round(float((fwd[mask] > 0).mean() * 100.0), 0),
+                "median_fwd": round(float(np.median(fwd[mask])) * 100.0, 1)}
+    return {"ticker": ticker, "base_move": round(base_move, 2),
+            "buckets": buckets, "needle": needle,
+            "med_relvol_bigup": med_relvol_bigup,
+            "breakout_heavy": _bo(bo & (relvol >= 1.5)),
+            "breakout_light": _bo(bo & (relvol < 1.5))}
+
+
 @dataclass
 class RoundTrip:
     entry_date: str

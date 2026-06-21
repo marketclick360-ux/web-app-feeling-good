@@ -95,3 +95,29 @@ def test_support_history_measures_a_multiyear_floor():
     assert s is not None and s["has_floor"] is True
     assert s["touches"] >= 3 and s["span_years"] >= 2
     assert s["n_events"] >= 3 and "median_gain" in s and "median_days_to_peak" in s
+
+
+def test_volume_study_bigger_moves_on_higher_volume():
+    from scanner.mtf import volume_study
+    rng = np.random.default_rng(1)
+    n = 1200
+    ret = rng.normal(0, 0.01, n)                    # daily returns
+    close = 100 * np.exp(np.cumsum(ret))
+    # volume scales with the size of the move -> heavy days = big moves
+    base_v = 1e6
+    volume = base_v * (1 + 8 * np.abs(ret)) * rng.uniform(0.8, 1.2, n)
+    idx = pd.bdate_range("2018-01-02", periods=n, tz="UTC")
+    df = pd.DataFrame({"open": close, "high": close * 1.005, "low": close * 0.995,
+                       "close": close, "volume": volume}, index=idx)
+
+    class _A:
+        def get_bars(self, *a, **k):
+            class _B:
+                pass
+            b = _B(); b.df = df; return b
+
+    s = volume_study(_A(), "TEST", as_of=pd.Timestamp("2022-09-01", tz="UTC"))
+    assert s is not None and s["buckets"]
+    moves = {b["bucket"]: b["median_move"] for b in s["buckets"]}
+    # the highest-volume bucket should move more than the lowest one
+    assert moves[s["buckets"][-1]["bucket"]] > moves[s["buckets"][0]["bucket"]]
