@@ -13,7 +13,7 @@ on:
   push:
     paths:
       - '.github/workflows/weekly-signals.yml'
-    # re-trigger: deep support (floors held for years/decades)
+    # re-trigger: watch list (beaten-down on multi-year floors)
 
 jobs:
   signals:
