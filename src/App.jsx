@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 import RichNoteEditor from './RichNoteEditor'
+import { BIBLE_BOOKS, getBibleSequence, jwOrgUrl, loadBibleIdx, saveBibleIdx, getBibleReadStats } from './bibleData'
 /* --------- helpers --------- */
 function mondayOf(date) {
   const d = new Date(date)
@@ -203,8 +204,9 @@ export default function App({ userId }) {
   const [tab, setTab] = useState(() => {
     if (typeof window === 'undefined') return 'morning'
     const saved = window.localStorage.getItem('eps-active-tab')
-    return ['morning', 'prep', 'sunday', 'todos'].includes(saved) ? saved : 'morning'
+    return ['morning', 'prep', 'sunday', 'todos', 'bible'].includes(saved) ? saved : 'morning'
   })
+  const [bibleIdx, setBibleIdx] = useState(() => loadBibleIdx())
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
   const [bibleReading, setBibleReading] = useState('')
@@ -602,7 +604,23 @@ const loadJournal = useCallback(async () => {
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
     { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
+    { id: 'bible', icon: '\ud83d\udcd6', name: 'Bible' },
   ]
+  const bibleSeq = getBibleSequence()
+  const bibleTotal = bibleSeq.length
+  const todayChapter = bibleIdx < bibleTotal ? bibleSeq[bibleIdx] : null
+  const bibleReadStats = getBibleReadStats(bibleSeq, bibleIdx)
+  const ntRead = Object.entries(bibleReadStats).reduce((sum, [slug, chs]) => {
+    const book = BIBLE_BOOKS.find(b => b.slug === slug)
+    return book?.testament === 'NT' ? sum + chs.length : sum
+  }, 0)
+  const otRead = bibleIdx - ntRead
+  const ntTotal = 260, otTotal = 929
+  const handleBibleDone = () => {
+    const next = Math.min(bibleIdx + 1, bibleTotal)
+    setBibleIdx(next)
+    saveBibleIdx(next)
+  }
   return (
     <div className={`app ${colorMode}`}>
       <nav className="nav-grid" aria-label="Primary tabs">
@@ -1039,6 +1057,117 @@ const loadJournal = useCallback(async () => {
     </section>
   </div>
 )}
+
+{tab === 'bible' && (
+  <div className="bible-tab">
+    <section className="card bible-hero-card">
+      <div className="bible-hero-header">
+        <div>
+          <h2 className="bible-hero-title">Bible Explorer</h2>
+          <p className="bible-hero-sub">{bibleIdx} of {bibleTotal} chapters read</p>
+        </div>
+        <div className="bible-overall-pct">{Math.round((bibleIdx / bibleTotal) * 100)}%</div>
+      </div>
+      <div className="bible-progress-bar-wrap">
+        <div className="bible-progress-bar-track">
+          <div className="bible-progress-bar-fill" style={{ width: `${(bibleIdx / bibleTotal) * 100}%` }} />
+        </div>
+      </div>
+      <div className="bible-testament-stats">
+        <div className="bible-testament-stat">
+          <span className="bts-label nt">NT</span>
+          <div className="bts-track"><div className="bts-fill nt" style={{ width: `${Math.round((ntRead / ntTotal) * 100)}%` }} /></div>
+          <span className="bts-count">{ntRead}/{ntTotal}</span>
+        </div>
+        <div className="bible-testament-stat">
+          <span className="bts-label ot">OT</span>
+          <div className="bts-track"><div className="bts-fill ot" style={{ width: `${Math.round((otRead / otTotal) * 100)}%` }} /></div>
+          <span className="bts-count">{otRead}/{otTotal}</span>
+        </div>
+      </div>
+    </section>
+
+    {todayChapter ? (
+      <section className="card bible-today-card">
+        <p className="bible-today-label">Today's Chapter</p>
+        <h3 className="bible-today-chapter">{todayChapter.name} {todayChapter.chapter}</h3>
+        <div className="bible-today-badges">
+          <span className={`bible-badge ${todayChapter.testament === 'NT' ? 'nt' : 'ot'}`}>{todayChapter.testament}</span>
+          <span className="bible-badge genre">{todayChapter.genre}</span>
+        </div>
+        <p className="bible-today-hint">Tap Listen to open the audio Bible on JW.org. Keep listening to extra chapters \u2014 then come back and mark done.</p>
+        <div className="bible-today-actions">
+          <a
+            href={jwOrgUrl(todayChapter.slug, todayChapter.chapter)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bible-listen-btn"
+          >
+            \ud83c\udfa7 Listen / Read
+          </a>
+          <button className="bible-done-btn" onClick={handleBibleDone}>
+            \u2713 Done \u2014 Next Chapter
+          </button>
+        </div>
+      </section>
+    ) : (
+      <section className="card bible-today-card">
+        <p className="bible-complete-msg">\ud83c\udf89 You've read all 1,189 chapters! The Bible is complete.</p>
+      </section>
+    )}
+
+    <section className="card">
+      <h3 className="section-heading" style={{ marginBottom: '12px' }}>\ud83d\udcda All 66 Books</h3>
+      <div className="bible-books-section">
+        <p className="bible-section-label">Old Testament</p>
+        <div className="bible-book-grid">
+          {BIBLE_BOOKS.filter(b => b.testament === 'OT').map(book => {
+            const readCount = bibleReadStats[book.slug]?.length || 0
+            const pct = readCount / book.chapters
+            return (
+              <a
+                key={book.slug}
+                href={jwOrgUrl(book.slug, 1)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`bible-book-tile ${pct === 0 ? 'unread' : pct >= 1 ? 'complete' : 'partial'}`}
+                title={`${book.name} \u2014 ${readCount}/${book.chapters} chapters`}
+              >
+                <span className="book-abbr">{book.abbr}</span>
+                {pct > 0 && pct < 1 && (
+                  <div className="book-fill" style={{ height: `${pct * 100}%` }} />
+                )}
+              </a>
+            )
+          })}
+        </div>
+        <p className="bible-section-label" style={{ marginTop: '16px' }}>New Testament</p>
+        <div className="bible-book-grid">
+          {BIBLE_BOOKS.filter(b => b.testament === 'NT').map(book => {
+            const readCount = bibleReadStats[book.slug]?.length || 0
+            const pct = readCount / book.chapters
+            return (
+              <a
+                key={book.slug}
+                href={jwOrgUrl(book.slug, 1)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`bible-book-tile ${pct === 0 ? 'unread' : pct >= 1 ? 'complete' : 'partial'}`}
+                title={`${book.name} \u2014 ${readCount}/${book.chapters} chapters`}
+              >
+                <span className="book-abbr">{book.abbr}</span>
+                {pct > 0 && pct < 1 && (
+                  <div className="book-fill" style={{ height: `${pct * 100}%` }} />
+                )}
+              </a>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  </div>
+)}
+
       <footer className="footer"><p>Eat Pray Study {"\u00a9"} 2026</p>
       </footer>
     </div>
