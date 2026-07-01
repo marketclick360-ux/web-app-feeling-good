@@ -29,6 +29,9 @@ on:
     paths:
       - '.github/workflows/backtest-validation.yml'
 
+permissions:
+  contents: write   # lets the run commit the trade spreadsheets back to the branch
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -97,3 +100,14 @@ jobs:
         with:
           name: backtest-validation
           path: scanner/validation_out/
+      - name: Commit the radar trade spreadsheets to the repo
+        working-directory: .
+        run: |
+          mkdir -p scanner/results
+          cp scanner/validation_out/radar_trades.csv scanner/results/radar_trades_full_universe.csv || true
+          cp scanner/validation_out/radar_etf/radar_trades.csv scanner/results/radar_trades_etf_only.csv || true
+          cp scanner/validation_out/RADAR_BACKTEST.md scanner/results/RADAR_BACKTEST.md || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scanner/results
+          git diff --cached --quiet || (git commit -m "data: radar trade spreadsheets from latest backtest run" && git push)
