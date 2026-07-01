@@ -67,6 +67,15 @@ jobs:
           mkdir -p validation_out
           python -m scanner.cli radar --source yahoo --years 15 \
             --out-dir validation_out | tee validation_out/radar_console.txt
+      - name: RADAR survivorship check — ETF-only universe
+        run: |
+          mkdir -p validation_out/radar_etf
+          python -m scanner.cli radar --source yahoo --years 15 \
+            --ticker GLD --ticker SMH --ticker XLE --ticker SPY --ticker DIA \
+            --ticker XLF --ticker XLK --ticker QQQ --ticker IWM --ticker TLT \
+            --ticker XLV --ticker XLI --ticker XLY --ticker XLP --ticker EEM \
+            --ticker EFA --ticker MDY --ticker XLB --ticker XLU \
+            --out-dir validation_out/radar_etf | tee validation_out/radar_etf_console.txt
       - name: Run the ONE-TICKER multi-timeframe model (SPY then QQQ) vs buy-and-hold
         run: |
           mkdir -p validation_out

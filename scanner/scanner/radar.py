@@ -97,9 +97,12 @@ def _signal(df: pd.DataFrame, i: int, strategy: str) -> bool:
     if strategy == "oversold_reclaim_20d":
         if i < 6:
             return False
-        lo20 = float(df["lo20_prev"].iloc[i])
-        recent_break = float(df["low"].iloc[i - 5:i].min()) < lo20
-        return recent_break and c > lo20 and c > o
+        # a bar in the last 5 broke below ITS OWN prior 20-day low (comparing
+        # against today's lo20_prev is impossible: the break low is inside it)
+        lows = df["low"].iloc[i - 5:i].to_numpy()
+        lo20s = df["lo20_prev"].iloc[i - 5:i].to_numpy()
+        recent_break = bool((lows < lo20s).any())
+        return recent_break and c > float(df["lo20_prev"].iloc[i]) and c > o
     return False
 
 

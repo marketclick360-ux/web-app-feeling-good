@@ -83,6 +83,19 @@ def test_spy_filter_blocks_downtrend():
     assert total_filtered <= total_open
 
 
+def test_oversold_reclaim_fires():
+    # long uptrend, then a sharp 2-bar break below the 20-day low (still above
+    # the 200-day), then a green reclaim bar -> the entry must fire
+    base = np.linspace(100, 160, 600)
+    base[560:562] = [149.0, 148.5]            # the break
+    base[562:] = np.linspace(154, 156, 38)    # green recovery, above sma200
+    frames = {"SPY": _df(base), "AAA": _df(base)}
+    res = run_radar(_StubAdapter(frames), ["AAA"], years=4,
+                    as_of=pd.Timestamp("2017-06-01", tz="UTC"), spy_filter=False,
+                    strategies=["oversold_reclaim_20d"])
+    assert res["oversold_reclaim_20d"]["stats"].get("n", 0) >= 1
+
+
 def test_stats_math():
     trades = [RadarTrade("A", "s", "2020-01-01", "2020-01-05", 100, 102, 2.0, 4, "strength", 2020),
               RadarTrade("A", "s", "2020-02-01", "2020-02-05", 100, 99, -1.0, 4, "stop", 2020)]
