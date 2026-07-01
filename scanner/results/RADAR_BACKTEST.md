@@ -7,9 +7,9 @@
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|---|
 | pullback_rsi2_200d | 2572 | 3.3 | 64% | +0.10% | 1.11 | 2 | 1029 | +0.22% | 1.23 | TSLA 12% | TENTATIVE |
 | sma50_bullish_bounce | 2728 | 3.5 | 29% | +0.01% | 1.01 | 4 | 1092 | -0.01% | 0.99 | CAT 8% | REJECTED |
-| breakout_20d | 1665 | 2.1 | 41% | +1.47% | 1.78 | 17 | 666 | +1.83% | 1.83 | NVDA 11% | PAPER-TRACK ONLY |
-| breakout_55d | 1033 | 1.3 | 39% | +2.43% | 2.14 | 25 | 414 | +3.99% | 2.77 | TSLA 15% | PAPER-TRACK ONLY |
-| oversold_reclaim_20d | 3543 | 4.5 | 50% | -0.20% | 0.72 | 0 | 1418 | -0.31% | 0.65 | NVDA 9% | REJECTED |
+| breakout_20d | 1666 | 2.1 | 41% | +1.47% | 1.78 | 17 | 667 | +1.85% | 1.84 | NVDA 11% | PAPER-TRACK ONLY |
+| breakout_55d | 1033 | 1.3 | 39% | +2.43% | 2.14 | 25 | 414 | +3.99% | 2.76 | TSLA 15% | PAPER-TRACK ONLY |
+| oversold_reclaim_20d | 3543 | 4.5 | 50% | -0.20% | 0.72 | 0 | 1418 | -0.30% | 0.65 | NVDA 9% | REJECTED |
 
 **Combined signal frequency: ~14.7 trades/week** across the universe (all five strategies).
 
@@ -19,7 +19,7 @@
 - **sma50_bullish_bounce** — REJECTED: OOS expectancy -0.01%/trade not positive
 - **breakout_20d** — PAPER-TRACK ONLY: passes every gate at this sample
 - **breakout_55d** — PAPER-TRACK ONLY: passes every gate at this sample
-- **oversold_reclaim_20d** — REJECTED: OOS expectancy -0.31%/trade not positive
+- **oversold_reclaim_20d** — REJECTED: OOS expectancy -0.30%/trade not positive
 
 **Best OOS performer: breakout_55d** (+3.99%/trade OOS; top ticker TSLA 15% of profits, exp without it +3.28%).
 
