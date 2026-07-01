@@ -96,6 +96,21 @@ def test_oversold_reclaim_fires():
     assert res["oversold_reclaim_20d"]["stats"].get("n", 0) >= 1
 
 
+def test_radar_signal_fires_on_fresh_breakout():
+    from scanner.radar import radar_signal
+    # steady uptrend whose LAST bar closes above the prior 20- and 55-day highs
+    base = np.linspace(100, 150, 600)
+    base[-1] = base[-2] * 1.03                 # decisive breakout close
+    frames = {"SPY": _df(base), "AAA": _df(base)}
+    res = radar_signal(_StubAdapter(frames), ["AAA"],
+                       as_of=pd.Timestamp("2017-06-01", tz="UTC"))
+    assert res["risk_on"] is True
+    strategies = {r["strategy"] for r in res["rows"] if r["ticker"] == "AAA"}
+    assert "breakout_20d" in strategies and "breakout_55d" in strategies
+    row = next(r for r in res["rows"] if r["strategy"] == "breakout_20d")
+    assert row["stop_2atr"] < row["close"] and row["risk_pct"] > 0
+
+
 def test_stats_math():
     trades = [RadarTrade("A", "s", "2020-01-01", "2020-01-05", 100, 102, 2.0, 4, "strength", 2020),
               RadarTrade("A", "s", "2020-02-01", "2020-02-05", 100, 99, -1.0, 4, "stop", 2020)]

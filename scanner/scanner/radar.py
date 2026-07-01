@@ -222,6 +222,68 @@ def _label(oos: dict, conc: dict) -> tuple:
     return "PAPER-TRACK ONLY", "passes every gate at this sample"
 
 
+# Strategies that survived validation on BOTH universes (see RADAR_BACKTEST):
+# the two breakouts are PAPER-TRACK; the RSI2 pullback passed only thinly and
+# is flagged as such in the live list.
+LIVE_STRATEGIES = ["breakout_20d", "breakout_55d", "pullback_rsi2_200d"]
+_THIN = {"pullback_rsi2_200d"}
+
+_EXIT_RULE = {
+    "breakout_20d": ("lo10_prev", "daily close < prior 10-day low"),
+    "breakout_55d": ("lo20_prev", "daily close < prior 20-day low"),
+    "pullback_rsi2_200d": ("sma5", "daily close > 5-day average (sell strength)"),
+}
+
+
+def radar_signal(adapter, tickers: List[str], as_of=None, years: int = 3):
+    """Fresh Radar signals on the most recent COMPLETED bar, for the weekly
+    paper-trading list. Only the strategies that survived validation. Entry is
+    the NEXT session open; each row carries the 2*ATR hard stop and the
+    channel/strength exit level. Honors the SPY momentum risk-on gate."""
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(max(years, 3) * 365.25) + 320)
+
+    spy = adapter.get_bars("SPY", "1d", start=start, end=as_of, as_of=as_of).df
+    risk_on = bool(len(spy) > 260 and
+                   float(spy["close"].iloc[-1]) > float(spy["close"].iloc[-253]))
+
+    rows = []
+    data_date = None
+    for tk in tickers:
+        try:
+            raw = adapter.get_bars(tk, "1d", start=start, end=as_of, as_of=as_of).df
+        except Exception:
+            continue
+        if len(raw) < 300:
+            continue
+        df = _prep(raw)
+        if len(df) < 60:
+            continue
+        i = len(df) - 1
+        data_date = max(data_date, df.index[i]) if data_date is not None else df.index[i]
+        for strat in LIVE_STRATEGIES:
+            if not _signal(df, i, strat):
+                continue
+            close = float(df["close"].iloc[i])
+            atr = float(df["atr14"].iloc[i])
+            exit_col, exit_txt = _EXIT_RULE[strat]
+            rows.append({
+                "ticker": tk, "strategy": strat,
+                "thin": strat in _THIN,
+                "date": str(df.index[i].date()),
+                "close": round(close, 2),
+                "entry_next_open": round(close, 2),      # proxy until the bar exists
+                "stop_2atr": round(close - 2.0 * atr, 2),
+                "risk_pct": round(2.0 * atr / close * 100.0, 1),
+                "exit_level": round(float(df[exit_col].iloc[i]), 2),
+                "exit_rule": exit_txt,
+                "atr": round(atr, 2),
+                "volume_m": round(float(df["volume"].iloc[i]) / 1e6, 1),
+            })
+    return {"risk_on": risk_on, "rows": rows,
+            "data_date": str(data_date.date()) if data_date is not None else "?"}
+
+
 def run_radar(adapter, tickers: List[str], years: int = 15, as_of=None,
               spy_filter: bool = True, strategies: Optional[List[str]] = None):
     """Backtest all Radar strategies across the universe. Returns

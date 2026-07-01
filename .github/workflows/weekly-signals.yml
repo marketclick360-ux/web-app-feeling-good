@@ -63,6 +63,10 @@ jobs:
             --ticker TLT --ticker LQD --ticker XOP \
             --ticker SPY --ticker QQQ --ticker XLK --ticker NVDA \
             --out-dir signals_out | tee signals_out/volume_console.txt
+      - name: RADAR — fresh validated breakout signals this week
+        run: |
+          python -m scanner.cli radar --signal --source yahoo \
+            --out-dir signals_out | tee signals_out/radar_signals_console.txt
       - name: Context — earnings, cycles, news (mover names)
         run: |
           python -m scanner.cli mtf --context --source yahoo \
@@ -80,6 +84,8 @@ jobs:
           cat signals_out/VOLUME_STUDY.md 2>/dev/null || true
           echo "==================== CONTEXT.md ===================="
           cat signals_out/CONTEXT.md 2>/dev/null || true
+          echo "==================== RADAR_SIGNALS.md ===================="
+          cat signals_out/RADAR_SIGNALS.md 2>/dev/null || true
       - name: Upload the watchlist
         if: always()
         uses: actions/upload-artifact@v4

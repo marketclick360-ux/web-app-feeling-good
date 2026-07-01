@@ -1937,6 +1937,76 @@ RADAR_UNIVERSE = [
 ]
 
 
+def _run_radar_signal(source, tickers, out_dir):
+    """This week's FRESH Radar signals (validated strategies only): new 20d/55d
+    breakouts + thin RSI2 pullbacks, each with the 2*ATR stop and its exit rule.
+    Paper-trade list — writes RADAR_SIGNALS.md."""
+    import os
+    from .radar import radar_signal
+    adapter = get_adapter(source)
+    tickers = tickers or list(RADAR_UNIVERSE)
+    res = radar_signal(adapter, tickers)
+    rows, risk_on = res["rows"], res["risk_on"]
+
+    print("=" * 84)
+    print("  RADAR SIGNALS — fresh entries this week (validated strategies only)")
+    print("=" * 84)
+    print(f"  As of: {res['data_date']}   Universe: {len(tickers)}   "
+          f"SPY momentum: {'RISK-ON — signals active' if risk_on else 'RISK-OFF — stand aside'}")
+    print("  Entry = next session open · hard stop = 2×ATR · exit on the channel rule.")
+    print("  ★ = breakout (PAPER-TRACK). (thin) = RSI2 pullback — passed only thinly.")
+    print("=" * 84)
+
+    md = ["# Radar Signals — fresh entries this week\n",
+          f"- **As of:** {res['data_date']} · **Universe:** {len(tickers)} · "
+          f"**SPY momentum gate:** {'RISK-ON ✅' if risk_on else 'RISK-OFF ⛔ (no new longs)'}",
+          "- Only strategies that **passed validation** (see RADAR_BACKTEST.md). "
+          "Entry next open · 2×ATR hard stop · channel/strength exit. "
+          "**Paper-trade first — not a live green light.**\n"]
+    if not risk_on:
+        print("\n  SPY momentum is RISK-OFF — the system takes NO new longs this week.")
+        md.append("\n**SPY momentum is RISK-OFF — no new longs this week.** "
+                  "That is the system protecting you, not a malfunction.\n")
+    breakouts = [r for r in rows if not r["thin"]]
+    thin = [r for r in rows if r["thin"]]
+    if risk_on and not rows:
+        print("\n  No fresh signals on the last completed bar. Normal — signals are lumpy.")
+        md.append("\n**No fresh signals this week.** Normal — breakouts are lumpy; "
+                  "some weeks several, some weeks none.\n")
+    if risk_on and rows:
+        md.append("| Ticker | Strategy | Close | Enter ~ | Stop (2×ATR) | Risk % | "
+                  "Exit when | Vol (M sh) |")
+        md.append("|---|---|--:|--:|--:|--:|---|--:|")
+        print(f"\n  {'tkr':<7}{'strategy':<22}{'close':>9}{'stop':>9}{'risk':>7}"
+              f"{'vol(M)':>8}  exit when")
+        print("  " + "-" * 84)
+        for r in breakouts + thin:
+            tag = f"{r['strategy']}{' (thin)' if r['thin'] else ''}"
+            print(f"  {r['ticker']:<7}{tag:<22}{r['close']:>9.2f}"
+                  f"{r['stop_2atr']:>9.2f}{r['risk_pct']:>6.1f}%"
+                  f"{r['volume_m']:>8.1f}  {r['exit_rule']} (now {r['exit_level']:.2f})")
+            md.append(f"| {r['ticker']} | {tag} | {r['close']:.2f} | "
+                      f"{r['entry_next_open']:.2f} | {r['stop_2atr']:.2f} | "
+                      f"{r['risk_pct']:.1f}% | {r['exit_rule']} (now {r['exit_level']:.2f}) | "
+                      f"{r['volume_m']:.1f} |")
+        bo_list = ", ".join(f"{r['ticker']}({r['strategy'].split('_')[1]})"
+                            for r in breakouts)
+        print("\n  ★ Fresh breakouts: " + (bo_list if breakouts else "none this week"))
+    md.append("\n## How to use (paper trading)\n"
+              "1. Prefer the **breakout** rows (both passed every validation gate; "
+              "ETF signals are the most trusted, stock signals had winner-bias in "
+              "backtest).\n2. Paper-buy at Monday's open; size so the 2×ATR stop "
+              "loses ~1% of the account.\n3. Exit on the row's channel rule "
+              "(close-based) or the hard stop — whichever comes first.\n"
+              "4. Log every trade for a month before a cent goes live.\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "RADAR_SIGNALS.md") if out_dir else "RADAR_SIGNALS.md"
+    with open(path, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+    print(f"\n  Wrote {path}. Paper only — no real money for a month.")
+
+
 def _run_radar(source, tickers, years, no_filter, out_dir):
     """Backtest the user's five Radar entry strategies with their CANONICAL
     exits (strength/channel exits, 2*ATR hard stop) across stocks + ETFs.
@@ -2805,6 +2875,9 @@ def main(argv: List[str] = None):
     prd.add_argument("--years", type=int, default=15)
     prd.add_argument("--no-filter", action="store_true", dest="no_filter",
                      help="disable the SPY absolute-momentum risk-on gate")
+    prd.add_argument("--signal", action="store_true", dest="signal_mode",
+                     help="fresh entries on the last completed bar (validated "
+                          "strategies only) instead of a backtest")
     prd.add_argument("--out-dir", default=".", dest="out_dir")
 
     prp = sub.add_parser("report",
@@ -2872,8 +2945,11 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "radar":
-        _run_radar(args.source, args.tickers, args.years, args.no_filter,
-                   args.out_dir)
+        if args.signal_mode:
+            _run_radar_signal(args.source, args.tickers, args.out_dir)
+        else:
+            _run_radar(args.source, args.tickers, args.years, args.no_filter,
+                       args.out_dir)
         return
     if args.cmd == "mtf":
         if args.context_mode:
