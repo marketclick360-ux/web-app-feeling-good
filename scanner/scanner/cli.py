@@ -1928,6 +1928,117 @@ def _run_defensive(source, n_symbols, years, small_account, etf_only, fast,
     print("  RESEARCH ONLY — paper-track a survivor before any real money.")
 
 
+RADAR_UNIVERSE = [
+    # the Radar's ETFs
+    "GLD", "SMH", "XLE", "SPY", "DIA", "XLF", "XLK", "QQQ", "IWM", "TLT", "XLV",
+    # liquid large-cap stocks (movers)
+    "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "AVGO", "TSLA",
+    "JPM", "UNH", "HD", "COST", "WMT", "CAT", "LLY",
+]
+
+
+def _run_radar(source, tickers, years, no_filter, out_dir):
+    """Backtest the user's five Radar entry strategies with their CANONICAL
+    exits (strength/channel exits, 2*ATR hard stop) across stocks + ETFs.
+    Reports expectancy after costs, OOS split, concentration, trade FREQUENCY
+    (per week), and an honest label. Writes RADAR_BACKTEST.md + radar_trades.csv."""
+    import os
+    from .radar import run_radar
+    adapter = get_adapter(source)
+    tickers = tickers or list(RADAR_UNIVERSE)
+
+    print("=" * 88)
+    print("  TACTICAL SIGNAL RADAR — honest backtest (canonical exits, not 3R)")
+    print("=" * 88)
+    print(f"  Source: {source}   Universe: {len(tickers)} (stocks + ETFs)   "
+          f"Years: {years}   SPY momentum filter: {'OFF' if no_filter else 'ON'}")
+    print("  Entries fill next open · 2*ATR hard stop (gap = actual fill) · 0.10%/side costs")
+    print("  OOS = most recent 40% of trades. NOT a live-trading green light.")
+    print("=" * 88)
+
+    res = run_radar(adapter, tickers, years=years, spy_filter=not no_filter)
+    if not res:
+        _warn_no_data(source, adapter)
+        return
+
+    md = ["# Tactical Signal Radar — honest backtest\n",
+          f"- **Source:** {source} · **Universe:** {len(tickers)} stocks + ETFs · "
+          f"**Years:** {years} · **SPY momentum filter:** {'OFF' if no_filter else 'ON'}",
+          "- Canonical exits (strength / SMA50-break / Donchian channel), 2×ATR "
+          "hard stop, next-open fills, 0.10%/side costs. OOS = most recent 40% "
+          "of trades. **Not a live-trading green light.**\n",
+          "| Strategy | Trades | /week | Win% | Exp/trade | PF | Hold(d) | "
+          "OOS n | OOS exp | OOS PF | Top ticker | Label |",
+          "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|---|"]
+
+    hdr = (f"  {'strategy':<22}{'n':>5}{'/wk':>6}{'win%':>6}{'exp%':>7}{'PF':>6}"
+           f"{'hold':>6}{'OOSn':>6}{'OOSexp':>8}{'OOSPF':>7}  label")
+    print("\n" + hdr)
+    print("  " + "-" * 96)
+    rows_csv = []
+    best = None
+    for name, r in res.items():
+        s, o, c = r["stats"], r["oos"], r["concentration"]
+        if s.get("n", 0) == 0:
+            print(f"  {name:<22}{0:>5}   — no trades")
+            md.append(f"| {name} | 0 | — | — | — | — | — | — | — | — | — | NO SAMPLE |")
+            continue
+        pf = "inf" if s["profit_factor"] == float("inf") else f"{s['profit_factor']:.2f}"
+        opf = ("—" if o.get("n", 0) == 0 else
+               ("inf" if o["profit_factor"] == float("inf") else f"{o['profit_factor']:.2f}"))
+        oexp = "—" if o.get("n", 0) == 0 else f"{o['expectancy']:+.2f}"
+        print(f"  {name:<22}{s['n']:>5}{r['per_week']:>6.1f}{s['win_rate']:>6.0%}"
+              f"{s['expectancy']:>+7.2f}{pf:>6}{s['median_hold']:>6.0f}"
+              f"{o.get('n', 0):>6}{oexp:>8}{opf:>7}  {r['label']}")
+        md.append(f"| {name} | {s['n']} | {r['per_week']:.1f} | {s['win_rate']:.0%} | "
+                  f"{s['expectancy']:+.2f}% | {pf} | {s['median_hold']:.0f} | "
+                  f"{o.get('n', 0)} | {oexp}% | {opf} | "
+                  f"{c['best']} {c['share']:.0%} | {r['label']} |")
+        for t in r["trades"]:
+            rows_csv.append(t.__dict__)
+        if o.get("n", 0) and o["expectancy"] > 0 and \
+                (best is None or o["expectancy"] > best[1]["oos"]["expectancy"]):
+            best = (name, r)
+
+    total_wk = sum(r["per_week"] for r in res.values() if r["stats"].get("n"))
+    print(f"\n  Combined signal frequency: ~{total_wk:.1f} trades/week across the universe.")
+    md.append(f"\n**Combined signal frequency: ~{total_wk:.1f} trades/week** "
+              "across the universe (all five strategies).")
+
+    print("\n  VERDICTS:")
+    md.append("\n## Verdicts\n")
+    for name, r in res.items():
+        print(f"    {name:<22} {r['label']:<28} {r['reason']}")
+        md.append(f"- **{name}** — {r['label']}: {r['reason']}")
+    if best:
+        n, r = best
+        c = r["concentration"]
+        md.append(f"\n**Best OOS performer: {n}** "
+                  f"({r['oos']['expectancy']:+.2f}%/trade OOS; "
+                  f"top ticker {c['best']} {c['share']:.0%} of profits, "
+                  f"exp without it {c['exp_without']:+.2f}%).")
+
+    md.append("\n## Honest notes\n"
+              "- A positive strategy here is *promising*, not proven — paper-trade "
+              "it before a cent, and re-check concentration (one hot ticker can "
+              "fake an edge).\n"
+              "- **Options:** cannot be honestly backtested without historical "
+              "option chains (we don't have that data). Options multiply the "
+              "underlying edge — including a negative one. Only consider "
+              "defined-risk options (long calls / spreads) on a strategy that "
+              "has already passed these gates, never before.\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "RADAR_BACKTEST.md") if out_dir else "RADAR_BACKTEST.md"
+    with open(path, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+    if rows_csv:
+        cpath = os.path.join(out_dir, "radar_trades.csv") if out_dir else "radar_trades.csv"
+        pd.DataFrame(rows_csv).to_csv(cpath, index=False)
+        print(f"  Wrote {cpath} — every trade (entry/exit/date/%/reason).")
+    print(f"  Wrote {path}. Paper-trade any survivor before real money.")
+
+
 def _run_mtf_context(source, tickers, out_dir):
     """Per-ticker context that's unique to each name: next EARNINGS date,
     seasonal CYCLES (best/worst months), and recent NEWS headlines. Earnings/
@@ -2684,6 +2795,18 @@ def main(argv: List[str] = None):
                      help="per-ticker earnings date, seasonal cycles, and "
                           "recent news headlines")
 
+    prd = sub.add_parser("radar",
+                         help="backtest the 5 Radar entries with canonical exits "
+                              "across stocks + ETFs (honest grades + frequency)")
+    prd.add_argument("--source", default="yahoo",
+                     choices=["synthetic", "csv", "polygon", "massive", "massive_files", "schwab", "stooq", "yahoo"])
+    prd.add_argument("--ticker", action="append", dest="tickers", default=None,
+                     help="override the default stock+ETF universe (repeatable)")
+    prd.add_argument("--years", type=int, default=15)
+    prd.add_argument("--no-filter", action="store_true", dest="no_filter",
+                     help="disable the SPY absolute-momentum risk-on gate")
+    prd.add_argument("--out-dir", default=".", dest="out_dir")
+
     prp = sub.add_parser("report",
                          help="one line: what PASSED the backtest + today's TRADES")
     prp.add_argument("--source", default="stooq",
@@ -2747,6 +2870,10 @@ def main(argv: List[str] = None):
         _run_defensive(args.source, args.symbols, args.years, args.small_account,
                        args.etf_only, args.fast, args.only_setups, args.out_dir,
                        args.risk_pct, args.max_open, args.month_stop)
+        return
+    if args.cmd == "radar":
+        _run_radar(args.source, args.tickers, args.years, args.no_filter,
+                   args.out_dir)
         return
     if args.cmd == "mtf":
         if args.context_mode:
