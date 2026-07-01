@@ -1,0 +1,43 @@
+name: daily-radar
+
+# Evening scan for FRESH validated Radar signals (20d/55d breakouts + thin
+# RSI2 pullback) on the last completed bar — so a Tuesday breakout is in your
+# hands Tuesday evening, ready to enter Wednesday's open, exactly like the
+# backtest traded. The big weekly watchlist still runs Saturdays.
+
+on:
+  schedule:
+    - cron: '30 22 * * 1-5'   # Mon–Fri 22:30 UTC (after the US close settles)
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/daily-radar.yml'
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scanner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps (+ yfinance)
+        run: pip install -r requirements.txt yfinance
+      - name: Fresh validated signals on today's close
+        run: |
+          mkdir -p radar_out
+          python -m scanner.cli radar --signal --source yahoo \
+            --out-dir radar_out | tee radar_out/console.txt
+      - name: Print to the log
+        run: |
+          echo "==================== RADAR_SIGNALS.md ===================="
+          cat radar_out/RADAR_SIGNALS.md 2>/dev/null || true
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-radar-signals
+          path: scanner/radar_out/
