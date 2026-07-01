@@ -109,5 +109,5 @@ jobs:
           cp scanner/validation_out/RADAR_BACKTEST.md scanner/results/RADAR_BACKTEST.md || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add scanner/results
+          git add -f scanner/results   # scanner/.gitignore excludes *.csv; these are deliberate
           git diff --cached --quiet || (git commit -m "data: radar trade spreadsheets from latest backtest run" && git push)
