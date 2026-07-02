@@ -284,6 +284,55 @@ def radar_signal(adapter, tickers: List[str], as_of=None, years: int = 3):
             "data_date": str(data_date.date()) if data_date is not None else "?"}
 
 
+def key_levels(adapter, tickers: List[str], as_of=None, years: int = 2):
+    """Per-ticker movement profile + the levels that matter RIGHT NOW:
+    how many $ it typically moves per day (ATR) and per week (median 5-bar
+    move), the 20d/55d highs (buy triggers), the 10d/20d lows (exits), the
+    2*ATR stop distance, and the 200-day trend line. Computed on completed
+    bars only."""
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(max(years, 2) * 365.25) + 320)
+    out = []
+    for tk in tickers:
+        try:
+            raw = adapter.get_bars(tk, "1d", start=start, end=as_of, as_of=as_of).df
+        except Exception:
+            continue
+        if len(raw) < 300:
+            continue
+        df = _prep(raw)
+        if len(df) < 60:
+            continue
+        last = df.iloc[-1]
+        close = float(last["close"])
+        atr = float(last["atr14"])
+        # typical 5-day move: median absolute close-to-close change over ~1y
+        c = df["close"].tail(260)
+        week_move = float((c.diff(5).abs().dropna()).median())
+        hi20, hi55 = float(last["hi20_prev"]), float(last["hi55_prev"])
+        lo10, lo20 = float(last["lo10_prev"]), float(last["lo20_prev"])
+        sma200 = float(last["sma200"])
+        out.append({
+            "ticker": tk, "date": str(df.index[-1].date()),
+            "close": round(close, 2),
+            "day_move_$": round(atr, 2),
+            "day_move_pct": round(atr / close * 100, 1),
+            "week_move_$": round(week_move, 2),
+            "buy_trigger_20d": round(hi20, 2),
+            "dist_20d_pct": round((hi20 - close) / close * 100, 1),
+            "buy_trigger_55d": round(hi55, 2),
+            "dist_55d_pct": round((hi55 - close) / close * 100, 1),
+            "exit_10d_low": round(lo10, 2),
+            "exit_20d_low": round(lo20, 2),
+            "stop_2atr_$": round(2 * atr, 2),
+            "sma200": round(sma200, 2),
+            "trend_up": bool(close > sma200),
+        })
+    # closest to triggering first
+    out.sort(key=lambda r: r["dist_20d_pct"])
+    return out
+
+
 def run_radar(adapter, tickers: List[str], years: int = 15, as_of=None,
               spy_filter: bool = True, strategies: Optional[List[str]] = None):
     """Backtest all Radar strategies across the universe. Returns

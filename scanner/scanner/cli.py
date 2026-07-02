@@ -1937,6 +1937,61 @@ RADAR_UNIVERSE = [
 ]
 
 
+def _run_radar_levels(source, tickers, out_dir):
+    """Each ticker's movement personality + the levels that matter right now:
+    $/day and $/week it typically moves, the 20d/55d buy triggers, the exit
+    lows, the 2*ATR stop distance, and the 200-day trend. Writes LEVELS.md."""
+    import os
+    from .radar import key_levels
+    adapter = get_adapter(source)
+    tickers = tickers or list(RADAR_UNIVERSE)
+    rows = key_levels(adapter, tickers)
+    if not rows:
+        _warn_no_data(source, adapter)
+        return
+
+    print("=" * 96)
+    print("  KEY LEVELS & MOVEMENT — each name's personality (sorted: closest to a buy trigger)")
+    print("=" * 96)
+    print(f"  As of {rows[0]['date']} · day move = ATR · week move = median 5-day change")
+    print("=" * 96)
+    print(f"\n  {'tkr':<7}{'close':>9}{'$/day':>8}{'$/wk':>8}{'20d-high':>10}"
+          f"{'away':>7}{'55d-high':>10}{'away':>7}{'exit20d':>9}{'stop$':>7}  trend")
+    print("  " + "-" * 94)
+    md = ["# Key Levels & Movement — per-ticker personality\n",
+          f"- **As of:** {rows[0]['date']} · sorted by who's closest to a fresh "
+          "20-day breakout.",
+          "- **$/day** = average daily range (ATR). **$/week** = median 5-day "
+          "move. **Buy triggers** = a daily CLOSE above the 20d/55d high. "
+          "**Exit** = a close below the 20d low. **Stop $** = 2×ATR below entry.\n",
+          "| Ticker | Close | $/day | $/week | 20d trigger | away | 55d trigger "
+          "| away | Exit (20d low) | Stop $ | Trend |",
+          "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|"]
+    for r in rows:
+        tr = "UP" if r["trend_up"] else "DOWN"
+        print(f"  {r['ticker']:<7}{r['close']:>9.2f}{r['day_move_$']:>8.2f}"
+              f"{r['week_move_$']:>8.2f}{r['buy_trigger_20d']:>10.2f}"
+              f"{r['dist_20d_pct']:>6.1f}%{r['buy_trigger_55d']:>10.2f}"
+              f"{r['dist_55d_pct']:>6.1f}%{r['exit_20d_low']:>9.2f}"
+              f"{r['stop_2atr_$']:>7.2f}  {tr}")
+        md.append(f"| {r['ticker']} | {r['close']:.2f} | {r['day_move_$']:.2f} | "
+                  f"{r['week_move_$']:.2f} | {r['buy_trigger_20d']:.2f} | "
+                  f"{r['dist_20d_pct']:+.1f}% | {r['buy_trigger_55d']:.2f} | "
+                  f"{r['dist_55d_pct']:+.1f}% | {r['exit_20d_low']:.2f} | "
+                  f"{r['stop_2atr_$']:.2f} | {tr} |")
+    md.append("\n**How to read a row:** e.g. a name that shows $/day 4.40 and "
+              "$/week 9.80 'moves about $4.40 a day, ~$10 a week'. When its "
+              "close crosses the 20d-trigger price, that's the validated entry; "
+              "the 55d trigger is the stronger one. Negative 'away' means it is "
+              "ALREADY above the trigger (in breakout territory).\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "LEVELS.md") if out_dir else "LEVELS.md"
+    with open(path, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+    print(f"\n  Wrote {path}.")
+
+
 def _run_radar_signal(source, tickers, out_dir):
     """This week's FRESH Radar signals (validated strategies only): new 20d/55d
     breakouts + thin RSI2 pullbacks, each with the 2*ATR stop and its exit rule.
@@ -2878,6 +2933,9 @@ def main(argv: List[str] = None):
     prd.add_argument("--signal", action="store_true", dest="signal_mode",
                      help="fresh entries on the last completed bar (validated "
                           "strategies only) instead of a backtest")
+    prd.add_argument("--levels", action="store_true", dest="levels_mode",
+                     help="per-ticker movement profile ($/day, $/week) + the "
+                          "current buy triggers, exits and stop distances")
     prd.add_argument("--out-dir", default=".", dest="out_dir")
 
     prp = sub.add_parser("report",
@@ -2945,7 +3003,9 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "radar":
-        if args.signal_mode:
+        if args.levels_mode:
+            _run_radar_levels(args.source, args.tickers, args.out_dir)
+        elif args.signal_mode:
             _run_radar_signal(args.source, args.tickers, args.out_dir)
         else:
             _run_radar(args.source, args.tickers, args.years, args.no_filter,

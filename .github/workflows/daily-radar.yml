@@ -31,10 +31,16 @@ jobs:
           mkdir -p radar_out
           python -m scanner.cli radar --signal --source yahoo \
             --out-dir radar_out | tee radar_out/console.txt
+      - name: Key levels & movement personality per ticker
+        run: |
+          python -m scanner.cli radar --levels --source yahoo \
+            --out-dir radar_out | tee radar_out/levels_console.txt
       - name: Print to the log
         run: |
           echo "==================== RADAR_SIGNALS.md ===================="
           cat radar_out/RADAR_SIGNALS.md 2>/dev/null || true
+          echo "==================== LEVELS.md ===================="
+          cat radar_out/LEVELS.md 2>/dev/null || true
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
