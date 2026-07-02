@@ -149,6 +149,43 @@ def test_breakout_report_card(tmp_path):
     assert card[1]["n"] == 1                              # rsi2 trade excluded
 
 
+def test_signal_verdict_rules():
+    from scanner.radar import signal_verdict
+    # clean leader breakout on a proven payer -> TAKE
+    v, why = signal_verdict("breakout_55d", rs_pp=12.0, card_total=3000.0)
+    assert v == "TAKE" and any("leader" in w for w in why)
+    # earnings inside the window overrides everything -> SKIP
+    v, why = signal_verdict("breakout_55d", rs_pp=12.0, card_total=3000.0,
+                            earnings_days=4)
+    assert v == "SKIP" and any("earnings" in w for w in why)
+    # earnings just outside the window does not
+    v, _ = signal_verdict("breakout_55d", rs_pp=12.0, card_total=3000.0,
+                          earnings_days=11)
+    assert v == "TAKE"
+    # net-loser 15y report card -> SKIP (the UNH trap)
+    v, why = signal_verdict("breakout_20d", rs_pp=25.0, card_total=-778.0)
+    assert v == "SKIP" and any("LOSER" in w for w in why)
+    # weak payer or laggard -> CAUTION
+    assert signal_verdict("breakout_20d", rs_pp=5.0, card_total=733.0)[0] == "CAUTION"
+    assert signal_verdict("breakout_20d", rs_pp=-9.5, card_total=3000.0)[0] == "CAUTION"
+    # thin RSI2 strategy is never better than CAUTION
+    assert signal_verdict("pullback_rsi2_200d", rs_pp=20.0)[0] == "CAUTION"
+    # missing data stays neutral (no card, no RS, no earnings) -> TAKE for breakout
+    assert signal_verdict("breakout_20d")[0] == "TAKE"
+
+
+def test_radar_signal_carries_rs():
+    from scanner.radar import radar_signal
+    base = np.linspace(100, 150, 600)
+    base[-1] = base[-2] * 1.03
+    frames = {"SPY": _df(base), "AAA": _df(base * 1.2)}
+    res = radar_signal(_StubAdapter(frames), ["AAA"],
+                       as_of=pd.Timestamp("2017-06-01", tz="UTC"))
+    row = next(r for r in res["rows"] if r["ticker"] == "AAA")
+    # AAA is SPY's path scaled by a constant -> identical returns -> RS ~ 0
+    assert row["rs_pp"] is not None and abs(row["rs_pp"]) < 1.0
+
+
 def test_stats_math():
     trades = [RadarTrade("A", "s", "2020-01-01", "2020-01-05", 100, 102, 2.0, 4, "strength", 2020),
               RadarTrade("A", "s", "2020-02-01", "2020-02-05", 100, 99, -1.0, 4, "stop", 2020)]

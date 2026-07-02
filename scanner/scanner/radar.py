@@ -261,6 +261,19 @@ def radar_signal(adapter, tickers: List[str], as_of=None, years: int = 3):
             continue
         i = len(df) - 1
         data_date = max(data_date, df.index[i]) if data_date is not None else df.index[i]
+
+        # relative strength vs SPY over 3/6/12 months — the big winners' trait
+        rs_pp = None
+        if len(spy) > 260:
+            sc = spy["close"].reindex(df.index).ffill()
+            rs = []
+            for n in (63, 126, 252):
+                if len(df) > n and sc.iloc[-1 - n] == sc.iloc[-1 - n]:
+                    rs.append(((df["close"].iloc[-1] / df["close"].iloc[-1 - n]) -
+                               (sc.iloc[-1] / sc.iloc[-1 - n])) * 100.0)
+            if rs:
+                rs_pp = round(float(np.mean(rs)), 1)
+
         for strat in LIVE_STRATEGIES:
             if not _signal(df, i, strat):
                 continue
@@ -270,6 +283,7 @@ def radar_signal(adapter, tickers: List[str], as_of=None, years: int = 3):
             rows.append({
                 "ticker": tk, "strategy": strat,
                 "thin": strat in _THIN,
+                "rs_pp": rs_pp,
                 "date": str(df.index[i].date()),
                 "close": round(close, 2),
                 "entry_next_open": round(close, 2),      # proxy until the bar exists
@@ -282,6 +296,41 @@ def radar_signal(adapter, tickers: List[str], as_of=None, years: int = 3):
             })
     return {"risk_on": risk_on, "rows": rows,
             "data_date": str(data_date.date()) if data_date is not None else "?"}
+
+
+def signal_verdict(strategy: str, rs_pp=None, card_total=None,
+                   earnings_days=None, earnings_window: int = 10):
+    """TAKE / CAUTION / SKIP for a fresh signal, from the three evidence-backed
+    filters the backtest surfaced: (1) earnings inside the window — the one gap
+    the 2*ATR stop cannot protect against; (2) the ticker's 15-year breakout
+    report card — names with a net-negative record get skipped; (3) leadership
+    vs SPY — the big winners were leaders. Thresholds are stated in the reasons
+    so the ranking is transparent, not a black box. Returns (verdict, reasons)."""
+    level, reasons = 0, []          # 0 TAKE · 1 CAUTION · 2 SKIP
+    is_breakout = strategy.startswith("breakout")
+    if earnings_days is not None and 0 <= earnings_days <= earnings_window:
+        level = 2
+        reasons.append(f"earnings in {int(earnings_days)}d — gap risk the "
+                       "2×ATR stop cannot cover")
+    if is_breakout and card_total is not None:
+        if card_total < 0:
+            level = max(level, 2)
+            reasons.append(f"15y breakout record is a net LOSER "
+                           f"(${card_total:+,.0f} per $1k)")
+        elif card_total < 800:
+            level = max(level, 1)
+            reasons.append(f"weak breakout payer historically "
+                           f"(${card_total:+,.0f} per $1k in 15y)")
+    if not is_breakout:
+        level = max(level, 1)
+        reasons.append("RSI2 pullback validated only thinly — half size or skip")
+    if rs_pp is not None:
+        if rs_pp < 0:
+            level = max(level, 1)
+            reasons.append(f"lagging SPY ({rs_pp:+.1f}pp) — big winners were leaders")
+        else:
+            reasons.append(f"market leader ({rs_pp:+.1f}pp vs SPY)")
+    return ("TAKE", "CAUTION", "SKIP")[level], reasons
 
 
 def key_levels(adapter, tickers: List[str], as_of=None, years: int = 2):

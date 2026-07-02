@@ -2083,11 +2083,40 @@ def _run_radar_signal(source, tickers, out_dir):
     breakouts + thin RSI2 pullbacks, each with the 2*ATR stop and its exit rule.
     Paper-trade list — writes RADAR_SIGNALS.md."""
     import os
-    from .radar import radar_signal
+    from .radar import radar_signal, signal_verdict, breakout_report_card
     adapter = get_adapter(source)
     tickers = tickers or list(RADAR_UNIVERSE)
     res = radar_signal(adapter, tickers)
     rows, risk_on = res["rows"], res["risk_on"]
+
+    # verdict inputs: 15y report card + next earnings (signal tickers only)
+    card_map = {}
+    card_path = os.path.join("results", "radar_trades_full_universe.csv")
+    if os.path.exists(card_path):
+        try:
+            card_map = {c["ticker"]: c["total_per_$1k"]
+                        for c in breakout_report_card(card_path)}
+        except Exception:
+            pass
+    earn_map = {}
+    if rows and source == "yahoo":
+        from .mtf import yahoo_extras
+        for tk in {r["ticker"] for r in rows}:
+            nxt = yahoo_extras(tk).get("next_earnings")
+            if nxt:
+                try:
+                    earn_map[tk] = int((pd.Timestamp(nxt).tz_localize(None) -
+                                        pd.Timestamp(res["data_date"])).days)
+                except Exception:
+                    pass
+    for r in rows:
+        r["verdict"], r["why"] = signal_verdict(
+            r["strategy"], rs_pp=r.get("rs_pp"),
+            card_total=card_map.get(r["ticker"]),
+            earnings_days=earn_map.get(r["ticker"]))
+        r["earnings_days"] = earn_map.get(r["ticker"])
+    _order = {"TAKE": 0, "CAUTION": 1, "SKIP": 2}
+    rows.sort(key=lambda r: (_order[r["verdict"]], r["thin"]))
 
     print("=" * 84)
     print("  RADAR SIGNALS — fresh entries this week (validated strategies only)")
@@ -2115,31 +2144,38 @@ def _run_radar_signal(source, tickers, out_dir):
         md.append("\n**No fresh signals this week.** Normal — breakouts are lumpy; "
                   "some weeks several, some weeks none.\n")
     if risk_on and rows:
-        md.append("| Ticker | Strategy | Close | Enter ~ | Stop (2×ATR) | Risk % | "
-                  "Exit when | Vol (M sh) |")
-        md.append("|---|---|--:|--:|--:|--:|---|--:|")
-        print(f"\n  {'tkr':<7}{'strategy':<22}{'close':>9}{'stop':>9}{'risk':>7}"
-              f"{'vol(M)':>8}  exit when")
-        print("  " + "-" * 84)
-        for r in breakouts + thin:
+        md.append("| Verdict | Ticker | Strategy | Close | Enter ~ | Stop (2×ATR) | "
+                  "Risk % | Exit when | Why |")
+        md.append("|---|---|---|--:|--:|--:|--:|---|---|")
+        print(f"\n  {'verdict':<9}{'tkr':<7}{'strategy':<22}{'close':>9}{'stop':>9}"
+              f"{'risk':>7}  exit when")
+        print("  " + "-" * 92)
+        _icon = {"TAKE": "✅ TAKE", "CAUTION": "⚠️ CAUTION", "SKIP": "⛔ SKIP"}
+        for r in rows:
             tag = f"{r['strategy']}{' (thin)' if r['thin'] else ''}"
-            print(f"  {r['ticker']:<7}{tag:<22}{r['close']:>9.2f}"
+            why = "; ".join(r["why"]) or "leader + proven breakout payer"
+            print(f"  {r['verdict']:<9}{r['ticker']:<7}{tag:<22}{r['close']:>9.2f}"
                   f"{r['stop_2atr']:>9.2f}{r['risk_pct']:>6.1f}%"
-                  f"{r['volume_m']:>8.1f}  {r['exit_rule']} (now {r['exit_level']:.2f})")
-            md.append(f"| {r['ticker']} | {tag} | {r['close']:.2f} | "
-                      f"{r['entry_next_open']:.2f} | {r['stop_2atr']:.2f} | "
-                      f"{r['risk_pct']:.1f}% | {r['exit_rule']} (now {r['exit_level']:.2f}) | "
-                      f"{r['volume_m']:.1f} |")
+                  f"  {r['exit_rule']} (now {r['exit_level']:.2f})")
+            print(f"           └ {why}")
+            md.append(f"| {_icon[r['verdict']]} | {r['ticker']} | {tag} | "
+                      f"{r['close']:.2f} | {r['entry_next_open']:.2f} | "
+                      f"{r['stop_2atr']:.2f} | {r['risk_pct']:.1f}% | "
+                      f"{r['exit_rule']} (now {r['exit_level']:.2f}) | {why} |")
         bo_list = ", ".join(f"{r['ticker']}({r['strategy'].split('_')[1]})"
                             for r in breakouts)
         print("\n  ★ Fresh breakouts: " + (bo_list if breakouts else "none this week"))
     md.append("\n## How to use (paper trading)\n"
-              "1. Prefer the **breakout** rows (both passed every validation gate; "
-              "ETF signals are the most trusted, stock signals had winner-bias in "
-              "backtest).\n2. Paper-buy at Monday's open; size so the 2×ATR stop "
+              "1. The **verdict** column applies the lessons from the backtest for "
+              "you: leadership vs SPY, the ticker's 15-year breakout report card, "
+              "and the earnings gap window. TAKE = all three clear · CAUTION = "
+              "readable in the Why column · SKIP = hard evidence against.\n"
+              "2. Paper-buy at the next open; size so the 2×ATR stop "
               "loses ~1% of the account.\n3. Exit on the row's channel rule "
               "(close-based) or the hard stop — whichever comes first.\n"
-              "4. Log every trade for a month before a cent goes live.\n")
+              "4. Log every trade for a month before a cent goes live.\n"
+              "5. Verdicts are evidence-weighted judgment, not new backtested "
+              "rules — the validated system is the entry/exit/stop itself.\n")
     if out_dir not in (".", ""):
         os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "RADAR_SIGNALS.md") if out_dir else "RADAR_SIGNALS.md"

@@ -12,6 +12,7 @@ on:
   push:
     paths:
       - '.github/workflows/daily-radar.yml'
+    # re-trigger: TAKE/CAUTION/SKIP verdicts on every signal row
 
 jobs:
   radar:
