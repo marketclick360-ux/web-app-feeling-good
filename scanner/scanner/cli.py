@@ -1937,6 +1937,92 @@ RADAR_UNIVERSE = [
 ]
 
 
+def _run_radar_profile(source, tickers, out_dir):
+    """Deep per-ticker personality: momentum-vs-chop, volatility mood, coil,
+    beta/correlation to SPY, relative strength, pullback/drawdown pain profile,
+    52-week position — plus each name's 15-year breakout report card from the
+    committed backtest spreadsheet. Writes PROFILE.md."""
+    import os
+    from .radar import ticker_profile, breakout_report_card
+    adapter = get_adapter(source)
+    tickers = tickers or list(RADAR_UNIVERSE)
+    rows = ticker_profile(adapter, tickers)
+    if not rows:
+        _warn_no_data(source, adapter)
+        return
+
+    print("=" * 100)
+    print("  TICKER PROFILES — personality, market relationship, pain, and breakout track record")
+    print("=" * 100)
+    print(f"  As of {rows[0]['date']} · sorted by relative strength vs SPY (leaders first)")
+    print("=" * 100)
+    print(f"\n  {'tkr':<7}{'person.':<9}{'FT%':>5}{'volmood':>9}{'coil%':>6}"
+          f"{'beta':>6}{'corr':>6}{'RSvsSPY':>8}{'pullbk':>7}{'maxDD':>7}"
+          f"{'recov':>7}{'52w%':>6}")
+    print("  " + "-" * 92)
+    md = ["# Ticker Profiles — know your names\n",
+          f"- **As of:** {rows[0]['date']} · sorted by relative strength "
+          "(leaders first). History, not a forecast.\n",
+          "| Ticker | Personality | Follow-through | Vol mood | Coil %ile | "
+          "Beta | Corr SPY | RS vs SPY | Typical pullback | Max DD | Recovery | 52w pos |",
+          "|---|---|--:|---|--:|--:|--:|--:|--:|--:|--:|--:|"]
+    for r in rows:
+        coil = f"{r['coil_pctile']:.0f}" if r["coil_pctile"] != "" else "—"
+        coil_tag = f"{coil}{' 🌀' if r['coiled'] else ''}"
+        rs = (f"{r['rs_avg_pp']:+.1f}pp" if isinstance(r["rs_avg_pp"], float) else "—")
+        rec = (f"{r['recovery_days']}d" if isinstance(r["recovery_days"], int)
+               else "open")
+        print(f"  {r['ticker']:<7}{r['personality']:<9}{r['followthrough_pct']:>5.1f}"
+              f"{r['vol_mood']:>9}{coil:>6}{str(r['beta']):>6}{str(r['corr_spy']):>6}"
+              f"{rs:>8}{r['typical_pullback_pct']:>6.1f}%{r['max_dd_pct']:>6.1f}%"
+              f"{rec:>7}{r['pos_52w_pct']:>5.0f}%")
+        md.append(f"| {r['ticker']} | {r['personality']} ({r['momo_edge_pp']:+.1f}pp) | "
+                  f"{r['followthrough_pct']:.1f}% | {r['vol_mood']} "
+                  f"({r['vol_pctile']:.0f}%ile) | {coil_tag} | {r['beta']} | "
+                  f"{r['corr_spy']} | {rs} | {r['typical_pullback_pct']:.1f}% | "
+                  f"{r['max_dd_pct']:.1f}% | {rec} | {r['pos_52w_pct']:.0f}% |")
+
+    # 15-year breakout report card from the committed backtest spreadsheet
+    card_path = os.path.join("results", "radar_trades_full_universe.csv")
+    if os.path.exists(card_path):
+        card = breakout_report_card(card_path)
+        print("\n  BREAKOUT REPORT CARD (15y, both breakout strategies, per $1,000 position)")
+        print(f"  {'tkr':<7}{'n':>5}{'win%':>6}{'avg%':>7}{'total$':>9}{'best%':>7}{'worst%':>8}")
+        print("  " + "-" * 52)
+        md.append("\n## Breakout report card — who actually follows through (15y)\n")
+        md.append("| Ticker | Trades | Win % | Avg % | Total $/1k | Best | Worst |")
+        md.append("|---|--:|--:|--:|--:|--:|--:|")
+        for c in card:
+            print(f"  {c['ticker']:<7}{c['n']:>5}{c['win_rate']:>5.0f}%"
+                  f"{c['avg_pct']:>7.2f}{c['total_per_$1k']:>9.0f}"
+                  f"{c['best_pct']:>6.1f}%{c['worst_pct']:>7.1f}%")
+            md.append(f"| {c['ticker']} | {c['n']} | {c['win_rate']:.0f}% | "
+                      f"{c['avg_pct']:.2f}% | ${c['total_per_$1k']:.0f} | "
+                      f"{c['best_pct']:.1f}% | {c['worst_pct']:.1f}% |")
+    else:
+        print("\n  (breakout report card skipped — results/radar_trades_full_universe.csv not found)")
+
+    md.append("\n## How to read this\n"
+              "- **Personality:** MOMO = up days tend to follow through (breakout-"
+              "friendly); CHOP = they snap back (breakouts get faded).\n"
+              "- **Vol mood + Coil:** SLEEPY vol and a 🌀 tight coil near a buy "
+              "trigger = the highest-energy setup.\n"
+              "- **Beta/Corr:** high correlation to SPY means it mostly copies "
+              "the index — trade SPY instead. **RS vs SPY** positive = leader; "
+              "your big winners came from leaders.\n"
+              "- **Typical pullback** = the heat you normally sit through in an "
+              "uptrend without the trend being broken. **Max DD/recovery** = "
+              "worst-ever pain for holders.\n"
+              "- **Report card** ranks who has actually paid on breakouts for "
+              "15 years — that is where your capital belongs.\n")
+    if out_dir not in (".", ""):
+        os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "PROFILE.md") if out_dir else "PROFILE.md"
+    with open(path, "w") as fh:
+        fh.write("\n".join(md) + "\n")
+    print(f"\n  Wrote {path}.")
+
+
 def _run_radar_levels(source, tickers, out_dir):
     """Each ticker's movement personality + the levels that matter right now:
     $/day and $/week it typically moves, the 20d/55d buy triggers, the exit
@@ -2936,6 +3022,11 @@ def main(argv: List[str] = None):
     prd.add_argument("--levels", action="store_true", dest="levels_mode",
                      help="per-ticker movement profile ($/day, $/week) + the "
                           "current buy triggers, exits and stop distances")
+    prd.add_argument("--profile", action="store_true", dest="profile_mode",
+                     help="deep per-ticker personality: momentum vs chop, "
+                          "volatility mood, coiled-spring, beta/correlation, "
+                          "relative strength, pullbacks, drawdowns, 52w "
+                          "position + the 15-yr breakout report card")
     prd.add_argument("--out-dir", default=".", dest="out_dir")
 
     prp = sub.add_parser("report",
@@ -3003,7 +3094,9 @@ def main(argv: List[str] = None):
                        args.risk_pct, args.max_open, args.month_stop)
         return
     if args.cmd == "radar":
-        if args.levels_mode:
+        if args.profile_mode:
+            _run_radar_profile(args.source, args.tickers, args.out_dir)
+        elif args.levels_mode:
             _run_radar_levels(args.source, args.tickers, args.out_dir)
         elif args.signal_mode:
             _run_radar_signal(args.source, args.tickers, args.out_dir)

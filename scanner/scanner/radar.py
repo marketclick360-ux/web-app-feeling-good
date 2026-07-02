@@ -333,6 +333,148 @@ def key_levels(adapter, tickers: List[str], as_of=None, years: int = 2):
     return out
 
 
+def ticker_profile(adapter, tickers: List[str], as_of=None, years: int = 10,
+                   benchmark: str = "SPY"):
+    """Deep personality profile per ticker, from price/volume history only:
+    momentum-vs-chop (next-day follow-through), volatility mood (current ATR%
+    vs its own past year), coiled-spring meter (range-compression percentile),
+    beta/correlation to SPY, relative strength vs SPY (3/6/12mo), typical
+    pullback depth inside uptrends, max drawdown + recovery time, and position
+    in the 52-week range. Descriptive history — not a forecast."""
+    as_of = as_of or pd.Timestamp.now("UTC").normalize()
+    start = as_of - pd.Timedelta(days=int(years * 365.25) + 320)
+
+    spy_raw = adapter.get_bars(benchmark, "1d", start=start, end=as_of,
+                               as_of=as_of).df
+    spy_close = spy_raw["close"] if len(spy_raw) else None
+
+    out = []
+    for tk in tickers:
+        try:
+            raw = adapter.get_bars(tk, "1d", start=start, end=as_of, as_of=as_of).df
+        except Exception:
+            continue
+        if len(raw) < 300:
+            continue
+        df = ind.enrich_daily(raw).dropna(subset=["sma200", "atr14"])
+        if len(df) < 260:
+            continue
+        close = df["close"]
+        r = close.pct_change()
+
+        # 1) momentum vs mean-reversion: does an up day follow through?
+        up = (r > 0)
+        follow = float((up & up.shift(1)).sum() / max(up.shift(1).sum(), 1))
+        base = float(up.mean())
+        edge = (follow - base) * 100.0
+        momo = "MOMO" if edge > 0.5 else ("CHOP" if edge < -0.5 else "NEUTRAL")
+
+        # 2) volatility mood: today's ATR% vs its own trailing year
+        atr_pct = (df["atr14"] / close * 100.0)
+        window = atr_pct.tail(252)
+        vol_pctile = float((window < window.iloc[-1]).mean() * 100.0)
+        mood = "SLEEPY" if vol_pctile < 30 else ("WILD" if vol_pctile > 70 else "NORMAL")
+
+        # 3) coiled spring: 20d Bollinger bandwidth percentile (low = tight coil)
+        coil = float(df["bb_bw_pctile"].iloc[-1]) if "bb_bw_pctile" in df else float("nan")
+        coiled = bool(coil == coil and coil <= 20)
+
+        # 4) beta / correlation to SPY (1 year of daily returns)
+        beta = corr = float("nan")
+        if spy_close is not None:
+            sr = spy_close.reindex(close.index).ffill().pct_change()
+            pair = pd.DataFrame({"t": r, "s": sr}).dropna().tail(252)
+            if len(pair) > 60 and float(pair["s"].var()) > 0:
+                corr = float(pair["t"].corr(pair["s"]))
+                beta = float(pair["t"].cov(pair["s"]) / pair["s"].var())
+
+        # 5) relative strength vs SPY over 3/6/12 months (percentage points)
+        rs = []
+        if spy_close is not None:
+            sc = spy_close.reindex(close.index).ffill()
+            for n in (63, 126, 252):
+                if len(close) > n and len(sc) > n:
+                    rs.append(((close.iloc[-1] / close.iloc[-1 - n]) -
+                               (sc.iloc[-1] / sc.iloc[-1 - n])) * 100.0)
+        rs_avg = float(np.mean(rs)) if rs else float("nan")
+
+        # 6) typical pullback inside uptrends (close > 200d): median depth of
+        #    >=2% dips from the running high within each above-200d regime
+        depths = []
+        peak, in_up, trough = None, False, None
+        for c, s in zip(close.to_numpy(), df["sma200"].to_numpy()):
+            if c > s:
+                if not in_up:
+                    in_up, peak, trough = True, c, c
+                peak = max(peak, c)
+                trough = min(trough, c) if c < peak else c
+                dd = (c - peak) / peak * 100.0
+                if dd <= -2.0:
+                    depths.append(dd)
+            else:
+                in_up = False
+        typ_pullback = float(np.percentile(depths, 50)) if depths else 0.0
+
+        # 7) max drawdown + recovery time (full window)
+        cv = close.to_numpy()
+        peaks = np.maximum.accumulate(cv)
+        dd = cv / peaks - 1.0
+        i_tr = int(dd.argmin())
+        max_dd = float(dd[i_tr] * 100.0)
+        peak_val = float(peaks[i_tr])
+        rec = None
+        for j in range(i_tr + 1, len(cv)):
+            if cv[j] >= peak_val:
+                rec = j - i_tr
+                break
+
+        # 8) position in the 52-week range
+        yr = close.tail(252)
+        lo, hi = float(yr.min()), float(yr.max())
+        pos52 = float((close.iloc[-1] - lo) / (hi - lo) * 100.0) if hi > lo else 50.0
+
+        out.append({
+            "ticker": tk, "date": str(df.index[-1].date()),
+            "followthrough_pct": round(follow * 100, 1),
+            "momo_edge_pp": round(edge, 1), "personality": momo,
+            "vol_pctile": round(vol_pctile, 0), "vol_mood": mood,
+            "coil_pctile": round(coil, 0) if coil == coil else "",
+            "coiled": coiled,
+            "beta": round(beta, 2) if beta == beta else "",
+            "corr_spy": round(corr, 2) if corr == corr else "",
+            "rs_avg_pp": round(rs_avg, 1) if rs_avg == rs_avg else "",
+            "leader": bool(rs_avg == rs_avg and rs_avg > 0),
+            "typical_pullback_pct": round(typ_pullback, 1),
+            "max_dd_pct": round(max_dd, 1),
+            "recovery_days": rec if rec is not None else "not yet",
+            "pos_52w_pct": round(pos52, 0),
+        })
+    out.sort(key=lambda x: -(x["rs_avg_pp"] if isinstance(x["rs_avg_pp"], float) else -999))
+    return out
+
+
+def breakout_report_card(trades_csv_path: str):
+    """Per-ticker report card of the VALIDATED breakout strategies, computed
+    from the committed backtest spreadsheet: n trades, win rate, avg %, total
+    per $1k position, best trade. Ranks which names have actually followed
+    through on breakouts for 15 years."""
+    df = pd.read_csv(trades_csv_path)
+    bo = df[df["strategy"].isin(["breakout_20d", "breakout_55d"])]
+    rows = []
+    for tk, g in bo.groupby("ticker"):
+        r = g["ret_pct"]
+        rows.append({
+            "ticker": tk, "n": int(len(g)),
+            "win_rate": round(float((r > 0).mean() * 100), 0),
+            "avg_pct": round(float(r.mean()), 2),
+            "total_per_$1k": round(float(r.sum() * 10), 0),
+            "best_pct": round(float(r.max()), 1),
+            "worst_pct": round(float(r.min()), 1),
+        })
+    rows.sort(key=lambda x: -x["total_per_$1k"])
+    return rows
+
+
 def run_radar(adapter, tickers: List[str], years: int = 15, as_of=None,
               spy_filter: bool = True, strategies: Optional[List[str]] = None):
     """Backtest all Radar strategies across the universe. Returns

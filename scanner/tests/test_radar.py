@@ -111,6 +111,44 @@ def test_radar_signal_fires_on_fresh_breakout():
     assert row["stop_2atr"] < row["close"] and row["risk_pct"] > 0
 
 
+def test_ticker_profile_fields_and_sanity():
+    from scanner.radar import ticker_profile
+    up = _uptrend_with_dips()
+    frames = {"SPY": _df(up), "AAA": _df(up * 1.1)}
+    rows = ticker_profile(_StubAdapter(frames), ["AAA"],
+                          as_of=pd.Timestamp("2020-11-01", tz="UTC"), years=6)
+    assert len(rows) == 1
+    p = rows[0]
+    assert p["ticker"] == "AAA"
+    assert p["personality"] in ("MOMO", "CHOP", "NEUTRAL")
+    assert 0 <= p["followthrough_pct"] <= 100
+    assert p["vol_mood"] in ("SLEEPY", "WILD", "NORMAL")
+    assert 0 <= p["vol_pctile"] <= 100
+    # AAA is SPY's path scaled: beta ~ 1, correlation ~ 1
+    assert abs(p["beta"] - 1.0) < 0.15
+    assert p["corr_spy"] > 0.95
+    assert p["max_dd_pct"] <= 0
+    assert p["typical_pullback_pct"] <= 0
+    assert 0 <= p["pos_52w_pct"] <= 100
+
+
+def test_breakout_report_card(tmp_path):
+    from scanner.radar import breakout_report_card
+    csv = tmp_path / "trades.csv"
+    pd.DataFrame({
+        "ticker":   ["AAA", "AAA", "BBB", "BBB"],
+        "strategy": ["breakout_20d", "breakout_55d",
+                     "breakout_20d", "pullback_rsi2_200d"],
+        "ret_pct":  [10.0, -2.0, 5.0, 99.0],   # the rsi2 row must be excluded
+    }).to_csv(csv, index=False)
+    card = breakout_report_card(str(csv))
+    assert [c["ticker"] for c in card] == ["AAA", "BBB"]  # sorted by total $
+    a = card[0]
+    assert a["n"] == 2 and a["win_rate"] == 50
+    assert abs(a["total_per_$1k"] - 80.0) < 1e-9          # (10-2)% * $1k
+    assert card[1]["n"] == 1                              # rsi2 trade excluded
+
+
 def test_stats_math():
     trades = [RadarTrade("A", "s", "2020-01-01", "2020-01-05", 100, 102, 2.0, 4, "strength", 2020),
               RadarTrade("A", "s", "2020-02-01", "2020-02-05", 100, 99, -1.0, 4, "stop", 2020)]
