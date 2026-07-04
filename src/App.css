@@ -1891,6 +1891,16 @@ textarea,
   font-size: 0.85rem;
   margin: 4px 0;
 }
+.auth-notice {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 12px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  padding: 10px 12px;
+  margin: 4px 0 12px;
+}
 .auth-message {
   color: #34d399;
   font-size: 0.85rem;
