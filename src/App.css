@@ -167,7 +167,7 @@ body.light-theme::after {
 /* -- Floating Glass Tab Bar -- */
 .nav-grid {
     display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   padding: 16px;
   max-width: 600px;
@@ -1891,6 +1891,16 @@ textarea,
   font-size: 0.85rem;
   margin: 4px 0;
 }
+.auth-notice {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 12px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  padding: 10px 12px;
+  margin: 4px 0 12px;
+}
 .auth-message {
   color: #34d399;
   font-size: 0.85rem;
@@ -3052,4 +3062,120 @@ body.light-theme .tab.active {
   .day-nav-btn { min-height: 44px; min-width: 44px; }
   .check-row { min-height: 46px; }
   .workbook-btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+}
+
+/* ── Watchtower Study tab ── */
+.study-tab { display: flex; flex-direction: column; gap: 16px; }
+.study-heading { color: #c084fc; }
+.study-intro {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.7);
+  margin: 4px 0 14px;
+}
+.study-title-input,
+.study-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: #fff;
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  font-family: inherit;
+}
+.study-title-input { margin-bottom: 12px; }
+.study-title-input::placeholder,
+.study-textarea::placeholder { color: rgba(255,255,255,0.35); }
+.study-textarea {
+  min-height: 220px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.study-title-input:focus,
+.study-textarea:focus {
+  outline: none;
+  border-color: rgba(192,132,252,0.6);
+  box-shadow: 0 0 0 3px rgba(192,132,252,0.15);
+}
+.study-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.study-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c084fc;
+}
+.study-action-btns { display: flex; gap: 8px; }
+.study-clear-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.75);
+  border-radius: 14px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.study-clear-btn:disabled,
+.study-action-btns .today-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.study-sub {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.55);
+  margin: 2px 0 10px;
+}
+.study-empty {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  padding: 8px;
+}
+.study-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #c084fc;
+  background: rgba(192,132,252,0.15);
+  border-radius: 10px;
+  padding: 2px 9px;
+  vertical-align: middle;
+}
+.wt-study-list { list-style: none; padding-left: 0; }
+.wt-study-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.wt-study-item .scripture-link { font-weight: 600; }
+
+.light-theme .study-intro,
+.light-theme .study-sub,
+.light-theme .study-empty { color: #475569; }
+.light-theme .study-title-input,
+.light-theme .study-textarea {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.12);
+  color: #1e293b;
+}
+.light-theme .wt-study-item {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.08);
+}
+.light-theme .study-heading { color: #9333ea; }
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .study-tab { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
 }

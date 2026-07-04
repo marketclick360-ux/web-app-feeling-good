@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 import RichNoteEditor from './RichNoteEditor'
+import WatchtowerStudy from './WatchtowerStudy'
 /* --------- helpers --------- */
 function mondayOf(date) {
   const d = new Date(date)
@@ -203,7 +204,7 @@ export default function App({ userId }) {
   const [tab, setTab] = useState(() => {
     if (typeof window === 'undefined') return 'morning'
     const saved = window.localStorage.getItem('eps-active-tab')
-    return ['morning', 'prep', 'sunday', 'todos'].includes(saved) ? saved : 'morning'
+    return ['morning', 'prep', 'sunday', 'study', 'todos'].includes(saved) ? saved : 'morning'
   })
   const [checks, setChecks] = useState({})
   const [theme, setTheme] = useState('')
@@ -601,6 +602,7 @@ const loadJournal = useCallback(async () => {
     { id: 'morning', icon: '\u2600\ufe0f', name: 'Morning' },
     { id: 'prep', icon: '\ud83d\udcdd', name: 'Midweek' },
     { id: 'sunday', icon: '\ud83d\udcd6', name: 'Sunday' },
+    { id: 'study', icon: '\ud83d\udd0d', name: 'Study' },
     { id: 'todos', icon: '\u2705', name: 'To-Do' },
   ]
   return (
@@ -1039,6 +1041,7 @@ const loadJournal = useCallback(async () => {
     </section>
   </div>
 )}
+      {tab === 'study' && <WatchtowerStudy />}
       <footer className="footer"><p>Eat Pray Study {"\u00a9"} 2026</p>
       </footer>
     </div>

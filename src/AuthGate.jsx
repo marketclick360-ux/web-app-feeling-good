@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase, isSupabaseConfigured } from './supabaseClient'
 
 const COOLDOWN_SECONDS = 60
+
+// Turn low-level auth errors into guidance the user can act on. Network / config
+// failures (common on preview links without Supabase env vars) point to Guest mode.
+function friendlyAuthError(error) {
+  const msg = (error?.message || '').toLowerCase()
+  if (!isSupabaseConfigured) {
+    return "Sign-in isn't available on this preview link. Tap “Continue as Guest” to use the app — your notes stay on this device."
+  }
+  if (msg.includes('fetch') || msg.includes('network') || msg.includes('load failed') || error?.status === 0) {
+    return "Can't reach the sign-in service right now. Tap “Continue as Guest” to keep going — sign-in works on the live app."
+  }
+  return error?.message || 'Something went wrong. Please try again.'
+}
 
 export default function AuthGate({ children }) {
   const [session, setSession] = useState(null)
@@ -88,7 +101,7 @@ export default function AuthGate({ children }) {
         setError('Too many requests. Please wait a moment before trying again.')
         startCooldown()
       } else {
-        setError(error.message)
+        setError(friendlyAuthError(error))
       }
     } else {
       setMessage('Code sent! Check your email.')
@@ -115,7 +128,7 @@ export default function AuthGate({ children }) {
       } else if (error.message.toLowerCase().includes('invalid')) {
         setError('Invalid code. Please check and try again.')
       } else {
-        setError(error.message)
+        setError(friendlyAuthError(error))
       }
     }
   }
@@ -134,7 +147,7 @@ export default function AuthGate({ children }) {
       if (error.message.toLowerCase().includes('rate') || error.status === 429) {
         setError('Too many requests. Please wait before trying again.')
       } else {
-        setError(error.message)
+        setError(friendlyAuthError(error))
       }
     } else {
       setMessage('New code sent!')
@@ -186,6 +199,9 @@ export default function AuthGate({ children }) {
         <p className="auth-subtitle">Pioneer Spiritual Growth Tracker</p>
         <h2 className="auth-heading">Welcome Back</h2>
         <p className="auth-text">Enter your email to sign in. New here? Same button &mdash; we'll create your account automatically.</p>
+        {!isSupabaseConfigured && (
+          <p className="auth-notice">Sign-in isn't available on this preview link. Tap &ldquo;Continue as Guest&rdquo; below to try the app &mdash; your notes stay on this device.</p>
+        )}
         <form onSubmit={handleSendCode}>
           <input
             type="email"
